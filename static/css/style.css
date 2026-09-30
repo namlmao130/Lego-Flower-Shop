@@ -727,6 +727,16 @@ footer.bg-dark {
     color: #d41414;
 }
 
+/* Ẩn triệt để nút x mặc định của trình duyệt để tránh xuất hiện 2 dấu x */
+input::-webkit-search-cancel-button,
+input::-webkit-search-decoration,
+input::-webkit-search-results-button,
+input::-webkit-search-results-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none !important;
+}
+
 .search-btn {
     display: inline-flex;
     align-items: center;
