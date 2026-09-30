@@ -264,23 +264,25 @@ h1, h2, h3, .hero-title {
     color: var(--lego-navy) !important;
 }
 
-/* ===== Thẻ sản phẩm — nền ngà, viền vàng mảnh khi hover ===== */
+/* ===== Thẻ sản phẩm — nền ngà, hiệu ứng hover mượt mà và zoom nhẹ ===== */
 .card {
-    border: 1px solid #EDE6D6 !important;
-    border-radius: 16px !important;
+    border: 1px solid rgba(237, 230, 214, 0.8) !important;
+    border-radius: 18px !important;
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 4px 14px rgba(33,36,61,0.08);
-    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease, border-color 0.3s ease;
 }
 .card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 22px rgba(33,36,61,0.16);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 32px rgba(0, 0, 0, 0.12), 0 0 16px rgba(201, 162, 39, 0.25) !important;
     border-color: var(--lego-gold) !important;
     cursor: pointer;
 }
 .card-img-top {
-    border-bottom: 1px solid var(--petal-cream);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .product-card-image {
@@ -289,6 +291,28 @@ h1, h2, h3, .hero-title {
     height: auto;
     object-fit: contain;
     background: #fff;
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.card:hover .product-card-image {
+    transform: scale(1.06);
+}
+
+.product-cat-badge {
+    background: rgba(201, 162, 39, 0.12) !important;
+    color: #926f0d !important;
+    border: 1px solid rgba(201, 162, 39, 0.3) !important;
+    font-size: 0.74rem !important;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.2px;
+}
+
+.product-price {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #b91c1c;
+    letter-spacing: -0.2px;
 }
 
 .product-detail-media {
@@ -875,6 +899,80 @@ footer.bg-dark {
 .mobile-desktop-notice {
     display: none;
 }
+
+/* ================================================= */
+/* CHÂN TRANG (FOOTER) SANG TRỌNG                   */
+/* ================================================= */
+.shop-footer {
+    background: rgba(18, 14, 28, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1.5px solid rgba(201, 162, 39, 0.4);
+    color: #EDE6D6;
+    position: relative;
+    z-index: 10;
+}
+
+.footer-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--lego-gold-light);
+    letter-spacing: 0.5px;
+}
+
+.footer-links li a {
+    transition: color 0.2s ease, transform 0.2s ease;
+    display: inline-block;
+}
+
+.footer-links li a:hover {
+    color: var(--lego-gold) !important;
+    transform: translateX(4px);
+}
+
+/* ================================================= */
+/* NÚT NỔI CUỘN LÊN ĐẦU TRANG (BACK TO TOP)          */
+/* ================================================= */
+.back-to-top-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(18, 14, 28, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1.5px solid var(--lego-gold);
+    color: var(--lego-gold-light);
+    font-size: 1.35rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35), 0 0 14px rgba(201, 162, 39, 0.3);
+    cursor: pointer;
+    z-index: 995;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(16px) scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.back-to-top-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+}
+
+.back-to-top-btn:hover {
+    background: var(--lego-gold);
+    color: #12100d;
+    transform: translateY(-4px) scale(1.08);
+    box-shadow: 0 10px 26px rgba(201, 162, 39, 0.55);
+}
+
 
 
 

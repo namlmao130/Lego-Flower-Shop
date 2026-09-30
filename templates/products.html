@@ -1,26 +1,165 @@
 {% extends "base.html" %}
-{% block title %}Sản phẩm - My Shop{% endblock %}
+{% block title %}Tất cả sản phẩm - Lego Flower{% endblock %}
 
 {% block content %}
-<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2 g-md-4">
-    {% for product in products %}
-    <div class="col">
-        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none text-reset">
-            <div class="card h-100 shadow-sm">
-                {% if product.thumbnail %}
-                <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" class="card-img-top product-card-image" alt="{{ product.name }}">
-                {% else %}
-                <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
-                {% endif %}
-                <div class="card-body">
-                    <h5 class="card-title">{{ product.name }}</h5>
-                    <p class="card-text text-danger fw-bold mb-0">{{ "{:,.0f}".format(product.price) }} đ</p>
-                </div>
-            </div>
-        </a>
-    </div>
-    {% else %}
-    <p class="text-muted">Không có sản phẩm nào trong danh mục này.</p>
-    {% endfor %}
+<div class="mb-4 text-center">
+    <h1 class="display-6 fw-bold" style="color: #21243D; font-family: 'Playfair Display', serif;">Tất cả sản phẩm</h1>
+    <p class="text-muted mb-0">Khám phá toàn bộ các mẫu hoa Lego độc đáo, từ hoa bó, hoa chậu đến phiên bản đặc biệt</p>
 </div>
+
+<!-- ============================================ -->
+<!--   PHẦN TÌM KIẾM SẢN PHẨM & LỌC DANH MỤC     -->
+<!-- ============================================ -->
+<div class="search-filter-box mb-4">
+    <form action="{{ url_for('products') }}" method="GET" class="search-form" id="searchFilterForm">
+        <!-- Ô tìm kiếm từ khóa -->
+        <div class="search-bar-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" id="productSearchInput" class="search-input" 
+                   placeholder="Tìm kiếm sản phẩm hoa Lego..." 
+                   value="{{ search_query or '' }}" autocomplete="off">
+            <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Xóa từ khóa" 
+                    style="background:none;border:none;cursor:pointer;display:{% if search_query %}flex{% else %}none{% endif %};">&times;</button>
+            <button type="submit" class="search-btn">Tìm kiếm</button>
+        </div>
+
+        <!-- Thanh lọc theo danh mục -->
+        <div class="category-filter-area">
+            <span class="category-filter-label">🏷️ Danh mục:</span>
+            <div class="category-pills-list">
+                <a href="{{ url_for('products', q=search_query if search_query else None) }}" 
+                   class="category-pill-btn {% if not selected_category %}active{% endif %}"
+                   data-category="">
+                   Tất cả
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('products', category=cat.id, q=search_query if search_query else None) }}" 
+                   class="category-pill-btn {% if selected_category == cat.id %}active{% endif %}"
+                   data-category="{{ cat.id }}">
+                   {{ cat.name }}
+                </a>
+                {% endfor %}
+            </div>
+            <!-- Giữ category đã chọn nếu người dùng bấm nút tìm kiếm qua ô input -->
+            <input type="hidden" name="category" id="categoryHiddenInput" value="{{ selected_category or '' }}">
+        </div>
+    </form>
+</div>
+
+<!-- KHU VỰC SẢN PHẨM PHÍA DƯỚI (LOAD AJAX KHI TÌM KIẾM HOẶC LỌC) -->
+<div id="productsSectionContainer">
+    {% include "_product_list_partial.html" %}
+</div>
+
+<script>
+(function () {
+    const searchForm = document.getElementById('searchFilterForm');
+    const searchInput = document.getElementById('productSearchInput');
+    const categoryHidden = document.getElementById('categoryHiddenInput');
+    const categoryPills = document.querySelectorAll('.category-pill-btn');
+    const productsContainer = document.getElementById('productsSectionContainer');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    let currentCategory = '{{ selected_category or "" }}';
+    let debounceTimer = null;
+
+    function fetchFilteredProducts(q, categoryId) {
+        if (!productsContainer) return;
+        productsContainer.style.transition = 'opacity 0.2s ease';
+        productsContainer.style.opacity = '0.4';
+
+        const params = new URLSearchParams();
+        if (q && q.trim()) params.set('q', q.trim());
+        if (categoryId) params.set('category', categoryId);
+        params.set('ajax', '1');
+
+        fetch(`/products?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network error');
+            return res.text();
+        })
+        .then(html => {
+            productsContainer.innerHTML = html;
+            productsContainer.style.opacity = '1';
+
+            params.delete('ajax');
+            const newUrl = params.toString() ? `/products?${params.toString()}` : '/products';
+            window.history.replaceState({}, '', newUrl);
+
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = (q && q.trim()) ? 'flex' : 'none';
+            }
+        })
+        .catch(err => {
+            console.error('Lỗi khi tải danh sách sản phẩm:', err);
+            productsContainer.style.opacity = '1';
+        });
+    }
+
+    if (searchForm) {
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearTimeout(debounceTimer);
+            fetchFilteredProducts(searchInput.value, currentCategory);
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = this.value.trim() ? 'flex' : 'none';
+            }
+            debounceTimer = setTimeout(() => {
+                fetchFilteredProducts(searchInput.value, currentCategory);
+            }, 300);
+        });
+    }
+
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            fetchFilteredProducts('', currentCategory);
+            searchInput.focus();
+        });
+    }
+
+    categoryPills.forEach(pill => {
+        pill.addEventListener('click', function (e) {
+            e.preventDefault();
+            const catId = this.dataset.category || '';
+            currentCategory = catId;
+            if (categoryHidden) categoryHidden.value = catId;
+
+            categoryPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+
+            fetchFilteredProducts(searchInput ? searchInput.value : '', currentCategory);
+        });
+    });
+
+    if (productsContainer) {
+        productsContainer.addEventListener('click', function (e) {
+            if (e.target.closest('.btn-clear-filters')) {
+                e.preventDefault();
+                if (searchInput) searchInput.value = '';
+                currentCategory = '';
+                if (categoryHidden) categoryHidden.value = '';
+                if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+
+                categoryPills.forEach(p => {
+                    if (!p.dataset.category) p.classList.add('active');
+                    else p.classList.remove('active');
+                });
+
+                fetchFilteredProducts('', '');
+            }
+        });
+    }
+})();
+</script>
 {% endblock %}

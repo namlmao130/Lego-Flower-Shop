@@ -24,16 +24,18 @@
         <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none text-reset">
             <div class="card h-100 shadow-sm">
                 {% if product.thumbnail %}
-                <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" class="card-img-top product-card-image" alt="{{ product.name }}">
+                <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" class="card-img-top product-card-image" alt="{{ product.name }}" loading="lazy">
                 {% else %}
                 <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
                 {% endif %}
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     {% if product.category %}
-                    <span class="badge bg-light text-dark border mb-1" style="font-size:0.75rem;">{{ product.category.name }}</span>
+                    <span class="badge product-cat-badge mb-1 align-self-start">{{ product.category.name }}</span>
                     {% endif %}
                     <h5 class="card-title">{{ product.name }}</h5>
-                    <p class="card-text text-danger fw-bold mb-0">{{ "{:,.0f}".format(product.price) }} đ</p>
+                    <div class="mt-auto pt-1">
+                        <span class="product-price">{{ "{:,.0f}".format(product.price) }} đ</span>
+                    </div>
                 </div>
             </div>
         </a>

@@ -121,8 +121,18 @@ def products():
         query = query.filter_by(category_id=category_id)
     if q:
         query = query.filter(Product.name.ilike(f'%{q}%'))
-    products = query.all()
+    products = query.order_by(Product.id.desc()).all()
     categories = Category.query.all()
+
+    # Hỗ trợ AJAX load nhanh không reload cả trang
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
+        return render_template(
+            '_product_list_partial.html',
+            products=products,
+            search_query=q,
+            selected_category=category_id
+        )
+
     return render_template('products.html', products=products, categories=categories,
                             selected_category=category_id, search_query=q)
 
@@ -130,7 +140,18 @@ def products():
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
-    return render_template('product_detail.html', product=product)
+    # Lấy tối đa 4 sản phẩm cùng danh mục gợi ý thêm (loại trừ sản phẩm hiện tại)
+    related_products = []
+    if product.category_id:
+        related_products = Product.query.filter(
+            Product.category_id == product.category_id,
+            Product.id != product.id
+        ).order_by(Product.id.desc()).limit(4).all()
+    if not related_products:
+        # Nếu danh mục này không còn sp khác, lấy 4 sp mới nhất khác
+        related_products = Product.query.filter(Product.id != product.id).order_by(Product.id.desc()).limit(4).all()
+
+    return render_template('product_detail.html', product=product, related_products=related_products)
 
 
 # ============================================

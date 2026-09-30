@@ -57,12 +57,72 @@
             <h5>Mô tả sản phẩm</h5>
             <p>{{ product.description or "Chưa có mô tả." }}</p>
 
-            <!-- Liên hệ đặt mua: thay nội dung bên dưới bằng SĐT/email thật của bạn khi có -->
-            <div class="contact-box">
-                <strong>📞 Liên hệ đặt mua</strong>
-                <p class="mb-0 text-muted">+84967701565 / SmartoyShop</p>
+            <!-- Liên hệ đặt mua & tư vấn -->
+            <div class="contact-box mt-4 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.7); border: 1.5px solid var(--lego-gold); backdrop-filter: blur(10px);">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span style="font-size: 1.4rem;">💐</span>
+                    <div>
+                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa Lego chính hãng</strong>
+                        <small class="text-muted">Hỗ trợ tư vấn mẫu hoa và giao hàng toàn quốc</small>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer" 
+                       class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2"
+                       style="background: #0068FF !important; border-color: #0068FF !important; color: #fff !important;">
+                        <span>💬 Nhắn Zalo tư vấn</span>
+                    </a>
+                    <a href="tel:0967701565" 
+                       class="btn btn-outline-dark d-inline-flex align-items-center gap-2 px-3 py-2">
+                        <span>📞 Gọi 0967.701.565</span>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ============================================ -->
+<!--   SẢN PHẨM CÙNG DANH MỤC / GỢI Ý THÊM       -->
+<!-- ============================================ -->
+{% if related_products %}
+<div class="related-products-section mt-5 pt-4 border-top" style="border-color: rgba(201, 162, 39, 0.3) !important;">
+    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+        <div>
+            <h3 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">🌸 Sản phẩm cùng danh mục</h3>
+            <p class="text-muted mb-0 small">Các mẫu hoa cùng bộ sưu tập được nhiều khách hàng yêu thích</p>
+        </div>
+        {% if product.category_id %}
+        <a href="{{ url_for('products', category=product.category_id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
+            Xem tất cả {{ product.category.name if product.category else '' }} &rarr;
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="row row-cols-2 row-cols-md-4 g-2 g-md-4">
+        {% for r in related_products %}
+        <div class="col">
+            <a href="{{ url_for('product_detail', product_id=r.id) }}" class="text-decoration-none text-reset">
+                <div class="card h-100 shadow-sm">
+                    {% if r.thumbnail %}
+                    <img src="{{ url_for('static', filename='uploads/' + r.thumbnail) }}" class="card-img-top product-card-image" alt="{{ r.name }}" loading="lazy">
+                    {% else %}
+                    <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
+                    {% endif %}
+                    <div class="card-body d-flex flex-column">
+                        {% if r.category %}
+                        <span class="badge product-cat-badge mb-1 align-self-start">{{ r.category.name }}</span>
+                        {% endif %}
+                        <h5 class="card-title">{{ r.name }}</h5>
+                        <div class="mt-auto pt-1">
+                            <span class="product-price">{{ "{:,.0f}".format(r.price) }} đ</span>
+                        </div>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
 {% endblock %}
