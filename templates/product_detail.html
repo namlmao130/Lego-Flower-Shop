@@ -105,7 +105,7 @@
             <a href="{{ url_for('product_detail', product_id=r.id) }}" class="text-decoration-none text-reset">
                 <div class="card h-100 shadow-sm">
                     {% if r.thumbnail %}
-                    <img src="{{ url_for('static', filename='uploads/' + r.thumbnail) }}" class="card-img-top product-card-image" alt="{{ r.name }}" loading="lazy">
+                    <img src="{{ url_for('static', filename='uploads/' + r.thumbnail) }}" class="card-img-top product-card-image" alt="{{ r.name }}" loading="lazy" decoding="async">
                     {% else %}
                     <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
                     {% endif %}

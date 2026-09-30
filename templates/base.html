@@ -441,10 +441,11 @@
             toolbarBackdrop.addEventListener('click', () => toggle(false));
         }
 
-        // Nhả cánh hoa tự động
+        // Nhả cánh hoa tự động (nhịp độ tối ưu theo thiết bị để máy mát và mượt mà)
+        const petalSpawnDelay = isMobileScreen ? 700 : 450;
         setInterval(() => {
             if (Math.random() < 0.45) spawnPetal(isOpen ? 270 : 50, Math.random() * height);
-        }, 450);
+        }, petalSpawnDelay);
 
         window.addEventListener('resize', () => {
             minX = getMinX();

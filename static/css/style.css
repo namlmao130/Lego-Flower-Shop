@@ -1,9 +1,16 @@
 html {
     scroll-behavior: smooth;
+    overscroll-behavior-x: none;
 }
 
 html, body {
     max-width: 100%;
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 * {
@@ -278,6 +285,12 @@ h1, h2, h3, .hero-title {
 .btn-outline-primary:hover {
     background-color: var(--lego-gold) !important;
     color: var(--lego-navy) !important;
+}
+
+/* Tối ưu hiệu năng rendering cho danh sách hơn 300 sản phẩm khi cuộn */
+.product-item-col {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 320px;
 }
 
 /* ===== Thẻ sản phẩm — nền ngà, hiệu ứng hover mượt mà và zoom nhẹ ===== */
