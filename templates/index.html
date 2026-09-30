@@ -356,15 +356,25 @@
         card.addEventListener('click', () => { hIdx = i; hUpdate(true); hReset(); });
     });
 
-    // Swipe
+    // Swipe mượt mà trên toàn bộ khung carousel (phân biệt vuốt ngang và vuốt dọc)
     let hTouchX = 0;
-    const hTrack = document.getElementById('heroCardsTrack');
-    hTrack.addEventListener('touchstart', e => { hTouchX = e.touches[0].clientX; }, { passive: true });
-    hTrack.addEventListener('touchend', e => {
-        const dx = e.changedTouches[0].clientX - hTouchX;
-        if (dx > 40) { hPrev(); hReset(); }
-        if (dx < -40) { hNext(); hReset(); }
-    });
+    let hTouchY = 0;
+    const stage = document.querySelector('.hero-carousel-stage');
+    if (stage) {
+        stage.addEventListener('touchstart', e => {
+            hTouchX = e.touches[0].clientX;
+            hTouchY = e.touches[0].clientY;
+        }, { passive: true });
+
+        stage.addEventListener('touchend', e => {
+            const dx = e.changedTouches[0].clientX - hTouchX;
+            const dy = e.changedTouches[0].clientY - hTouchY;
+            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 35) {
+                if (dx > 0) { hPrev(); hReset(); }
+                else { hNext(); hReset(); }
+            }
+        }, { passive: true });
+    }
 
     hUpdate(false);
     hStartAuto();

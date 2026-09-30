@@ -2,6 +2,14 @@ html {
     scroll-behavior: smooth;
 }
 
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, a, input, select {
+    touch-action: manipulation;
+}
+
 /* ===== Bảng màu sang trọng: navy đậm + ánh vàng gold + hoa pastel ===== */
 :root {
     --lego-bg: #FBF8F2;      /* nền ngà nhẹ */
@@ -811,15 +819,44 @@ footer.bg-dark {
         font-size: 0.82rem !important;
     }
 
+    /* Thanh tìm kiếm không bị iOS tự động zoom */
+    .search-input {
+        font-size: 16px !important;
+    }
+
+    /* Danh mục cuộn ngang mượt mà bằng ngón tay trên điện thoại */
     .category-filter-area {
-        gap: 6px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
         margin-top: 0.75rem !important;
         padding-top: 0.6rem !important;
     }
 
+    .category-pills-list {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        width: 100% !important;
+        padding-bottom: 6px !important;
+        gap: 6px !important;
+        scrollbar-width: none;
+    }
+
+    .category-pills-list::-webkit-scrollbar {
+        display: none;
+    }
+
     .category-pill-btn {
-        padding: 4px 12px !important;
-        font-size: 0.78rem !important;
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+        padding: 6px 14px !important;
+        font-size: 0.8rem !important;
+    }
+
+    .card {
+        border-radius: 14px !important;
     }
 
     .card-title {
@@ -832,11 +869,38 @@ footer.bg-dark {
     }
 
     .card-body {
-        padding: 0.6rem !important;
+        padding: 0.55rem 0.65rem !important;
+    }
+
+    .product-cat-badge {
+        font-size: 0.68rem !important;
+        padding: 2px 7px !important;
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .product-price {
+        font-size: 0.95rem !important;
     }
 
     .product-detail-media {
-        height: 320px !important;
+        height: 300px !important;
+    }
+
+    /* 2 nút chốt đơn Zalo / Gọi điện chia đều 50-50 trên điện thoại */
+    .contact-box .d-flex.flex-wrap {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px !important;
+    }
+
+    .contact-box .btn {
+        width: 100% !important;
+        justify-content: center;
+        font-size: 0.82rem !important;
+        padding: 9px 4px !important;
     }
 
     .stud-row {
@@ -868,10 +932,17 @@ footer.bg-dark {
         font-size: 1.35rem !important;
     }
 
+    #toggleBtn {
+        min-width: 44px;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
     .shop-navbar .nav-link {
         font-size: 0.88rem !important;
-        padding-left: 0.35rem !important;
-        padding-right: 0.35rem !important;
+        padding: 8px 6px !important;
     }
 
     .mobile-desktop-notice {
@@ -895,6 +966,15 @@ footer.bg-dark {
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         letter-spacing: 0.2px;
         line-height: 1.4;
+    }
+
+    /* Nút Back to Top trên điện thoại: tránh bị đè bởi thanh điều hướng dưới của iPhone */
+    .back-to-top-btn {
+        bottom: calc(18px + env(safe-area-inset-bottom, 0px)) !important;
+        right: 16px !important;
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 1.25rem !important;
     }
 }
 
