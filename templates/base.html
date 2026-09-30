@@ -258,27 +258,34 @@
                 grad.addColorStop(0.7, '#881337');
                 grad.addColorStop(1, '#4c0519');
                 ctx.fillStyle = grad;
-                ctx.shadowColor = 'rgba(225, 29, 72, 0.4)';
-                ctx.shadowBlur = 6;
                 ctx.fill();
                 ctx.restore();
             }
         }
 
         const petals = [];
+        const isMobileScreen = window.innerWidth < 768;
+        const maxPetals = isMobileScreen ? 28 : 46;
 
         function spawnPetal(x, y, speed = 1) {
-            if (petals.length < 90) petals.push(new Petal(x, y, speed));
+            if (document.hidden) return;
+            if (petals.length < maxPetals) petals.push(new Petal(x, y, speed));
         }
 
         function burstPetals(count = 35, originX = 60, originY = null) {
-            for (let i = 0; i < count; i++) {
+            const actualCount = isMobileScreen ? Math.min(count, 16) : count;
+            for (let i = 0; i < actualCount; i++) {
                 const y = originY !== null ? originY + (Math.random() - 0.5) * 100 : Math.random() * height;
                 petals.push(new Petal(originX, y, 1.8));
             }
         }
 
+        let animFrameId = null;
         function render() {
+            if (document.hidden) {
+                animFrameId = null;
+                return;
+            }
             ctx.clearRect(0, 0, width, height);
             for (let i = petals.length - 1; i >= 0; i--) {
                 const p = petals[i];
@@ -286,9 +293,15 @@
                 p.draw(ctx);
                 if (p.opacity <= 0 || p.x > width + 50 || p.y > height + 50) petals.splice(i, 1);
             }
-            requestAnimationFrame(render);
+            animFrameId = requestAnimationFrame(render);
         }
         render();
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && !animFrameId) {
+                animFrameId = requestAnimationFrame(render);
+            }
+        });
 
         // -------------------------------------------------------
         // LOGIC KÉO THẢ & TRƯỢT TOOLBAR
@@ -429,14 +442,21 @@
         });
         updateToolbarPos(minX, false);
 
-        // Nút tròn nổi cuộn lên đầu trang (Back to top)
+        // Nút tròn nổi cuộn lên đầu trang (Back to top) với requestAnimationFrame throttling
         const backToTopBtn = document.getElementById('backToTopBtn');
         if (backToTopBtn) {
+            let scrollTicking = false;
             window.addEventListener('scroll', () => {
-                if (window.scrollY > 280) {
-                    backToTopBtn.classList.add('visible');
-                } else {
-                    backToTopBtn.classList.remove('visible');
+                if (!scrollTicking) {
+                    window.requestAnimationFrame(() => {
+                        if (window.scrollY > 280) {
+                            backToTopBtn.classList.add('visible');
+                        } else {
+                            backToTopBtn.classList.remove('visible');
+                        }
+                        scrollTicking = false;
+                    });
+                    scrollTicking = true;
                 }
             }, { passive: true });
 
