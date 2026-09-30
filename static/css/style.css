@@ -73,15 +73,24 @@ h1, h2, h3, .hero-title {
     font-weight: 700;
 }
 
-/* ===== Thanh điều hướng — frosted glass ===== */
+/* ===== Thanh điều hướng — frosted glass & sticky top ===== */
 .shop-navbar {
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border-bottom: 2px solid rgba(201, 162, 39, 0.5);
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background: rgba(18, 14, 28, 0.82);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 2px solid rgba(201, 162, 39, 0.45);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
 }
 .shop-navbar .navbar-brand {
     color: var(--lego-gold-light) !important;
+}
+.shop-navbar .navbar-nav {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
 }
 .shop-navbar .nav-link {
     color: #EDE6D6 !important;
@@ -819,6 +828,16 @@ footer.bg-dark {
     .hero-viewfinder {
         width: 204px !important;
         height: 320px !important;
+    }
+
+    .shop-navbar .navbar-brand {
+        font-size: 1.35rem !important;
+    }
+
+    .shop-navbar .nav-link {
+        font-size: 0.88rem !important;
+        padding-left: 0.35rem !important;
+        padding-right: 0.35rem !important;
     }
 }
 
