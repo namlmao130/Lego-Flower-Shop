@@ -15,7 +15,7 @@
         <!-- Ô tìm kiếm từ khóa -->
         <div class="search-bar-wrapper">
             <span class="search-icon">🔍</span>
-            <input type="text" name="q" id="productSearchInput" class="search-input" 
+            <input type="search" enterkeyhint="search" name="q" id="productSearchInput" class="search-input" 
                    placeholder="Tìm kiếm sản phẩm hoa Lego..." 
                    value="{{ search_query or '' }}" autocomplete="off">
             <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Xóa từ khóa" 
@@ -101,20 +101,26 @@
     if (searchForm) {
         searchForm.addEventListener('submit', function (e) {
             e.preventDefault();
-            clearTimeout(debounceTimer);
             fetchFilteredProducts(searchInput.value, currentCategory);
+            if (searchInput) searchInput.blur();
         });
     }
 
+    // Khi gõ chữ: CHỈ hiện/ẩn nút xóa (x), KHÔNG gửi request ngầm làm đơ bàn phím điện thoại
     if (searchInput) {
         searchInput.addEventListener('input', function () {
-            clearTimeout(debounceTimer);
             if (clearSearchBtn) {
                 clearSearchBtn.style.display = this.value.trim() ? 'flex' : 'none';
             }
-            debounceTimer = setTimeout(() => {
-                fetchFilteredProducts(searchInput.value, currentCategory);
-            }, 300);
+        });
+
+        // Nhấn phím Enter/Tìm trên bàn phím ảo điện thoại để tìm kiếm
+        searchInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                fetchFilteredProducts(this.value, currentCategory);
+                this.blur(); // Thu gọn bàn phím ảo để người dùng xem kết quả
+            }
         });
     }
 
