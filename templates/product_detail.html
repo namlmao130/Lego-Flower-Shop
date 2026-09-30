@@ -2,11 +2,11 @@
 {% block title %}{{ product.name }} - My Shop{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('products') }}" class="btn btn-link mb-3" style="text-decoration: underline; color: #dfe6ed;">&larr; Quay lại danh sách</a>
+<a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 mb-3 d-inline-flex align-items-center gap-1 shadow-sm" style="backdrop-filter: blur(8px); background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.3); font-size: 0.85rem;">&larr; Quay lại danh sách</a>
 
 <div class="row">
     <div class="col-md-6">
-        <div id="productCarousel" class="carousel slide carousel-fade product-carousel" data-bs-interval="false">
+        <div id="productCarousel" class="carousel slide carousel-fade product-carousel" data-bs-interval="false" data-bs-touch="true">
             <div class="carousel-inner rounded">
                 {% if product.media %}
                     {% for m in product.media %}

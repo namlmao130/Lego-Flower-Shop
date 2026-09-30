@@ -2,6 +2,11 @@ html {
     scroll-behavior: smooth;
 }
 
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
 * {
     -webkit-tap-highlight-color: transparent;
 }
@@ -453,6 +458,25 @@ footer.bg-dark {
     inset: 0;
     pointer-events: none;
     z-index: 999;
+}
+
+/* ================================================= */
+/* LỚP PHỦ MỜ KHI MỞ MENU TRÊN ĐIỆN THOẠI          */
+/* ================================================= */
+.toolbar-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1005;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+.toolbar-backdrop.active {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 /* ================================================= */

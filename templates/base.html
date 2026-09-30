@@ -112,6 +112,9 @@
         </div>
     </aside>
 
+    <!-- LỚP PHỦ MỜ KHI MỞ MENU TRÊN ĐIỆN THOẠI -->
+    <div id="toolbarBackdrop" class="toolbar-backdrop"></div>
+
     <!-- Thông báo khuyên dùng máy tính (chỉ hiển thị trên điện thoại) -->
     <div class="mobile-desktop-notice">
         <div class="mobile-notice-inner">
@@ -170,7 +173,7 @@
                 </div>
 
                 <!-- Cột 3: Liên hệ & Hỗ trợ -->
-                <div class="col-6 col-md-4 col-lg-3">
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
                     <h5 class="footer-heading mb-3">Liên hệ hỗ trợ</h5>
                     <ul class="list-unstyled footer-contact mb-0 text-white-50" style="font-size: 0.92rem;">
                         <li class="mb-2">
@@ -309,6 +312,7 @@
         const toolbar = document.getElementById('roseToolbar');
         const dragHandle = document.getElementById('dragHandle');
         const toggleBtn = document.getElementById('toggleBtn');
+        const toolbarBackdrop = document.getElementById('toolbarBackdrop');
 
         let isOpen = false;
         let isDragging = false;
@@ -343,6 +347,11 @@
             currentX = isOpen ? maxX : minX;
             updateToolbarPos(currentX, true);
             toggleBtn.textContent = isOpen ? '✕' : '☰';
+
+            if (toolbarBackdrop) {
+                if (isOpen) toolbarBackdrop.classList.add('active');
+                else toolbarBackdrop.classList.remove('active');
+            }
 
             if (isOpen) {
                 // Bung cánh hoa chung
@@ -427,6 +436,10 @@
                 toggle(false);
             }
         });
+
+        if (toolbarBackdrop) {
+            toolbarBackdrop.addEventListener('click', () => toggle(false));
+        }
 
         // Nhả cánh hoa tự động
         setInterval(() => {
