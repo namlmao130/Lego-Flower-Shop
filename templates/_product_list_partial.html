@@ -17,8 +17,8 @@
     {% endif %}
 </div>
 
-<!-- DANH SÁCH SẢN PHẨM -->
-<div class="row row-cols-1 row-cols-md-4 g-4" id="productListGrid">
+<!-- DANH SÁCH SẢN PHẨM (2 cột trên điện thoại, 4 cột trên máy tính) -->
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-2 g-md-4" id="productListGrid">
     {% for product in products %}
     <div class="col product-item-col" data-name="{{ product.name|lower }}" data-cat="{{ product.category_id or '' }}">
         <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none text-reset">
