@@ -228,7 +228,8 @@
         let startX = 0;
         let lastRoseBurstAt = 0;
         const roseBurstCooldown = 3000;
-        const minX = -215;
+        const getMinX = () => (window.innerWidth < 768 ? -295 : -215);
+        let minX = getMinX();
         const maxX = 0;
         let currentX = minX;
 
@@ -249,6 +250,7 @@
 
         function toggle(openState) {
             isOpen = openState;
+            minX = getMinX();
             currentX = isOpen ? maxX : minX;
             updateToolbarPos(currentX, true);
             toggleBtn.textContent = isOpen ? '✕' : '☰';
@@ -341,6 +343,15 @@
         setInterval(() => {
             if (Math.random() < 0.45) spawnPetal(isOpen ? 270 : 50, Math.random() * height);
         }, 450);
+
+        window.addEventListener('resize', () => {
+            minX = getMinX();
+            if (!isOpen) {
+                currentX = minX;
+                updateToolbarPos(currentX, false);
+            }
+        });
+        updateToolbarPos(minX, false);
     </script>
 </body>
 </html>

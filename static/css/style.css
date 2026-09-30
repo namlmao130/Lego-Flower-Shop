@@ -804,6 +804,22 @@ footer.bg-dark {
         gap: 12px !important;
         padding: 6px 8px !important;
     }
+
+    /* Ẩn hoàn toàn thanh hoa hồng bên trái khi đóng trên màn hình điện thoại */
+    .rose-toolbar {
+        transform: translateX(-295px);
+    }
+
+    /* Thu gọn khung carousel và viewfinder vừa vặn màn hình điện thoại */
+    .hero-carousel-stage {
+        height: 340px !important;
+        max-width: 100% !important;
+    }
+
+    .hero-viewfinder {
+        width: 204px !important;
+        height: 320px !important;
+    }
 }
 
 
