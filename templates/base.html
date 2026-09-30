@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Shop Online{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Canvas hiệu ứng cánh hoa bay -->
+    <canvas id="petalCanvas"></canvas>
+
+    <nav class="navbar navbar-expand-lg shop-navbar">
+        <div class="container">
+            <button id="toggleBtn" class="btn btn-link p-0 me-3" type="button" style="color:#EDE6D6; font-size:1.4rem; text-decoration:none;">☰</button>
+            <a class="navbar-brand fw-bold rainbow-brand" href="{{ url_for('index') }}">Lego Flower</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
+                <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- KHUNG CÔNG CỤ HOA HỒNG BÊN TRÁI -->
+    <aside id="roseToolbar" class="rose-toolbar">
+
+        <div>
+            <div class="toolbar-header">
+                <div class="toolbar-logo">🥀</div>
+                <div>
+                    <div class="toolbar-title">Lego Flower</div>
+                    <div class="toolbar-subtitle">Danh mục</div>
+                </div>
+            </div>
+
+            <nav class="toolbar-nav">
+                <a href="{{ url_for('index') }}" class="nav-item"> Trang chủ</a>
+                <a href="{{ url_for('products') }}" class="nav-item"> Tất cả sản phẩm</a>
+                {% for cat in nav_categories %}
+                <a href="{{ url_for('products', category=cat.id) }}" class="nav-item"> {{ cat.name }}</a>
+                {% endfor %}
+            </nav>
+        </div>
+
+        <div class="toolbar-footer">
+            <span>● Lego Flower Shop</span>
+        </div>
+
+        <!-- DẢI ĐÓA HOA HỒNG BÊN PHẢI TOOLBAR -->
+        <div class="rose-vine-border">
+
+            <!-- Bông 1 -->
+            <div class="rose-item" title="Click để bung cánh hoa!">
+                <svg width="42" height="42" viewBox="0 0 100 100">
+                    <path d="M50 75 Q40 85 20 80 Q35 65 50 75" fill="#14532d" />
+                    <path d="M50 75 Q60 85 80 80 Q65 65 50 75" fill="#166534" />
+                    <circle cx="50" cy="48" r="32" fill="#881337" />
+                    <path d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z" fill="#9f1239" />
+                    <path d="M28 42 C30 28, 70 28, 72 42 C74 58, 26 58, 28 42 Z" fill="#be123c" />
+                    <path d="M35 36 C42 22, 65 25, 65 38 C65 52, 32 50, 35 36 Z" fill="#e11d48" />
+                    <path d="M42 40 C45 32, 58 32, 58 40 C58 48, 44 48, 45 42" stroke="#fb7185" stroke-width="3.5" fill="#f43f5e" stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <!-- Bông 2 -->
+            <div class="rose-item" style="transform: rotate(-15deg);">
+                <svg width="36" height="36" viewBox="0 0 100 100">
+                    <path d="M50 70 Q30 75 25 60 Q40 55 50 70" fill="#14532d" />
+                    <circle cx="50" cy="48" r="28" fill="#9f1239" />
+                    <path d="M25 45 C25 25, 75 25, 75 45 C75 68, 25 68, 25 45 Z" fill="#be123c" />
+                    <path d="M32 40 C38 26, 62 26, 68 40 C68 55, 32 55, 32 40 Z" fill="#e11d48" />
+                    <circle cx="50" cy="44" r="10" fill="#f43f5e" />
+                </svg>
+            </div>
+
+            <!-- Bông 3: TAY CẦM KÉO -->
+            <div id="dragHandle" class="rose-item drag-handle-rose" title="Kéo ra điiiii!">
+                <svg width="44" height="44" viewBox="0 0 100 100">
+                    <path d="M50 75 Q75 90 85 75 Q70 60 50 75" fill="#166534" />
+                    <circle cx="50" cy="50" r="34" fill="#881337" />
+                    <path d="M18 48 C15 28, 45 15, 50 22 C55 15, 85 28, 82 48 C85 70, 55 80, 50 78 C45 80, 15 70, 18 48 Z" fill="#be123c" />
+                    <path d="M26 44 C28 28, 72 28, 74 44 C76 62, 24 62, 26 44 Z" fill="#e11d48" />
+                    <circle cx="50" cy="45" r="9" fill="#fda4af" />
+                    <path d="M46 45 A4 4 0 1 1 54 45" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" />
+                </svg>
+            </div>
+
+            <!-- Bông 4 -->
+            <div class="rose-item" style="transform: rotate(20deg);">
+                <svg width="36" height="36" viewBox="0 0 100 100">
+                    <path d="M50 70 Q70 75 75 60 Q60 55 50 70" fill="#14532d" />
+                    <circle cx="50" cy="48" r="28" fill="#9f1239" />
+                    <path d="M25 45 C25 25, 75 25, 75 45 C75 68, 25 68, 25 45 Z" fill="#e11d48" />
+                    <circle cx="50" cy="44" r="10" fill="#fb7185" />
+                </svg>
+            </div>
+
+            <!-- Bông 5 -->
+            <div class="rose-item">
+                <svg width="40" height="40" viewBox="0 0 100 100">
+                    <path d="M50 75 Q35 85 20 78 Q35 65 50 75" fill="#14532d" />
+                    <circle cx="50" cy="48" r="30" fill="#881337" />
+                    <path d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z" fill="#be123c" />
+                    <path d="M30 40 C35 26, 65 26, 70 40 C70 56, 30 56, 30 40 Z" fill="#f43f5e" />
+                    <circle cx="50" cy="44" r="8" fill="#fda4af" />
+                </svg>
+            </div>
+
+        </div>
+    </aside>
+
+    <div class="stud-row">
+        {% for i in range(24) %}<div class="stud"></div>{% endfor %}
+    </div>
+
+    <div class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category=='error' else category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // -------------------------------------------------------
+        // ENGINE VẼ CÁNH HOA BAY (CANVAS)
+        // -------------------------------------------------------
+        const canvas = document.getElementById('petalCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        class Petal {
+            constructor(originX, originY, speedMult = 1) {
+                this.x = originX ?? (Math.random() * 60);
+                this.y = originY ?? (Math.random() * height);
+                this.size = Math.random() * 10 + 9;
+                this.vx = (Math.random() * 2.8 + 1.2) * speedMult;
+                this.vy = (Math.random() * 1.6 + 0.6) * speedMult;
+                this.angle = Math.random() * Math.PI * 2;
+                this.angularSpeed = (Math.random() - 0.5) * 0.04;
+                this.flip = Math.random() * Math.PI;
+                this.flipSpeed = Math.random() * 0.03 + 0.02;
+                this.opacity = Math.random() * 0.4 + 0.6;
+                this.decay = Math.random() * 0.003 + 0.002;
+                const shades = ['#e11d48', '#be123c', '#9f1239', '#f43f5e', '#881337', '#fda4af'];
+                this.color = shades[Math.floor(Math.random() * shades.length)];
+            }
+            update() {
+                this.x += this.vx + Math.sin(this.angle) * 0.8;
+                this.y += this.vy + Math.cos(this.flip) * 0.5;
+                this.angle += this.angularSpeed;
+                this.flip += this.flipSpeed;
+                this.opacity -= this.decay;
+            }
+            draw(ctx) {
+                if (this.opacity <= 0) return;
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.angle);
+                ctx.scale(1, Math.sin(this.flip));
+                ctx.globalAlpha = Math.max(0, this.opacity);
+                ctx.beginPath();
+                ctx.moveTo(0, -this.size * 0.6);
+                ctx.bezierCurveTo(this.size * 0.8, -this.size * 0.8, this.size * 0.9, this.size * 0.4, 0, this.size * 0.9);
+                ctx.bezierCurveTo(-this.size * 0.9, this.size * 0.4, -this.size * 0.8, -this.size * 0.8, 0, -this.size * 0.6);
+                const grad = ctx.createLinearGradient(-this.size, -this.size, this.size, this.size);
+                grad.addColorStop(0, this.color);
+                grad.addColorStop(0.7, '#881337');
+                grad.addColorStop(1, '#4c0519');
+                ctx.fillStyle = grad;
+                ctx.shadowColor = 'rgba(225, 29, 72, 0.4)';
+                ctx.shadowBlur = 6;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        const petals = [];
+
+        function spawnPetal(x, y, speed = 1) {
+            if (petals.length < 90) petals.push(new Petal(x, y, speed));
+        }
+
+        function burstPetals(count = 35, originX = 60, originY = null) {
+            for (let i = 0; i < count; i++) {
+                const y = originY !== null ? originY + (Math.random() - 0.5) * 100 : Math.random() * height;
+                petals.push(new Petal(originX, y, 1.8));
+            }
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = petals.length - 1; i >= 0; i--) {
+                const p = petals[i];
+                p.update();
+                p.draw(ctx);
+                if (p.opacity <= 0 || p.x > width + 50 || p.y > height + 50) petals.splice(i, 1);
+            }
+            requestAnimationFrame(render);
+        }
+        render();
+
+        // -------------------------------------------------------
+        // LOGIC KÉO THẢ & TRƯỢT TOOLBAR
+        // -------------------------------------------------------
+        const toolbar = document.getElementById('roseToolbar');
+        const dragHandle = document.getElementById('dragHandle');
+        const toggleBtn = document.getElementById('toggleBtn');
+
+        let isOpen = false;
+        let isDragging = false;
+        let hasDragged = false;
+        let suppressNextOutsideClick = false;
+        let startX = 0;
+        let lastRoseBurstAt = 0;
+        const roseBurstCooldown = 3000;
+        const minX = -215;
+        const maxX = 0;
+        let currentX = minX;
+
+        function updateToolbarPos(x, smooth = false) {
+            toolbar.style.transition = smooth ? 'transform 0.4s cubic-bezier(0.16, 1, 0.3, 1)' : 'none';
+            toolbar.style.transform = `translateX(${x}px)`;
+            if (Math.random() < 0.35) spawnPetal(270 + x, Math.random() * height);
+        }
+
+        function tryRoseBurst(count, x, y) {
+            const now = Date.now();
+            if (now - lastRoseBurstAt < roseBurstCooldown) return false;
+
+            lastRoseBurstAt = now;
+            burstPetals(count, x, y);
+            return true;
+        }
+
+        function toggle(openState) {
+            isOpen = openState;
+            currentX = isOpen ? maxX : minX;
+            updateToolbarPos(currentX, true);
+            toggleBtn.textContent = isOpen ? '✕' : '☰';
+
+            if (isOpen) {
+                // Bung cánh hoa chung
+                tryRoseBurst(35, 270);
+
+                // Lấy vị trí 2 bông hoa trên cùng và bung thêm nhiều cánh hơn
+                setTimeout(() => {
+                    const roseItems = document.querySelectorAll('.rose-item');
+                    if (roseItems[0]) {
+                        const r0 = roseItems[0].getBoundingClientRect();
+                        tryRoseBurst(30, r0.left + r0.width / 2, r0.top + r0.height / 2);
+                    }
+                    if (roseItems[1]) {
+                        const r1 = roseItems[1].getBoundingClientRect();
+                        tryRoseBurst(30, r1.left + r1.width / 2, r1.top + r1.height / 2);
+                    }
+                }, 200); // Chờ toolbar trượt ra rồi mới bung
+            }
+        }
+
+        toggleBtn.addEventListener('click', () => toggle(!isOpen));
+
+        // Click bông hoa để bung cánh
+        setTimeout(() => {
+            document.querySelectorAll('.rose-item').forEach(rose => {
+            rose.addEventListener('click', (e) => {
+                const rect = rose.getBoundingClientRect();
+                tryRoseBurst(20, rect.left + 20, rect.top + 20);
+            });
+        });
+        }, 3000);
+
+        // Kéo thả
+        function dragStart(e) {
+            if (e.button !== undefined && e.button !== 0) return;
+            isDragging = true;
+            hasDragged = false;
+            startX = e.clientX;
+            dragHandle.setPointerCapture?.(e.pointerId);
+            toolbar.style.transition = 'none';
+            document.body.style.userSelect = 'none'; // Chặn bôi xanh text khi kéo
+            e.preventDefault();
+        }
+        function dragMove(e) {
+            if (!isDragging) return;
+            const clientX = e.clientX;
+            const delta = clientX - startX;
+            if (Math.abs(delta) > 3) hasDragged = true;
+            let newX = (isOpen ? maxX : minX) + delta;
+            if (newX < minX) newX = minX;
+            if (newX > maxX + 10) newX = maxX + 10;
+            currentX = newX;
+            updateToolbarPos(newX, false);
+            e.preventDefault();
+        }
+        function dragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            document.body.style.userSelect = ''; // Khôi phục bôi text bình thường
+            if (dragHandle.hasPointerCapture?.(e.pointerId)) {
+                dragHandle.releasePointerCapture(e.pointerId);
+            }
+            if (hasDragged) {
+                // Pointerup có thể tạo click ở vị trí thả chuột bên ngoài sidebar.
+                // Bỏ qua click đó để không kích hoạt logic tự đóng.
+                suppressNextOutsideClick = true;
+                setTimeout(() => { suppressNextOutsideClick = false; }, 300);
+            }
+            toggle(currentX > minX + 80);
+        }
+
+        dragHandle.addEventListener('pointerdown', dragStart);
+        dragHandle.addEventListener('pointermove', dragMove);
+        dragHandle.addEventListener('pointerup', dragEnd);
+        dragHandle.addEventListener('pointercancel', dragEnd);
+
+        // Bấm ra ngoài toolbar thì tự đóng
+        document.addEventListener('click', (e) => {
+            if (!isOpen) return;
+            if (suppressNextOutsideClick) return;
+            if (!toolbar.contains(e.target) && e.target !== toggleBtn) {
+                toggle(false);
+            }
+        });
+
+        // Nhả cánh hoa tự động
+        setInterval(() => {
+            if (Math.random() < 0.45) spawnPetal(isOpen ? 270 : 50, Math.random() * height);
+        }, 450);
+    </script>
+</body>
+</html>

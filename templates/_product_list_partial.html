@@ -1,0 +1,47 @@
+<!-- TIÊU ĐỀ KHU VỰC SẢN PHẨM -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+    <h2 class="mb-0">
+        {% if search_query or selected_category %}
+            Kết quả tìm kiếm
+            <small class="fs-6 text-muted ms-2">
+                ({{ products|length }} sản phẩm{% if search_query %} cho "{{ search_query }}"{% endif %})
+            </small>
+        {% else %}
+            Sản phẩm mới nhất
+        {% endif %}
+    </h2>
+    {% if search_query or selected_category %}
+    <button type="button" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 btn-clear-filters" id="btnClearFilters">
+        ✕ Xóa bộ lọc
+    </button>
+    {% endif %}
+</div>
+
+<!-- DANH SÁCH SẢN PHẨM -->
+<div class="row row-cols-1 row-cols-md-4 g-4" id="productListGrid">
+    {% for product in products %}
+    <div class="col product-item-col" data-name="{{ product.name|lower }}" data-cat="{{ product.category_id or '' }}">
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none text-reset">
+            <div class="card h-100 shadow-sm">
+                {% if product.thumbnail %}
+                <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" class="card-img-top product-card-image" alt="{{ product.name }}">
+                {% else %}
+                <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
+                {% endif %}
+                <div class="card-body">
+                    {% if product.category %}
+                    <span class="badge bg-light text-dark border mb-1" style="font-size:0.75rem;">{{ product.category.name }}</span>
+                    {% endif %}
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-danger fw-bold mb-0">{{ "{:,.0f}".format(product.price) }} đ</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <p class="text-muted fs-5 mb-3">Không tìm thấy sản phẩm nào phù hợp.</p>
+        <button type="button" class="btn btn-primary rounded-pill px-4 btn-clear-filters">Xem tất cả sản phẩm</button>
+    </div>
+    {% endfor %}
+</div>

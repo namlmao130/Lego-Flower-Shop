@@ -1,0 +1,742 @@
+/* ===== Bảng màu sang trọng: navy đậm + ánh vàng gold + hoa pastel ===== */
+:root {
+    --lego-bg: #FBF8F2;      /* nền ngà nhẹ */
+    --lego-ink: #21243D;     /* navy đậm - chữ chính */
+    --lego-navy: #1B2140;    /* navy cho navbar/hero */
+    --lego-gold: #C9A227;    /* vàng gold - điểm nhấn chính */
+    --lego-gold-light: #E9C766;
+    --petal-blue: #A9C7E8;
+    --petal-cream: #F3EBDA;
+    --petal-sun: #E8B84B;
+}
+
+body {
+    color: var(--lego-ink);
+    font-family: 'Nunito', -apple-system, sans-serif;
+    background: linear-gradient(120deg,
+        #FF4D4D 0%,     /* đỏ */
+        #FF9F45 14%,    /* cam */
+        #FFD93D 28%,    /* vàng */
+        #4CD964 42%,    /* xanh lá */
+        #4DA6FF 56%,    /* xanh dương */
+        #6C5CE7 70%,    /* chàm */
+        #C263F0 84%,    /* tím */
+        #FF4D4D 100%);  /* quay lại đỏ cho mượt vòng lặp */
+    background-size: 400% 400%;
+    animation: bgFlow 18s ease infinite;
+}
+
+@keyframes bgFlow {
+    0%   { background-position: 0% 50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+h1, h2, h3, .hero-title {
+    font-family: 'Playfair Display', serif;
+}
+
+.navbar-brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+}
+
+.rainbow-brand {
+    background: linear-gradient(
+        90deg,
+        #d41414 0%,
+        #e87500 16%,
+        #c9a600 32%,
+        #168a2f 48%,
+        #1264b3 64%,
+        #3f27a8 80%,
+        #8c168f 100%
+    );
+    background-size: 300% 100%;
+    background-position: 0% 50%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: rainbowBrandFlow 5s linear infinite;
+}
+
+@keyframes rainbowBrandFlow {
+    from { background-position: 0% 50%; }
+    to { background-position: 300% 50%; }
+}
+
+.card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+/* ===== Thanh điều hướng — frosted glass ===== */
+.shop-navbar {
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 2px solid rgba(201, 162, 39, 0.5);
+}
+.shop-navbar .navbar-brand {
+    color: var(--lego-gold-light) !important;
+}
+.shop-navbar .nav-link {
+    color: #EDE6D6 !important;
+    font-weight: 600;
+}
+.shop-navbar .nav-link:hover {
+    color: var(--lego-gold) !important;
+}
+
+/* ===== Hàng ngôi sao lấp lánh ===== */
+.stud-row {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}
+.stud {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--lego-gold-light);
+    opacity: 0.8;
+    flex: 0 0 auto;
+    align-self: center;
+}
+.stud:nth-child(3n) { opacity: 0.4; transform: translateY(-4px); }
+.stud:nth-child(5n) { opacity: 1; transform: scale(1.6); }
+
+/* ===== Hero trang chủ — frosted glass ===== */
+.hero-box {
+    position: relative;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 24px;
+    overflow: hidden;
+    padding: 4.5rem 2rem;
+    text-align: center;
+    color: #F3EBDA;
+}
+.hero-box > * {
+    position: relative;
+    z-index: 1;
+}
+.hero-title {
+    color: var(--lego-gold-light);
+}
+
+.hero-card {
+    position: absolute;
+    width: 220px;
+    height: 350px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    color: #1c1917;
+    text-decoration: none;
+    border: 3px solid transparent;
+    background:
+        linear-gradient(#faf9f3, #faf9f3) padding-box,
+        linear-gradient(
+            90deg,
+            #d41414 0%,
+            #e87500 16%,
+            #c9a600 32%,
+            #168a2f 48%,
+            #1264b3 64%,
+            #3f27a8 80%,
+            #8c168f 100%
+        ) border-box;
+    background-size: 100% 100%, 300% 100%;
+    animation: heroCardRainbowFrame 5s linear infinite;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 10px 24px rgba(28, 25, 23, 0.14);
+    transition: box-shadow .25s ease, border-color .25s ease;
+}
+
+.hero-card:hover {
+    box-shadow:
+        0 0 18px rgba(255, 241, 40, 0.85),
+        0 0 42px rgba(255, 145, 42, 0.62),
+        0 0 78px rgba(91, 116, 255, 0.42),
+        0 20px 38px rgba(28, 25, 23, 0.3);
+}
+
+@keyframes heroCardRainbowFrame {
+    from { background-position: 0 0, 0% 50%; }
+    to { background-position: 0 0, 300% 50%; }
+}
+
+.hero-card img {
+    width: 100%;
+    height: 230px;
+    object-fit: contain;
+    transition: transform .3s ease, filter .3s ease;
+}
+
+.hero-card:hover img {
+    transform: scale(1.08);
+    filter: brightness(1.08);
+}
+
+.hero-card strong {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: .95rem;
+    line-height: 1.2;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.hero-card-price {
+    font-family: monospace;
+    font-size: .72rem;
+}
+
+.hero-card-price {
+    color: #a61b1b;
+    font-weight: 700;
+}
+
+.hero-card-placeholder {
+    height: 230px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #777;
+}
+
+/* ===== Nút bấm — viền vàng gold thanh lịch ===== */
+.btn {
+    border-radius: 999px !important;
+    font-weight: 700;
+}
+.btn-primary {
+    background-color: var(--lego-gold) !important;
+    border-color: var(--lego-gold) !important;
+    color: var(--lego-navy) !important;
+}
+.btn-primary:hover {
+    background-color: var(--lego-gold-light) !important;
+    border-color: var(--lego-gold-light) !important;
+    color: var(--lego-navy) !important;
+}
+.btn-success {
+    background-color: var(--lego-navy) !important;
+    border-color: var(--lego-navy) !important;
+}
+.btn-warning {
+    background-color: var(--petal-sun) !important;
+    border-color: var(--petal-sun) !important;
+    color: var(--lego-ink) !important;
+}
+.btn-danger {
+    background-color: #B5495B !important;
+    border-color: #B5495B !important;
+}
+.btn-outline-primary {
+    color: var(--lego-navy) !important;
+    border-color: var(--lego-gold) !important;
+}
+.btn-outline-primary:hover {
+    background-color: var(--lego-gold) !important;
+    color: var(--lego-navy) !important;
+}
+
+/* ===== Thẻ sản phẩm — nền ngà, viền vàng mảnh khi hover ===== */
+.card {
+    border: 1px solid #EDE6D6 !important;
+    border-radius: 16px !important;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(33,36,61,0.08);
+    transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 22px rgba(33,36,61,0.16);
+    border-color: var(--lego-gold) !important;
+    cursor: pointer;
+}
+.card-img-top {
+    border-bottom: 1px solid var(--petal-cream);
+}
+
+.product-card-image {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+    object-fit: contain;
+    background: #fff;
+}
+
+.product-detail-media {
+    width: 100%;
+    height: 450px;
+    object-fit: contain;
+    background: #fff;
+}
+
+.badge.bg-info {
+    background-color: var(--lego-navy) !important;
+    border-radius: 999px;
+}
+
+.list-group-item.active {
+    background-color: var(--lego-navy) !important;
+    border-color: var(--lego-navy) !important;
+}
+
+/* ===== Sidebar danh mục kiểu YouTube ===== */
+.sidebar-menu {
+    background: var(--lego-navy);
+    color: #EDE6D6;
+    width: 280px;
+}
+.sidebar-menu .offcanvas-title {
+    color: var(--lego-gold-light);
+    font-family: 'Playfair Display', serif;
+}
+.sidebar-menu .list-group-item {
+    background: transparent;
+    color: #EDE6D6;
+    border: none;
+    padding: 10px 20px;
+    font-weight: 600;
+}
+.sidebar-menu .list-group-item:hover {
+    background: rgba(201,162,39,0.15);
+    color: var(--lego-gold-light);
+}
+/* ===== Hiệu ứng chuyển ảnh/video mượt hơn trong carousel ===== */
+.product-carousel .carousel-item {
+    transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+}
+.product-carousel .carousel-item-next,
+.product-carousel .carousel-item-prev {
+    transform: scale(0.97);
+}
+.product-carousel .carousel-item.active {
+    transform: scale(1);
+}
+
+/* ===== Sidebar mở mượt hơn + các mục trượt vào lần lượt ===== */
+.offcanvas.sidebar-menu {
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.sidebar-menu .list-group-item {
+    opacity: 0;
+}
+.sidebar-menu.sidebar-animate .list-group-item {
+    animation: sidebarItemIn 0.4s ease forwards;
+}
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(1) { animation-delay: 0.06s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(2) { animation-delay: 0.12s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(3) { animation-delay: 0.18s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(4) { animation-delay: 0.24s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(5) { animation-delay: 0.30s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(6) { animation-delay: 0.36s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(7) { animation-delay: 0.42s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(8) { animation-delay: 0.48s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(9) { animation-delay: 0.54s; }
+.sidebar-menu.sidebar-animate .list-group-item:nth-child(10) { animation-delay: 0.60s; }
+
+@keyframes sidebarItemIn {
+    from { opacity: 0; transform: translateX(-18px); }
+    to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ===== Khung trắng bọc thông tin sản phẩm (mô tả, giá...) ===== */
+.product-info-box {
+    background: #fff;
+    border-radius: 18px;
+    padding: 1.75rem;
+    box-shadow: 0 4px 14px rgba(33,36,61,0.08);
+}
+
+.contact-box {
+    margin-top: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--petal-cream);
+    border-radius: 14px;
+    border: 1px dashed var(--lego-gold);
+}
+
+/* ===== Nút mũi tên carousel — hình tròn, viền đen nhạt ===== */
+.product-carousel .carousel-control-prev,
+.product-carousel .carousel-control-next {
+    width: 48px;
+    height: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 1;
+}
+.product-carousel .carousel-control-prev-icon,
+.product-carousel .carousel-control-next-icon {
+    width: 44px;
+    height: 44px;
+    background-color: rgba(0,0,0,0.35);
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 50%;
+    background-size: 55% 55%;
+}
+.product-carousel .carousel-control-prev-icon:hover,
+.product-carousel .carousel-control-next-icon:hover {
+    background-color: rgba(0,0,0,0.55);
+}
+
+footer.bg-dark {
+    background: var(--lego-navy) !important;
+}
+
+/* ================================================= */
+/* CANVAS CÁNH HOA BAY                               */
+/* ================================================= */
+#petalCanvas {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 999;
+}
+
+/* ================================================= */
+/* ROSE TOOLBAR — THANH CÔNG CỤ HOA HỒNG BÊN TRÁI   */
+/* ================================================= */
+.rose-toolbar {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 270px;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    box-shadow: 12px 0 40px rgba(225, 29, 72, 0.25), inset -1px 0 0 rgba(244, 63, 94, 0.2);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 50px 24px 20px;
+    transform: translateX(-215px);
+    transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toolbar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(225, 29, 72, 0.2);
+}
+
+.toolbar-logo {
+    width: 38px;
+    height: 38px;
+    background: rgba(136, 19, 55, 0.5);
+    border: 1px solid rgba(244, 63, 94, 0.5);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.toolbar-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.toolbar-subtitle {
+    font-size: 11px;
+    color: rgba(253, 164, 175, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.toolbar-nav {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* Override Bootstrap .nav-item cho rose toolbar */
+.rose-toolbar .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #d4d4d8;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+}
+
+.rose-toolbar .nav-item:hover,
+.rose-toolbar .nav-item.active {
+    background: rgba(136, 19, 55, 0.45);
+    color: #fff;
+    border-color: rgba(225, 29, 72, 0.4);
+}
+
+.toolbar-footer {
+    font-size: 12px;
+    color: #71717a;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ================================================= */
+/* DẢI ĐÓA HOA HỒNG BÊN PHẢI TOOLBAR                */
+/* ================================================= */
+.rose-vine-border {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: -24px;
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    filter: drop-shadow(0 0 12px rgba(225, 29, 72, 0.65));
+    pointer-events: auto;
+}
+
+.rose-item {
+    cursor: pointer;
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s;
+}
+
+.rose-item:hover {
+    transform: scale(1.3) rotate(10deg);
+    filter: drop-shadow(0 0 18px rgba(244, 63, 94, 0.9));
+}
+
+.drag-handle-rose {
+    cursor: grab;
+    padding: 4px;
+    border-radius: 50%;
+    background: rgba(30, 10, 15, 0.9);
+    border: 1.5px solid rgba(244, 63, 94, 0.8);
+    animation: pulseGlow 2.5s infinite ease-in-out;
+    touch-action: none;
+    user-select: none;
+}
+
+.drag-handle-rose:active {
+    cursor: grabbing;
+    transform: scale(1.15);
+}
+
+@keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 12px rgba(225, 29, 72, 0.5); }
+    50%       { box-shadow: 0 0 24px rgba(244, 63, 94, 0.95); }
+}
+
+/* ===== Nút điều hướng Carousel dạng Pill (PREV / NEXT) ===== */
+.hero-carousel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 22px;
+    border-radius: 9999px;
+    border: 1.5px solid #1a1a1a;
+    background-color: rgba(250, 248, 245, 0.85);
+    color: #1a1a1a;
+    font-family: 'Nunito', -apple-system, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    outline: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.hero-carousel-btn:hover {
+    background-color: #1a1a1a;
+    color: #ffffff;
+    border-color: #1a1a1a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.hero-carousel-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+/* ===== Khung tìm kiếm & lọc danh mục ===== */
+.search-filter-box {
+    background: rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 20px;
+    padding: 1.35rem 1.6rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.search-bar-wrapper {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border-radius: 9999px;
+    padding: 4px 6px 4px 18px;
+    border: 1.5px solid rgba(33, 36, 61, 0.15);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.25s ease;
+}
+
+.search-bar-wrapper:focus-within {
+    border-color: #21243D;
+    box-shadow: 0 4px 16px rgba(33, 36, 61, 0.18);
+}
+
+.search-icon {
+    font-size: 1.1rem;
+    margin-right: 10px;
+    color: #8c857b;
+    user-select: none;
+    line-height: 1;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 0.95rem;
+    font-family: 'Nunito', -apple-system, sans-serif;
+    font-weight: 600;
+    color: #21243D;
+    background: transparent;
+    padding: 6px 0;
+}
+
+.search-input::placeholder {
+    color: #9a948b;
+    font-weight: 500;
+}
+
+.clear-search-btn {
+    color: #8c857b;
+    text-decoration: none;
+    font-size: 1.35rem;
+    padding: 0 12px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+}
+
+.clear-search-btn:hover {
+    color: #d41414;
+}
+
+.search-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 24px;
+    border-radius: 9999px;
+    border: none;
+    background: #21243D;
+    color: #ffffff;
+    font-family: 'Nunito', -apple-system, sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.search-btn:hover {
+    background: #000000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.category-filter-area {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1rem;
+    padding-top: 0.8rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.category-filter-label {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #21243D;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 4px;
+}
+
+.category-pills-list {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.category-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 16px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(33, 36, 61, 0.15);
+    background: rgba(255, 255, 255, 0.75);
+    color: #21243D;
+    font-family: 'Nunito', -apple-system, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.category-pill-btn:hover {
+    background: #ffffff;
+    color: #000000;
+    border-color: #21243D;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.category-pill-btn.active {
+    background: #21243D;
+    color: #ffffff;
+    border-color: #21243D;
+    box-shadow: 0 3px 10px rgba(33, 36, 61, 0.25);
+}
+
+

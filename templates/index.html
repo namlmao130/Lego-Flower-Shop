@@ -1,0 +1,487 @@
+{% extends "base.html" %}
+{% block title %}Trang chủ - My Shop{% endblock %}
+
+{% block content %}
+<div class="hero-box mb-5">
+    <div class="row align-items-center g-0" style="min-height: 320px;">
+
+        <!-- Cột trái: Text hero -->
+        <div class="col-12 col-lg-5 d-flex flex-column justify-content-center" style="position:relative; z-index:2;">
+            <p class="mb-2 text-uppercase" style="letter-spacing:3px; font-size:0.85rem; font-weight:800; background:linear-gradient(90deg, #d41414 0%, #e87500 16%, #c9a600 32%, #168a2f 48%, #1264b3 64%, #3f27a8 80%, #8c168f 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;">Lego Flower Bouquet</p>
+            <p class="fs-5 mb-4" style="color:#12100d;">Bộ sưu tập hoa Lego cao cấp — món quà tinh tế cho mọi dịp đặc biệt</p>
+            <div>
+                <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">Khám phá bộ sưu tập</a>
+            </div>
+        </div>
+
+        <!-- Cột phải: Focus Carousel -->
+        <div class="col-12 col-lg-7 d-flex flex-column align-items-center justify-content-center mt-4 mt-lg-0">
+
+            <!-- Stage -->
+            <div style="position:relative; width:100%; max-width:600px; height:400px; display:flex; align-items:center; justify-content:center; perspective:1100px; overflow:hidden;">
+
+                <!-- Viewfinder frame -->
+                <div style="position:absolute; width:250px; height:390px; border:2px solid #f6f6b5e4; pointer-events:none; z-index:30;">
+                    <div style="position:absolute;top:-6px;left:-6px;width:6px;height:6px;background:#fff128;"></div>
+                    <div style="position:absolute;top:-6px;right:-6px;width:6px;height:6px;background:#fff128;"></div>
+                    <div style="position:absolute;bottom:-6px;left:-6px;width:6px;height:6px;background:#fff128;"></div>
+                    <div style="position:absolute;bottom:-6px;right:-6px;width:6px;height:6px;background:#fff128;"></div>
+                </div>
+
+                <!-- Cards track -->
+                <div id="heroCardsTrack" style="position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                    {% for product in carousel_products %}
+                    <a class="hero-card" data-hidx="{{ loop.index0 }}"
+                       href="{{ url_for('product_detail', product_id=product.id) }}">
+                        {% if product.thumbnail %}
+                        <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" alt="{{ product.name }}">
+                        {% else %}
+                        <span class="hero-card-placeholder">Chưa có ảnh</span>
+                        {% endif %}
+                        <strong>{{ product.name }}</strong>
+                        <span class="hero-card-price">{{ "{:,.0f}".format(product.price) }} đ</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Controls -->
+            <div class="d-flex flex-column align-items-center justify-content-center mt-3 w-100">
+                <div class="d-flex align-items-center justify-content-center gap-3">
+                    <button id="heroPrevBtn" class="hero-carousel-btn" type="button" aria-label="Previous">&larr; PREV</button>
+                    <button id="heroNextBtn" class="hero-carousel-btn" type="button" aria-label="Next">NEXT &rarr;</button>
+                </div>
+                <div class="mt-2">
+                    <button id="heroAutoBtn" style="font-size:10px;font-family:monospace;color:#a89e8c;background:transparent;border:none;cursor:pointer;letter-spacing:1px;color:#0c1116">⏸ AUTO</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes heroPulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+    .hero-carousel-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 6px 22px;
+        border-radius: 9999px;
+        border: 1.5px solid #1a1a1a;
+        background-color: rgba(250, 248, 245, 0.85);
+        color: #1a1a1a;
+        font-family: 'Nunito', -apple-system, sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+        outline: none;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .hero-carousel-btn:hover {
+        background-color: #1a1a1a;
+        color: #ffffff;
+        border-color: #1a1a1a;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-carousel-btn:active {
+        transform: translateY(0);
+        box-shadow: none;
+    }
+
+    /* ===== Khung tìm kiếm & lọc danh mục ===== */
+    .search-filter-box {
+        background: rgba(255, 255, 255, 0.22);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 20px;
+        padding: 1.35rem 1.6rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .search-bar-wrapper {
+        display: flex;
+        align-items: center;
+        background: #ffffff;
+        border-radius: 9999px;
+        padding: 4px 6px 4px 18px;
+        border: 1.5px solid rgba(33, 36, 61, 0.15);
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+        transition: all 0.25s ease;
+    }
+
+    .search-bar-wrapper:focus-within {
+        border-color: #21243D;
+        box-shadow: 0 4px 16px rgba(33, 36, 61, 0.18);
+    }
+
+    .search-icon {
+        font-size: 1.1rem;
+        margin-right: 10px;
+        color: #8c857b;
+        user-select: none;
+        line-height: 1;
+    }
+
+    .search-input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 0.95rem;
+        font-family: 'Nunito', -apple-system, sans-serif;
+        font-weight: 600;
+        color: #21243D;
+        background: transparent;
+        padding: 6px 0;
+    }
+
+    .search-input::placeholder {
+        color: #9a948b;
+        font-weight: 500;
+    }
+
+    .clear-search-btn {
+        color: #8c857b;
+        text-decoration: none;
+        font-size: 1.35rem;
+        padding: 0 12px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        transition: color 0.2s ease;
+    }
+
+    .clear-search-btn:hover {
+        color: #d41414;
+    }
+
+    .search-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px 24px;
+        border-radius: 9999px;
+        border: none;
+        background: #21243D;
+        color: #ffffff;
+        font-family: 'Nunito', -apple-system, sans-serif;
+        font-size: 0.9rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .search-btn:hover {
+        background: #000000;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .category-filter-area {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 1rem;
+        padding-top: 0.8rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .category-filter-label {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #21243D;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-right: 4px;
+    }
+
+    .category-pills-list {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .category-pill-btn {
+        display: inline-flex;
+        align-items: center;
+        padding: 5px 16px;
+        border-radius: 9999px;
+        border: 1.5px solid rgba(33, 36, 61, 0.15);
+        background: rgba(255, 255, 255, 0.75);
+        color: #21243D;
+        font-family: 'Nunito', -apple-system, sans-serif;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .category-pill-btn:hover {
+        background: #ffffff;
+        color: #000000;
+        border-color: #21243D;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .category-pill-btn.active {
+        background: #21243D;
+        color: #ffffff;
+        border-color: #21243D;
+        box-shadow: 0 3px 10px rgba(33, 36, 61, 0.25);
+    }
+</style>
+
+<script>
+(function () {
+    const hCards = Array.from(document.querySelectorAll('.hero-card'));
+    const hTotal = hCards.length;
+    const hSpacing = 235;
+    let hIdx = 1;
+    let hAuto = true;
+    let hTimer = null;
+
+    if (!hTotal) return;
+
+    function hUpdate(animate) {
+        hCards.forEach((card, i) => {
+            let offset = (i - hIdx) % hTotal;
+            if (offset < -Math.floor(hTotal / 2)) offset += hTotal;
+            if (offset > Math.floor((hTotal - 1) / 2)) offset -= hTotal;
+            const abs = Math.abs(offset);
+            const scale = offset === 0 ? 1.06 : Math.max(0.78, 1 - abs * 0.12);
+            const opacity = abs > 2 ? 0 : (offset === 0 ? 1 : Math.max(0.3, 1 - abs * 0.3));
+            card.style.transition = animate ? 'transform .5s cubic-bezier(.25,1,.5,1), opacity .4s ease, filter .4s ease' : 'none';
+            card.style.transform = `translateX(${offset * hSpacing}px) scale(${scale})`;
+            card.style.zIndex = 20 - abs;
+            card.style.opacity = opacity;
+            card.style.filter = offset === 0 ? 'none' : `blur(${abs * 0.5}px)`;
+            card.style.pointerEvents = abs > 1.5 ? 'none' : 'auto';
+        });
+    }
+
+    function hNext() { hIdx = (hIdx + 1) % hTotal; hUpdate(true); }
+    function hPrev() { hIdx = (hIdx - 1 + hTotal) % hTotal; hUpdate(true); }
+    function hStartAuto() { hTimer = setInterval(hNext, 2800); }
+    function hStopAuto() { clearInterval(hTimer); hTimer = null; }
+    function hReset() { if (hAuto) { hStopAuto(); hStartAuto(); } }
+
+    const prevBtn = document.getElementById('heroPrevBtn');
+    const nextBtn = document.getElementById('heroNextBtn');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            hPrev();
+            hReset();
+        });
+    }
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            hNext();
+            hReset();
+        });
+    }
+
+    document.getElementById('heroAutoBtn').addEventListener('click', () => {
+        hAuto = !hAuto;
+        document.getElementById('heroAutoBtn').textContent = hAuto ? '⏸ AUTO' : '▶ AUTO';
+        hAuto ? hStartAuto() : hStopAuto();
+    });
+
+    hCards.forEach((card, i) => {
+        card.addEventListener('click', () => { hIdx = i; hUpdate(true); hReset(); });
+    });
+
+    // Swipe
+    let hTouchX = 0;
+    const hTrack = document.getElementById('heroCardsTrack');
+    hTrack.addEventListener('touchstart', e => { hTouchX = e.touches[0].clientX; }, { passive: true });
+    hTrack.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - hTouchX;
+        if (dx > 40) { hPrev(); hReset(); }
+        if (dx < -40) { hNext(); hReset(); }
+    });
+
+    hUpdate(false);
+    hStartAuto();
+})();
+</script>
+
+<!-- ============================================ -->
+<!--   PHẦN TÌM KIẾM SẢN PHẨM & LỌC DANH MỤC     -->
+<!-- ============================================ -->
+<div class="search-filter-box mb-5">
+    <form action="{{ url_for('index') }}" method="GET" class="search-form" id="searchFilterForm">
+        <!-- Ô tìm kiếm từ khóa -->
+        <div class="search-bar-wrapper">
+            <span class="search-icon">🔍</span>
+            <input type="text" name="q" id="productSearchInput" class="search-input" 
+                   placeholder="Tìm kiếm sản phẩm hoa Lego..." 
+                   value="{{ search_query or '' }}" autocomplete="off">
+            <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Xóa từ khóa" 
+                    style="background:none;border:none;cursor:pointer;display:{% if search_query %}flex{% else %}none{% endif %};">&times;</button>
+            <button type="submit" class="search-btn">Tìm kiếm</button>
+        </div>
+
+        <!-- Thanh lọc theo danh mục -->
+        <div class="category-filter-area">
+            <span class="category-filter-label">🏷️ Danh mục:</span>
+            <div class="category-pills-list">
+                <a href="{{ url_for('index', q=search_query if search_query else None) }}" 
+                   class="category-pill-btn {% if not selected_category %}active{% endif %}"
+                   data-category="">
+                   Tất cả
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('index', category=cat.id, q=search_query if search_query else None) }}" 
+                   class="category-pill-btn {% if selected_category == cat.id %}active{% endif %}"
+                   data-category="{{ cat.id }}">
+                   {{ cat.name }}
+                </a>
+                {% endfor %}
+            </div>
+            <!-- Giữ category đã chọn nếu người dùng bấm nút tìm kiếm qua ô input -->
+            <input type="hidden" name="category" id="categoryHiddenInput" value="{{ selected_category or '' }}">
+        </div>
+    </form>
+</div>
+
+<!-- KHU VỰC SẢN PHẨM PHÍA DƯỚI (CHỈ LOAD LẠI PHẦN NÀY KHI TÌM KIẾM HOẶC LỌC) -->
+<div id="productsSectionContainer">
+    {% include "_product_list_partial.html" %}
+</div>
+
+<script>
+(function () {
+    const searchForm = document.getElementById('searchFilterForm');
+    const searchInput = document.getElementById('productSearchInput');
+    const categoryHidden = document.getElementById('categoryHiddenInput');
+    const categoryPills = document.querySelectorAll('.category-pill-btn');
+    const productsContainer = document.getElementById('productsSectionContainer');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+    let currentCategory = '{{ selected_category or "" }}';
+    let debounceTimer = null;
+
+    function fetchFilteredProducts(q, categoryId) {
+        if (!productsContainer) return;
+        productsContainer.style.transition = 'opacity 0.2s ease';
+        productsContainer.style.opacity = '0.4';
+
+        const params = new URLSearchParams();
+        if (q && q.trim()) params.set('q', q.trim());
+        if (categoryId) params.set('category', categoryId);
+        params.set('ajax', '1');
+
+        fetch(`/?${params.toString()}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(res => {
+            if (!res.ok) throw new Error('Network error');
+            return res.text();
+        })
+        .then(html => {
+            productsContainer.innerHTML = html;
+            productsContainer.style.opacity = '1';
+
+            // Cập nhật URL trình duyệt (không reload trang và không ảnh hưởng carousel ở trên)
+            params.delete('ajax');
+            const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+            window.history.replaceState({}, '', newUrl);
+
+            // Ẩn/hiện nút xóa từ khóa
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = (q && q.trim()) ? 'flex' : 'none';
+            }
+        })
+        .catch(err => {
+            console.error('Lỗi khi tải danh sách sản phẩm:', err);
+            productsContainer.style.opacity = '1';
+        });
+    }
+
+    // Submit form tìm kiếm
+    if (searchForm) {
+        searchForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            clearTimeout(debounceTimer);
+            fetchFilteredProducts(searchInput.value, currentCategory);
+        });
+    }
+
+    // Tự động tìm kiếm tức thì khi gõ từ khóa (debounce 300ms)
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            if (clearSearchBtn) {
+                clearSearchBtn.style.display = this.value.trim() ? 'flex' : 'none';
+            }
+            debounceTimer = setTimeout(() => {
+                fetchFilteredProducts(searchInput.value, currentCategory);
+            }, 300);
+        });
+    }
+
+    // Nút xóa từ khóa (x) trong ô tìm kiếm
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            searchInput.value = '';
+            clearSearchBtn.style.display = 'none';
+            fetchFilteredProducts('', currentCategory);
+            searchInput.focus();
+        });
+    }
+
+    // Lọc theo danh mục khi click pill
+    categoryPills.forEach(pill => {
+        pill.addEventListener('click', function (e) {
+            e.preventDefault();
+            const catId = this.dataset.category || '';
+            currentCategory = catId;
+            if (categoryHidden) categoryHidden.value = catId;
+
+            categoryPills.forEach(p => p.classList.remove('active'));
+            this.classList.add('active');
+
+            fetchFilteredProducts(searchInput ? searchInput.value : '', currentCategory);
+        });
+    });
+
+    // Bắt sự kiện click nút "Xóa bộ lọc" bên trong container sản phẩm
+    if (productsContainer) {
+        productsContainer.addEventListener('click', function (e) {
+            if (e.target.closest('.btn-clear-filters')) {
+                e.preventDefault();
+                if (searchInput) searchInput.value = '';
+                currentCategory = '';
+                if (categoryHidden) categoryHidden.value = '';
+                if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+
+                categoryPills.forEach(p => {
+                    if (!p.dataset.category) p.classList.add('active');
+                    else p.classList.remove('active');
+                });
+
+                fetchFilteredProducts('', '');
+            }
+        });
+    }
+})();
+</script>
+{% endblock %}

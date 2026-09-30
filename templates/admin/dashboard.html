@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .product-checkbox, #selectAllCheckbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            cursor: pointer;
+        }
+        tr.row-selected {
+            background-color: #fff3cd !important;
+        }
+        .table tbody tr {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand">🛠️ Admin - Quản lý sản phẩm</span>
+            <div>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2" target="_blank">🌐 Xem trang web</a>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm me-2">Danh mục</a>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">Đăng xuất</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-4">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category=='error' else category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- THANH TÌM KIẾM & BỘ LỌC ADMIN -->
+        <div class="card mb-4 shadow-sm border-0 bg-light">
+            <div class="card-body p-3">
+                <form method="GET" action="{{ url_for('admin_dashboard') }}" class="row g-2 align-items-center" id="adminSearchForm">
+                    <div class="col-12 col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0">🔍</span>
+                            <input type="text" name="q" id="adminSearchInput" class="form-control border-start-0" 
+                                   placeholder="Tìm kiếm sản phẩm theo tên..." 
+                                   value="{{ search_query or '' }}" autocomplete="off">
+                            {% if search_query %}
+                            <a href="{{ url_for('admin_dashboard', category=selected_category if selected_category else None) }}" class="btn btn-outline-secondary" title="Xóa từ khóa">&times;</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <select name="category" id="adminCategorySelect" class="form-select">
+                            <option value="">-- Tất cả danh mục --</option>
+                            {% for cat in categories %}
+                            <option value="{{ cat.id }}" {% if selected_category == cat.id %}selected{% endif %}>{{ cat.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-3">Tìm kiếm</button>
+                        {% if search_query or selected_category %}
+                        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">Xóa bộ lọc</a>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_delete_multiple') }}" id="bulkDeleteForm">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <h2 class="mb-0 fs-4">
+                        Danh sách sản phẩm 
+                        <span class="badge bg-secondary fs-6 ms-1" id="visibleBadge">Hiển thị <span id="visibleCount">{{ products|length }}</span> / {{ products|length }}</span>
+                    </h2>
+                    <button type="submit" id="btnDeleteSelected" class="btn btn-danger btn-sm" disabled 
+                            onclick="return confirmBulkDelete();">
+                        🗑️ Xóa các mục đã chọn (<span id="selectedCount">0</span>)
+                    </button>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" id="btnToggleAll" class="btn btn-outline-secondary btn-sm">Chọn tất cả</button>
+                    <a href="{{ url_for('admin_add_product') }}" class="btn btn-success btn-sm">+ Thêm sản phẩm</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover bg-white align-middle" id="adminProductsTable">
+                    <thead class="table-dark">
+                        <tr>
+                            <th style="width: 45px; text-align: center;">
+                                <input type="checkbox" id="selectAllCheckbox" class="form-check-input" title="Chọn tất cả">
+                            </th>
+                            <th style="width: 80px;">Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Giá</th>
+                            <th>Tồn kho</th>
+                            <th>Danh mục</th>
+                            <th style="width: 130px;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr id="row-{{ product.id }}" class="product-row" 
+                            data-name="{{ (product.name or '') | lower }}" 
+                            data-category="{{ product.category_id or '' }}">
+                            <td style="text-align: center;">
+                                <input type="checkbox" name="product_ids" value="{{ product.id }}" class="form-check-input product-checkbox">
+                            </td>
+                            <td>
+                                {% if product.thumbnail %}
+                                <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" style="width:60px; height:60px; object-fit:cover; border-radius:6px;">
+                                {% else %}
+                                <span class="text-muted small">Không có</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold product-name-cell">{{ product.name or '(Chưa có tên)' }}</td>
+                            <td class="text-danger fw-bold">{{ "{:,.0f}".format(product.price) }} đ</td>
+                            <td>{{ product.stock }}</td>
+                            <td>
+                                {% if product.category %}
+                                <span class="badge bg-info text-dark">{{ product.category.name }}</span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn btn-sm btn-warning">Sửa</a>
+                                <button type="button" class="btn btn-sm btn-danger" onclick="deleteSingleProduct({{ product.id }}, '{{ product.name | escape }}')">Xóa</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr id="noProductsRow"><td colspan="7" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </form>
+
+        <!-- Form ẩn để xóa từng sản phẩm khi bấm nút Xóa riêng lẻ -->
+        <form id="singleDeleteForm" method="POST" style="display: none;"></form>
+    </div>
+
+    <script>
+        const selectAll = document.getElementById('selectAllCheckbox');
+        const rows = Array.from(document.querySelectorAll('.product-row'));
+        const deleteBtn = document.getElementById('btnDeleteSelected');
+        const countSpan = document.getElementById('selectedCount');
+        const visibleCountSpan = document.getElementById('visibleCount');
+        const btnToggleAll = document.getElementById('btnToggleAll');
+        const searchInput = document.getElementById('adminSearchInput');
+        const categorySelect = document.getElementById('adminCategorySelect');
+
+        // Hàm lấy danh sách các checkbox thuộc hàng đang hiển thị
+        function getVisibleCheckboxes() {
+            return rows
+                .filter(r => r.style.display !== 'none')
+                .map(r => r.querySelector('.product-checkbox'))
+                .filter(Boolean);
+        }
+
+        function updateSelection() {
+            const visibleCheckboxes = getVisibleCheckboxes();
+            const checkedBoxes = visibleCheckboxes.filter(cb => cb.checked);
+            const checkedCount = checkedBoxes.length;
+
+            if (countSpan) countSpan.textContent = checkedCount;
+            if (deleteBtn) {
+                deleteBtn.disabled = (checkedCount === 0);
+            }
+
+            if (btnToggleAll) {
+                btnToggleAll.textContent = (checkedCount === visibleCheckboxes.length && visibleCheckboxes.length > 0) ? 'Bỏ chọn tất cả' : 'Chọn tất cả';
+            }
+
+            // Đổi màu nền hàng khi được chọn
+            rows.forEach(tr => {
+                const cb = tr.querySelector('.product-checkbox');
+                if (cb && cb.checked) tr.classList.add('row-selected');
+                else tr.classList.remove('row-selected');
+            });
+
+            // Checkbox ở thead
+            if (selectAll) {
+                selectAll.checked = (visibleCheckboxes.length > 0 && checkedCount === visibleCheckboxes.length);
+                selectAll.indeterminate = (checkedCount > 0 && checkedCount < visibleCheckboxes.length);
+            }
+        }
+
+        // Chọn tất cả các hàng đang hiển thị qua checkbox thead
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                const visibleCheckboxes = getVisibleCheckboxes();
+                visibleCheckboxes.forEach(cb => cb.checked = selectAll.checked);
+                updateSelection();
+            });
+        }
+
+        // Chọn tất cả các hàng đang hiển thị qua nút bấm
+        if (btnToggleAll) {
+            btnToggleAll.addEventListener('click', function () {
+                const visibleCheckboxes = getVisibleCheckboxes();
+                const allChecked = (visibleCheckboxes.filter(cb => cb.checked).length === visibleCheckboxes.length);
+                visibleCheckboxes.forEach(cb => cb.checked = !allChecked);
+                updateSelection();
+            });
+        }
+
+        // Khi thay đổi từng checkbox
+        document.querySelectorAll('.product-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateSelection);
+        });
+
+        // Click vào hàng để tick chọn (trừ click vào nút / link)
+        rows.forEach(row => {
+            row.addEventListener('click', function (e) {
+                if (['A', 'BUTTON', 'INPUT', 'SELECT'].includes(e.target.tagName)) return;
+                const cb = this.querySelector('.product-checkbox');
+                if (cb) {
+                    cb.checked = !cb.checked;
+                    updateSelection();
+                }
+            });
+        });
+
+        // ============================================
+        // LỌC TỨC THÌ PHÍA CLIENT (REALTIME FILTER)
+        // ============================================
+        function filterRows() {
+            const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+            const selectedCat = categorySelect ? categorySelect.value : '';
+
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const name = row.dataset.name || '';
+                const cat = row.dataset.category || '';
+
+                const matchesQuery = !query || name.includes(query);
+                const matchesCat = !selectedCat || cat === selectedCat;
+
+                if (matchesQuery && matchesCat) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                    // Bỏ chọn nếu hàng bị ẩn đi
+                    const cb = row.querySelector('.product-checkbox');
+                    if (cb) cb.checked = false;
+                }
+            });
+
+            if (visibleCountSpan) visibleCountSpan.textContent = visibleCount;
+            updateSelection();
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', filterRows);
+        }
+        if (categorySelect) {
+            categorySelect.addEventListener('change', filterRows);
+        }
+
+        // Xác nhận khi xóa nhiều
+        function confirmBulkDelete() {
+            const count = getVisibleCheckboxes().filter(cb => cb.checked).length;
+            if (count === 0) return false;
+            return confirm(`Bạn có chắc chắn muốn xóa ${count} sản phẩm đã chọn? Thao tác này không thể hoàn tác!`);
+        }
+
+        // Xóa đơn lẻ
+        function deleteSingleProduct(id, name) {
+            if (confirm(`Bạn chắc chắn muốn xóa sản phẩm "${name}"?`)) {
+                const form = document.getElementById('singleDeleteForm');
+                form.action = `/admin/delete/${id}`;
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

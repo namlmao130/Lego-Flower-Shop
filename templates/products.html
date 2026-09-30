@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Sản phẩm - My Shop{% endblock %}
+
+{% block content %}
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for product in products %}
+    <div class="col">
+        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="text-decoration-none text-reset">
+            <div class="card h-100 shadow-sm">
+                {% if product.thumbnail %}
+                <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" class="card-img-top product-card-image" alt="{{ product.name }}">
+                {% else %}
+                <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-danger fw-bold mb-0">{{ "{:,.0f}".format(product.price) }} đ</p>
+                </div>
+            </div>
+        </a>
+    </div>
+    {% else %}
+    <p class="text-muted">Không có sản phẩm nào trong danh mục này.</p>
+    {% endfor %}
+</div>
+{% endblock %}

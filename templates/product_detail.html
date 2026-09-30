@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{{ product.name }} - My Shop{% endblock %}
+
+{% block content %}
+<a href="{{ url_for('products') }}" class="btn btn-link mb-3" style="text-decoration: underline; color: #dfe6ed;">&larr; Quay lại danh sách</a>
+
+<div class="row">
+    <div class="col-md-6">
+        <div id="productCarousel" class="carousel slide carousel-fade product-carousel" data-bs-interval="false">
+            <div class="carousel-inner rounded">
+                {% if product.media %}
+                    {% for m in product.media %}
+                    <div class="carousel-item {% if loop.first %}active{% endif %}">
+                        {% if m.media_type == 'video' %}
+                        <video controls class="d-block w-100 product-detail-media">
+                            <source src="{{ url_for('static', filename='uploads/' + m.filename) }}">
+                        </video>
+                        {% else %}
+                        <img src="{{ url_for('static', filename='uploads/' + m.filename) }}" class="d-block w-100 product-detail-media" alt="{{ product.name }}">
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% elif product.image %}
+                    <div class="carousel-item active">
+                        <img src="{{ url_for('static', filename='uploads/' + product.image) }}" class="d-block w-100 product-detail-media" alt="{{ product.name }}">
+                    </div>
+                {% else %}
+                    <div class="carousel-item active">
+                        <div class="product-detail-media bg-secondary text-white d-flex align-items-center justify-content-center rounded">Chưa có ảnh</div>
+                    </div>
+                {% endif %}
+            </div>
+            {% if product.media and product.media|length > 1 %}
+            <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#productCarousel" data-bs-slide="next">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="product-info-box">
+            <h1>{{ product.name }}</h1>
+            {% if product.category %}
+            <span class="badge bg-info text-light mb-2">{{ product.category.name }}</span>
+            {% endif %}
+            <h3 class="text-danger">{{ "{:,.0f}".format(product.price) }} đ</h3>
+            <p>
+                {% if product.stock > 0 %}
+                <span class="badge bg-success">Còn hàng ({{ product.stock }})</span>
+                {% else %}
+                <span class="badge bg-danger">Hết hàng</span>
+                {% endif %}
+            </p>
+            <h5>Mô tả sản phẩm</h5>
+            <p>{{ product.description or "Chưa có mô tả." }}</p>
+
+            <!-- Liên hệ đặt mua: thay nội dung bên dưới bằng SĐT/email thật của bạn khi có -->
+            <div class="contact-box">
+                <strong>📞 Liên hệ đặt mua</strong>
+                <p class="mb-0 text-muted">+84967701565 / SmartoyShop</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
