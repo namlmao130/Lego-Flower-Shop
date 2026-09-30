@@ -8,6 +8,7 @@
     --petal-blue: #A9C7E8;
     --petal-cream: #F3EBDA;
     --petal-sun: #E8B84B;
+    --navbar-height: 58px;
 }
 
 body {
@@ -78,11 +79,11 @@ h1, h2, h3, .hero-title {
     position: sticky;
     top: 0;
     z-index: 1020;
-    background: rgba(18, 14, 28, 0.52);
-    backdrop-filter: blur(22px);
-    -webkit-backdrop-filter: blur(22px);
-    border-bottom: 2px solid rgba(201, 162, 39, 0.35);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
 }
 .shop-navbar .navbar-brand {
     color: var(--lego-gold-light) !important;
@@ -94,7 +95,8 @@ h1, h2, h3, .hero-title {
 }
 .shop-navbar .nav-link {
     color: #EDE6D6 !important;
-    font-weight: 600;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
 }
 .shop-navbar .nav-link:hover {
     color: var(--lego-gold) !important;
@@ -106,9 +108,7 @@ h1, h2, h3, .hero-title {
     justify-content: center;
     gap: 28px;
     padding: 10px 20px;
-    background: rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
+    background: transparent;
 }
 .stud {
     width: 6px;
@@ -425,7 +425,8 @@ footer.bg-dark {
 /* ================================================= */
 .rose-toolbar {
     position: fixed;
-    top: 0;
+    top: var(--navbar-height, 58px);
+    height: calc(100vh - var(--navbar-height, 58px));
     bottom: 0;
     left: 0;
     width: 270px;
@@ -433,11 +434,11 @@ footer.bg-dark {
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
     box-shadow: 12px 0 40px rgba(225, 29, 72, 0.25), inset -1px 0 0 rgba(244, 63, 94, 0.2);
-    z-index: 1000;
+    z-index: 1010;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    padding: 24px 50px 24px 20px;
+    padding: 20px 50px 20px 20px;
     transform: translateX(-215px);
     transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -529,6 +530,8 @@ footer.bg-dark {
     flex-direction: column;
     justify-content: space-around;
     align-items: center;
+    padding-top: 15px;
+    padding-bottom: 25px;
     filter: drop-shadow(0 0 12px rgba(225, 29, 72, 0.65));
     pointer-events: auto;
 }
@@ -812,6 +815,10 @@ footer.bg-dark {
     .stud-row {
         gap: 12px !important;
         padding: 6px 8px !important;
+    }
+
+    :root {
+        --navbar-height: 52px;
     }
 
     /* Ẩn hoàn toàn thanh hoa hồng bên trái khi đóng trên màn hình điện thoại */
