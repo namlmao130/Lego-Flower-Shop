@@ -846,6 +846,34 @@ footer.bg-dark {
         padding-left: 0.35rem !important;
         padding-right: 0.35rem !important;
     }
+
+    .mobile-desktop-notice {
+        display: block;
+        text-align: center;
+        padding: 8px 12px 2px 12px;
+    }
+
+    .mobile-notice-inner {
+        display: inline-block;
+        background: rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        color: #FFF9E6;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 5px 14px;
+        border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        letter-spacing: 0.2px;
+        line-height: 1.4;
+    }
+}
+
+/* ===== Banner nhắc nhở chỉ hiển thị trên mobile ===== */
+.mobile-desktop-notice {
+    display: none;
 }
 
 
