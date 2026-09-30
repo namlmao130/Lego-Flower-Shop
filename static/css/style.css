@@ -78,11 +78,11 @@ h1, h2, h3, .hero-title {
     position: sticky;
     top: 0;
     z-index: 1020;
-    background: rgba(18, 14, 28, 0.82);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-bottom: 2px solid rgba(201, 162, 39, 0.45);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    background: rgba(18, 14, 28, 0.52);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-bottom: 2px solid rgba(201, 162, 39, 0.35);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.18);
 }
 .shop-navbar .navbar-brand {
     color: var(--lego-gold-light) !important;
