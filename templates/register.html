@@ -2,40 +2,166 @@
 {% block title %}Đăng ký - Lego Flower{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-5">
-        <div class="p-4 p-md-5 rounded-4" style="background: rgba(255,255,255,0.75); border: 1.5px solid var(--lego-gold);">
-            <h3 class="text-center mb-4" style="font-family:'Playfair Display',serif; color:#21243D;">Tạo tài khoản</h3>
+<div class="row justify-content-center my-3 my-md-4">
+    <div class="col-11 col-sm-9 col-md-6 col-lg-5 col-xl-4">
+        <div class="auth-card p-4 p-md-5 rounded-4 shadow-lg">
+            <div class="text-center mb-4">
+                <div class="auth-icon mb-2">✨</div>
+                <h3 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Tạo tài khoản</h3>
+                <p class="text-muted small mb-0">Đăng ký thành viên để lưu đơn & đánh giá sản phẩm</p>
+            </div>
 
-            <form method="POST">
+            <form method="POST" id="registerForm">
                 <div class="mb-3">
-                    <label class="form-label">Họ và tên</label>
-                    <input type="text" name="full_name" class="form-control" maxlength="100"
-                           value="{{ full_name or '' }}" required autofocus>
+                    <label class="form-label fw-bold small text-dark d-flex align-items-center gap-1">
+                        <span>👤</span> Họ và tên
+                    </label>
+                    <input type="text" name="full_name" class="form-control" placeholder="Ví dụ: Nguyễn Văn Nam"
+                           maxlength="100" autocomplete="name" value="{{ full_name or '' }}" required autofocus>
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label">Số điện thoại</label>
-                    <input type="tel" name="phone" class="form-control" placeholder="0912345678"
-                           inputmode="numeric" value="{{ phone or '' }}" required>
+                    <label class="form-label fw-bold small text-dark d-flex align-items-center gap-1">
+                        <span>📱</span> Số điện thoại
+                    </label>
+                    <input type="tel" name="phone" id="registerPhone" class="form-control" placeholder="0912345678"
+                           inputmode="numeric" autocomplete="tel" maxlength="15"
+                           value="{{ phone or '' }}" required>
+                    <div class="form-text small" style="color: #6c757d;">Dùng làm tên đăng nhập chính của bạn.</div>
                 </div>
+
                 <div class="mb-3">
-                    <label class="form-label">Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" minlength="6" required>
-                    <div class="form-text">Ít nhất 6 ký tự.</div>
+                    <label class="form-label fw-bold small text-dark d-flex align-items-center gap-1">
+                        <span>🔒</span> Mật khẩu
+                    </label>
+                    <div class="input-group">
+                        <input type="password" name="password" id="regPassword" class="form-control"
+                               placeholder="Tối thiểu 6 ký tự" minlength="6" autocomplete="new-password" required>
+                        <button class="btn btn-outline-secondary toggle-password-btn" type="button"
+                                data-target="regPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
+                            <span class="eye-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div id="pwdRuleLength" class="small mt-1 text-muted">📏 Ít nhất 6 ký tự</div>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Nhập lại mật khẩu</label>
-                    <input type="password" name="password2" class="form-control" minlength="6" required>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-dark d-flex align-items-center gap-1">
+                        <span>🔒</span> Nhập lại mật khẩu
+                    </label>
+                    <div class="input-group">
+                        <input type="password" name="password2" id="regPassword2" class="form-control"
+                               placeholder="Nhập lại mật khẩu ở trên" minlength="6" autocomplete="new-password" required>
+                        <button class="btn btn-outline-secondary toggle-password-btn" type="button"
+                                data-target="regPassword2" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
+                            <span class="eye-icon">👁️</span>
+                        </button>
+                    </div>
+                    <div id="pwdMatchMsg" class="small mt-1" style="display:none;"></div>
                 </div>
-                <button type="submit" class="btn w-100" style="background: var(--lego-gold); color:#fff; border:none;">
-                    Đăng ký
+
+                <button type="submit" id="registerSubmitBtn" class="btn btn-auth w-100 py-2 fw-bold shadow-sm">
+                    <span class="btn-text">Đăng ký tài khoản</span>
                 </button>
             </form>
 
-            <p class="text-center mt-3 mb-0">
-                Đã có tài khoản? <a href="{{ url_for('login') }}" style="color: var(--lego-gold);">Đăng nhập</a>
-            </p>
+            <div class="text-center mt-4 pt-3 border-top" style="border-color: rgba(33, 36, 61, 0.1) !important;">
+                <p class="small text-muted mb-0">
+                    Đã có tài khoản? <a href="{{ url_for('login') }}" class="auth-switch-link">Đăng nhập</a>
+                </p>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Ẩn / hiện mật khẩu
+    document.querySelectorAll('.toggle-password-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var targetId = this.getAttribute('data-target');
+            var input = document.getElementById(targetId);
+            if (input) {
+                var isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                var eye = this.querySelector('.eye-icon');
+                if (eye) eye.textContent = isPassword ? '🙈' : '👁️';
+                input.focus();
+            }
+        });
+    });
+
+    // Tự động chuẩn hóa số điện thoại khi gõ/dán (chỉ giữ số và dấu +)
+    var phoneInput = document.getElementById('registerPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            var val = this.value;
+            if (val.startsWith('+')) {
+                this.value = '+' + val.slice(1).replace(/\D/g, '');
+            } else {
+                this.value = val.replace(/\D/g, '');
+            }
+        });
+    }
+
+    // Kiểm tra trực tiếp độ dài và so khớp mật khẩu ngay khi gõ
+    var p1 = document.getElementById('regPassword');
+    var p2 = document.getElementById('regPassword2');
+    var ruleLen = document.getElementById('pwdRuleLength');
+    var matchMsg = document.getElementById('pwdMatchMsg');
+
+    function checkPasswords() {
+        if (!p1 || !p2) return;
+        var v1 = p1.value;
+        var v2 = p2.value;
+
+        if (v1.length >= 6) {
+            ruleLen.className = 'small mt-1 text-success fw-bold';
+            ruleLen.innerHTML = '✓ Đã đủ độ dài (>= 6 ký tự)';
+        } else {
+            ruleLen.className = 'small mt-1 text-muted';
+            ruleLen.innerHTML = '📏 Ít nhất 6 ký tự (còn thiếu ' + (6 - v1.length) + ' ký tự)';
+        }
+
+        if (v2.length > 0) {
+            matchMsg.style.display = 'block';
+            if (v1 === v2) {
+                matchMsg.className = 'small mt-1 text-success fw-bold';
+                matchMsg.innerHTML = '✓ Mật khẩu xác nhận trùng khớp';
+            } else {
+                matchMsg.className = 'small mt-1 text-danger fw-semibold';
+                matchMsg.innerHTML = '✗ Mật khẩu xác nhận chưa khớp';
+            }
+        } else {
+            matchMsg.style.display = 'none';
+        }
+    }
+
+    if (p1 && p2) {
+        p1.addEventListener('input', checkPasswords);
+        p2.addEventListener('input', checkPasswords);
+    }
+
+    // Hiệu ứng loading nút và chống click lặp
+    var form = document.getElementById('registerForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (p1 && p2 && p1.value !== p2.value) {
+                e.preventDefault();
+                matchMsg.style.display = 'block';
+                matchMsg.className = 'small mt-1 text-danger fw-bold';
+                matchMsg.innerHTML = '✗ Hai mật khẩu không khớp nhau, vui lòng kiểm tra lại!';
+                p2.focus();
+                return;
+            }
+            var btn = document.getElementById('registerSubmitBtn');
+            if (btn && !btn.disabled) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang tạo tài khoản...';
+                form.submit();
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

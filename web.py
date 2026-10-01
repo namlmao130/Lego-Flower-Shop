@@ -201,7 +201,7 @@ def register():
         db.session.add(customer)
         db.session.commit()
 
-        login_user(customer)
+        login_user(customer, remember=True)
         flash(f'Chào mừng {customer.full_name} đã tham gia Lego Flower!', 'success')
         return redirect(url_for('index'))
 
@@ -232,10 +232,11 @@ def login():
         raw_phone = request.form.get('phone', '')
         phone = normalize_phone(raw_phone)
         password = request.form.get('password', '')
+        remember = bool(request.form.get('remember'))
 
         customer = Customer.query.filter_by(phone=phone).first()
         if customer and customer.check_password(password):
-            login_user(customer)
+            login_user(customer, remember=remember)
             next_page = request.args.get('next')
             # Chỉ redirect tới next nếu là đường dẫn nội bộ (tránh open-redirect)
             if next_page and next_page.startswith('/'):
