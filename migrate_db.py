@@ -11,6 +11,11 @@ Cách chạy:
     python migrate_db.py
 """
 import sqlite3
+import sys
+
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+
 from config import Config
 
 DB_PATH = Config.SQLALCHEMY_DATABASE_URI.replace('sqlite:///', '')
@@ -32,6 +37,14 @@ def main():
         print("✅ Đã thêm cột customer_id.")
     else:
         print("Cột customer_id đã tồn tại, bỏ qua.")
+
+    if not column_exists(cur, 'customers', 'email'):
+        print("Đang thêm cột 'email' vào bảng 'customers'...")
+        cur.execute("ALTER TABLE customers ADD COLUMN email VARCHAR(120)")
+        conn.commit()
+        print("✅ Đã thêm cột email.")
+    else:
+        print("Cột email đã tồn tại, bỏ qua.")
 
     conn.close()
 

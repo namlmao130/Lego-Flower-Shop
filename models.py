@@ -8,6 +8,7 @@ db = SQLAlchemy()
 
 # Số điện thoại VN: bắt đầu bằng 0 hoặc +84, theo sau là 9-10 chữ số
 PHONE_REGEX = re.compile(r'^(0|\+84)\d{9,10}$')
+EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
 
 def normalize_phone(raw_phone):
@@ -106,11 +107,12 @@ class Review(db.Model):
 
 
 class Customer(UserMixin, db.Model):
-    """Tài khoản khách hàng, đăng nhập bằng số điện thoại + mật khẩu (tách biệt với Admin)."""
+    """Tài khoản khách hàng, đăng nhập bằng số điện thoại hoặc email + mật khẩu (tách biệt với Admin)."""
     __tablename__ = 'customers'
 
     id = db.Column(db.Integer, primary_key=True)
     phone = db.Column(db.String(20), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), unique=True, nullable=True, index=True)
     full_name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

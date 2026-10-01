@@ -12,10 +12,10 @@
 
             <form method="POST" id="loginForm">
                 <div class="mb-3">
-                    <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại</label>
-                    <input type="tel" name="phone" id="loginPhone" class="form-control" placeholder="0912345678"
-                           inputmode="numeric" autocomplete="tel" maxlength="15"
-                           value="{{ phone or '' }}" required {% if not phone %}autofocus{% endif %}>
+                    <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại hoặc Email</label>
+                    <input type="text" name="login_identifier" id="loginIdentifier" class="form-control" placeholder="0912345678 hoặc email@example.com"
+                           autocomplete="username" maxlength="120"
+                           value="{{ login_identifier or '' }}" required {% if not login_identifier %}autofocus{% endif %}>
                 </div>
 
                 <div class="mb-3">
@@ -23,7 +23,7 @@
                     <div class="input-group">
                         <input type="password" name="password" id="loginPassword" class="form-control"
                                placeholder="Nhập mật khẩu" required autocomplete="current-password"
-                               {% if phone %}autofocus{% endif %}>
+                               {% if login_identifier %}autofocus{% endif %}>
                         <button class="btn btn-outline-secondary toggle-password-btn" type="button"
                                 data-target="loginPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
                             <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -45,6 +45,9 @@
                             Ghi nhớ đăng nhập
                         </label>
                     </div>
+                    <a href="{{ url_for('forgot_password') }}" class="small auth-switch-link text-decoration-none">
+                        Quên mật khẩu?
+                    </a>
                 </div>
 
                 <button type="submit" id="loginSubmitBtn" class="btn btn-auth w-100 py-2 fw-semibold">
@@ -87,15 +90,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Tự động làm sạch số điện thoại khi gõ/dán
-    var phoneInput = document.getElementById('loginPhone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            var val = this.value;
-            if (val.startsWith('+')) {
-                this.value = '+' + val.slice(1).replace(/\D/g, '');
-            } else {
-                this.value = val.replace(/\D/g, '');
+    // Tự động làm sạch số điện thoại nếu người dùng nhập số
+    var loginInput = document.getElementById('loginIdentifier');
+    if (loginInput) {
+        loginInput.addEventListener('blur', function() {
+            var val = this.value.trim();
+            if (val && !/[a-zA-Z@]/.test(val)) {
+                this.value = val.replace(/[\s\-.]/g, '');
             }
         });
     }

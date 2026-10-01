@@ -1,11 +1,16 @@
 import os
+import smtplib
 from functools import wraps
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
+from sqlalchemy import func
+from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
 from config import Config
-from models import db, Product, Category, Admin, ProductMedia, Review, Customer, PHONE_REGEX, normalize_phone
+from models import db, Product, Category, Admin, ProductMedia, Review, Customer, PHONE_REGEX, EMAIL_REGEX, normalize_phone
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -180,6 +185,67 @@ def products():
 #   (đăng nhập bằng số điện thoại + mật khẩu, tách biệt với tài khoản Admin)
 # ============================================
 
+def get_reset_serializer():
+    return URLSafeTimedSerializer(app.config['SECRET_KEY'])
+
+
+def send_password_reset_email(to_email, reset_url):
+    """Gửi email chứa liên kết đặt lại mật khẩu.
+    Nếu chưa cấu hình thông tin SMTP (ở môi trường local/dev), tự động in link ra Terminal."""
+    mail_username = app.config.get('MAIL_USERNAME')
+    mail_password = app.config.get('MAIL_PASSWORD')
+    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_username or 'Lego Flower <noreply@legoflower.com>'
+
+    html_content = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 28px; border: 1.5px solid #C9A227; border-radius: 16px; background: #ffffff;">
+        <div style="text-align: center; margin-bottom: 24px;">
+            <h2 style="color: #21243D; margin: 0 0 6px 0; font-size: 24px;">Lego Flower</h2>
+            <p style="color: #6c757d; font-size: 14px; margin: 0;">Khôi phục mật khẩu tài khoản</p>
+        </div>
+        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Xin chào,</p>
+        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Lego Flower liên kết với địa chỉ email <strong>{to_email}</strong>.</p>
+        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Vui lòng nhấn vào nút bên dưới để tiến hành thiết lập mật khẩu mới (liên kết có hiệu lực trong vòng 30 phút):</p>
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{reset_url}" style="display: inline-block; background: #C9A227; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 10px; font-weight: bold; font-size: 15px; letter-spacing: 0.3px;">Đặt lại mật khẩu</a>
+        </div>
+        <p style="color: #6c757d; font-size: 13px; line-height: 1.6;">Nếu nút trên không hoạt động, bạn có thể sao chép liên kết sau và dán vào thanh địa chỉ trình duyệt:<br>
+            <a href="{reset_url}" style="color: #C9A227; word-break: break-all;">{reset_url}</a>
+        </p>
+        <p style="color: #8c857b; font-size: 13px; line-height: 1.5; margin-top: 24px;">
+            <em>Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này. Mật khẩu của bạn vẫn an toàn.</em>
+        </p>
+        <hr style="border: none; border-top: 1px solid #eeeeee; margin: 24px 0 16px 0;">
+        <p style="color: #aaaaaa; font-size: 12px; text-align: center; margin: 0;">Lego Flower Shop &bull; Shop hoa Lego nghệ thuật cao cấp</p>
+    </div>
+    """
+
+    if not mail_username or not mail_password:
+        print("\n" + "="*70)
+        print(" [EMAIL SIMULATOR - DEV] RESET PASSWORD LINK:")
+        print(f" To: {to_email}")
+        print(f" Reset URL: {reset_url}")
+        print("="*70 + "\n")
+        return True, "simulated"
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = "[Lego Flower] Đặt lại mật khẩu tài khoản"
+        msg['From'] = sender
+        msg['To'] = to_email
+        msg.attach(MIMEText(html_content, 'html', 'utf-8'))
+
+        server = smtplib.SMTP(app.config.get('MAIL_SERVER'), app.config.get('MAIL_PORT'), timeout=10)
+        if app.config.get('MAIL_USE_TLS'):
+            server.starttls()
+        server.login(mail_username, mail_password)
+        server.sendmail(sender, [to_email], msg.as_string())
+        server.quit()
+        return True, "sent"
+    except Exception as ex:
+        print(f"[ERROR GỬI EMAIL] {ex}")
+        return False, str(ex)
+
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if current_user.is_authenticated and isinstance(current_user, Customer):
@@ -188,6 +254,7 @@ def register():
     if request.method == 'POST':
         full_name = request.form.get('full_name', '').strip()
         phone = normalize_phone(request.form.get('phone', ''))
+        email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
         password2 = request.form.get('password2', '')
 
@@ -198,6 +265,14 @@ def register():
             errors.append('Số điện thoại không hợp lệ (VD: 0912345678).')
         elif Customer.query.filter_by(phone=phone).first():
             errors.append('Số điện thoại này đã được đăng ký.')
+
+        if not email:
+            errors.append('Vui lòng nhập địa chỉ email.')
+        elif not EMAIL_REGEX.match(email):
+            errors.append('Địa chỉ email không đúng định dạng (VD: example@gmail.com).')
+        elif Customer.query.filter(func.lower(Customer.email) == email).first():
+            errors.append('Địa chỉ email này đã được sử dụng.')
+
         if len(password) < 6:
             errors.append('Mật khẩu phải có ít nhất 6 ký tự.')
         elif password != password2:
@@ -206,9 +281,9 @@ def register():
         if errors:
             for e in errors:
                 flash(e, 'error')
-            return render_template('register.html', full_name=full_name, phone=phone)
+            return render_template('register.html', full_name=full_name, phone=phone, email=email)
 
-        customer = Customer(phone=phone, full_name=full_name[:100])
+        customer = Customer(phone=phone, email=email, full_name=full_name[:100])
         customer.set_password(password)
         db.session.add(customer)
         db.session.commit()
@@ -246,10 +321,24 @@ def user_settings():
         action = request.form.get('action')
         if action == 'update_profile':
             full_name = request.form.get('full_name', '').strip()
+            email = request.form.get('email', '').strip().lower()
+            errors = []
             if not full_name:
-                flash('Họ và tên không được để trống.', 'error')
+                errors.append('Họ và tên không được để trống.')
+            if email:
+                if not EMAIL_REGEX.match(email):
+                    errors.append('Địa chỉ email không đúng định dạng.')
+                else:
+                    existing = Customer.query.filter(func.lower(Customer.email) == email, Customer.id != current_user.id).first()
+                    if existing:
+                        errors.append('Địa chỉ email này đã được sử dụng bởi tài khoản khác.')
+
+            if errors:
+                for e in errors:
+                    flash(e, 'error')
             else:
                 current_user.full_name = full_name[:100]
+                current_user.email = email or None
                 db.session.commit()
                 flash('Cập nhật thông tin thành công!', 'success')
             return redirect(url_for('user_settings'))
@@ -281,24 +370,91 @@ def login():
         return redirect(url_for('index'))
 
     if request.method == 'POST':
-        raw_phone = request.form.get('phone', '')
-        phone = normalize_phone(raw_phone)
+        identifier = request.form.get('login_identifier', '').strip()
         password = request.form.get('password', '')
         remember = bool(request.form.get('remember'))
 
-        customer = Customer.query.filter_by(phone=phone).first()
+        customer = None
+        if '@' in identifier:
+            customer = Customer.query.filter(func.lower(Customer.email) == identifier.lower()).first()
+        else:
+            phone = normalize_phone(identifier)
+            customer = Customer.query.filter_by(phone=phone).first()
+
         if customer and customer.check_password(password):
             login_user(customer, remember=remember)
             next_page = request.args.get('next')
-            # Chỉ redirect tới next nếu là đường dẫn nội bộ (tránh open-redirect)
             if next_page and next_page.startswith('/'):
                 return redirect(next_page)
             return redirect(url_for('index'))
         else:
-            flash('Số điện thoại hoặc mật khẩu không đúng!', 'error')
-            return render_template('login.html', phone=raw_phone.strip())
+            flash('Số điện thoại/Email hoặc mật khẩu không chính xác!', 'error')
+            return render_template('login.html', login_identifier=identifier)
 
     return render_template('login.html')
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        if not email or not EMAIL_REGEX.match(email):
+            flash('Vui lòng nhập địa chỉ email hợp lệ.', 'error')
+            return render_template('forgot_password.html', email=email)
+
+        customer = Customer.query.filter(func.lower(Customer.email) == email).first()
+        if customer:
+            serializer = get_reset_serializer()
+            token = serializer.dumps(customer.email, salt='password-reset-salt')
+            reset_url = url_for('reset_password', token=token, _external=True)
+            send_password_reset_email(customer.email, reset_url)
+
+        flash('Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (kể cả mục Spam/Thư rác).', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('forgot_password.html')
+
+
+@app.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        return redirect(url_for('index'))
+
+    serializer = get_reset_serializer()
+    try:
+        email = serializer.loads(token, salt='password-reset-salt', max_age=1800)
+    except SignatureExpired:
+        flash('Liên kết đặt lại mật khẩu đã hết hạn (chỉ có hiệu lực trong 30 phút). Vui lòng yêu cầu lại.', 'error')
+        return redirect(url_for('forgot_password'))
+    except BadTimeSignature:
+        flash('Liên kết đặt lại mật khẩu không hợp lệ.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    customer = Customer.query.filter(func.lower(Customer.email) == email.lower()).first()
+    if not customer:
+        flash('Tài khoản không tồn tại.', 'error')
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        password2 = request.form.get('password2', '')
+
+        if len(password) < 6:
+            flash('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error')
+            return render_template('reset_password.html', token=token)
+        if password != password2:
+            flash('Mật khẩu xác nhận không khớp.', 'error')
+            return render_template('reset_password.html', token=token)
+
+        customer.set_password(password)
+        db.session.commit()
+        flash('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới ngay bây giờ.', 'success')
+        return redirect(url_for('login'))
+
+    return render_template('reset_password.html', token=token)
 
 
 @app.route('/logout')
