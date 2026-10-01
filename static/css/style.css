@@ -1177,19 +1177,12 @@ input::-webkit-search-results-decoration {
 
 /* ===== Giao diện Đăng nhập & Đăng ký (Auth UI) ===== */
 .auth-card {
-    background: rgba(255, 255, 255, 0.88) !important;
+    background: rgba(255, 255, 255, 0.92) !important;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1.5px solid rgba(201, 162, 39, 0.45) !important;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+    border: 1px solid rgba(201, 162, 39, 0.35) !important;
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08) !important;
     transition: transform 0.25s ease, box-shadow 0.25s ease;
-}
-
-.auth-icon {
-    font-size: 2.2rem;
-    line-height: 1;
-    display: inline-block;
-    filter: drop-shadow(0 2px 6px rgba(201, 162, 39, 0.4));
 }
 
 .auth-card .form-control {
@@ -1203,7 +1196,7 @@ input::-webkit-search-results-decoration {
 
 .auth-card .form-control:focus {
     border-color: var(--lego-gold);
-    box-shadow: 0 0 0 0.22rem rgba(201, 162, 39, 0.22);
+    box-shadow: 0 0 0 0.2rem rgba(201, 162, 39, 0.2);
     background: #ffffff;
 }
 
@@ -1218,14 +1211,21 @@ input::-webkit-search-results-decoration {
     background: #ffffff;
     border-top-right-radius: 10px !important;
     border-bottom-right-radius: 10px !important;
-    color: #6c757d;
     padding: 0 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.2s ease;
+}
+
+.toggle-password-btn svg {
+    color: #8c857b;
+    transition: color 0.2s ease;
+}
+
+.toggle-password-btn:hover svg {
+    color: #21243D;
 }
 
 .toggle-password-btn:hover {
