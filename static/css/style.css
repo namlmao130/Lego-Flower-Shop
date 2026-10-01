@@ -815,7 +815,7 @@ footer.bg-dark {
 }
 
 /* ================================================= */
-/* DẢI ĐÓA HOA HỒNG BÊN PHẢI TOOLBAR                */
+/* DẢI ĐÁ QUÝ RUBY & HOA LEGO 3D BÊN PHẢI TOOLBAR   */
 /* ================================================= */
 .rose-vine-border {
     position: absolute;
@@ -829,39 +829,82 @@ footer.bg-dark {
     align-items: center;
     padding-top: 15px;
     padding-bottom: 25px;
-    filter: drop-shadow(0 0 12px rgba(225, 29, 72, 0.65));
     pointer-events: auto;
 }
 
+/* Dây chỉ vàng thanh mảnh nối các viên đá quý */
+.rose-vine-border::before {
+    content: '';
+    position: absolute;
+    top: 30px;
+    bottom: 35px;
+    width: 2px;
+    background: linear-gradient(180deg, 
+        rgba(201, 162, 39, 0.05) 0%, 
+        rgba(201, 162, 39, 0.45) 15%, 
+        rgba(254, 240, 138, 0.8) 50%, 
+        rgba(201, 162, 39, 0.45) 85%, 
+        rgba(201, 162, 39, 0.05) 100%);
+    box-shadow: 0 0 6px rgba(201, 162, 39, 0.35);
+    z-index: 0;
+    pointer-events: none;
+}
+
 .rose-item {
+    position: relative;
+    z-index: 1;
     cursor: pointer;
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.3s;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.25s ease;
+    filter: drop-shadow(0 3px 8px rgba(0, 0, 0, 0.45));
+}
+
+.rose-item .gem-svg {
+    display: block;
+    filter: drop-shadow(0 0 4px rgba(201, 162, 39, 0.3));
+    transition: filter 0.25s ease;
 }
 
 .rose-item:hover {
-    transform: scale(1.3) rotate(10deg);
-    filter: drop-shadow(0 0 18px rgba(244, 63, 94, 0.9));
+    transform: scale(1.22) rotate(6deg);
+    filter: drop-shadow(0 0 14px rgba(201, 162, 39, 0.85)) drop-shadow(0 0 6px rgba(225, 29, 72, 0.7));
+}
+
+.rose-item:hover .gem-svg {
+    filter: drop-shadow(0 0 8px rgba(254, 240, 138, 0.85));
 }
 
 .drag-handle-rose {
     cursor: grab;
-    padding: 4px;
+    padding: 3px;
     border-radius: 50%;
-    background: rgba(30, 10, 15, 0.9);
-    border: 1.5px solid rgba(244, 63, 94, 0.8);
-    animation: pulseGlow 2.5s infinite ease-in-out;
+    background: radial-gradient(circle, rgba(159, 18, 57, 0.85) 0%, rgba(30, 4, 12, 0.96) 100%);
+    border: 1.5px solid rgba(201, 162, 39, 0.85);
+    box-shadow: 0 0 15px rgba(201, 162, 39, 0.45), 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(254, 240, 138, 0.25);
+    animation: jewelShimmer 3.2s infinite ease-in-out;
     touch-action: none;
     user-select: none;
 }
 
-.drag-handle-rose:active {
-    cursor: grabbing;
+.drag-handle-rose:hover {
     transform: scale(1.15);
+    box-shadow: 0 0 22px rgba(201, 162, 39, 0.75), 0 0 10px rgba(244, 63, 94, 0.7), inset 0 0 12px rgba(254, 240, 138, 0.5);
 }
 
-@keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 12px rgba(225, 29, 72, 0.5); }
-    50%       { box-shadow: 0 0 24px rgba(244, 63, 94, 0.95); }
+.drag-handle-rose:active {
+    cursor: grabbing;
+    transform: scale(1.18);
+    box-shadow: 0 0 28px rgba(201, 162, 39, 0.9), 0 0 16px rgba(244, 63, 94, 0.9), inset 0 0 14px rgba(254, 240, 138, 0.7);
+}
+
+@keyframes jewelShimmer {
+    0%, 100% {
+        box-shadow: 0 0 14px rgba(201, 162, 39, 0.4), 0 4px 12px rgba(0, 0, 0, 0.6), inset 0 0 6px rgba(254, 240, 138, 0.25);
+        border-color: rgba(201, 162, 39, 0.8);
+    }
+    50% {
+        box-shadow: 0 0 24px rgba(201, 162, 39, 0.7), 0 0 12px rgba(244, 63, 94, 0.55), inset 0 0 10px rgba(254, 240, 138, 0.5);
+        border-color: #fde047;
+    }
 }
 
 /* ===== Nút điều hướng Carousel dạng Pill (PREV / NEXT) ===== */

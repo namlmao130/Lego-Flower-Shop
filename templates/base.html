@@ -130,71 +130,191 @@
             <span>● Lego Flower Shop</span>
         </div>
 
-        <!-- DẢI ĐÓA HOA HỒNG BÊN PHẢI TOOLBAR -->
+        <!-- DẢI ĐÁ QUÝ RUBY & HOA LEGO 3D BÊN PHẢI TOOLBAR -->
         <div class="rose-vine-border">
 
-            <!-- Bông 1 -->
-            <div class="rose-item" title="Click để bung cánh hoa!">
-                <svg width="42" height="42" viewBox="0 0 100 100">
-                    <path d="M50 75 Q40 85 20 80 Q35 65 50 75" fill="#14532d" />
-                    <path d="M50 75 Q60 85 80 80 Q65 65 50 75" fill="#166534" />
-                    <circle cx="50" cy="48" r="32" fill="#881337" />
-                    <path
-                        d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z"
-                        fill="#9f1239" />
-                    <path d="M28 42 C30 28, 70 28, 72 42 C74 58, 26 58, 28 42 Z" fill="#be123c" />
-                    <path d="M35 36 C42 22, 65 25, 65 38 C65 52, 32 50, 35 36 Z" fill="#e11d48" />
-                    <path d="M42 40 C45 32, 58 32, 58 40 C58 48, 44 48, 45 42" stroke="#fb7185" stroke-width="3.5"
-                        fill="#f43f5e" stroke-linecap="round" />
+            <!-- Bông 1: Đóa hoa Ruby giác cắt Octagon -->
+            <div class="rose-item" title="Đóa hồng Ruby 3D • Chạm để bung cánh hoa">
+                <svg width="42" height="42" viewBox="0 0 100 100" class="gem-svg">
+                    <defs>
+                        <linearGradient id="goldRim1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fef08a"/>
+                            <stop offset="50%" stop-color="#c9a227"/>
+                            <stop offset="100%" stop-color="#78350f"/>
+                        </linearGradient>
+                        <linearGradient id="rubyF1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f43f5e"/>
+                            <stop offset="50%" stop-color="#be123c"/>
+                            <stop offset="100%" stop-color="#4c0519"/>
+                        </linearGradient>
+                        <linearGradient id="rubyF2" x1="100%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stop-color="#fda4af"/>
+                            <stop offset="60%" stop-color="#e11d48"/>
+                            <stop offset="100%" stop-color="#881337"/>
+                        </linearGradient>
+                        <linearGradient id="emeraldLeaf1" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#34d399"/>
+                            <stop offset="60%" stop-color="#059669"/>
+                            <stop offset="100%" stop-color="#064e3b"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Lá ngọc lục bảo giác cắt -->
+                    <polygon points="35,76 18,84 14,74 28,68" fill="url(#emeraldLeaf1)" stroke="#c9a227" stroke-width="1.2" stroke-linejoin="round"/>
+                    <polygon points="65,76 82,84 86,74 72,68" fill="url(#emeraldLeaf1)" stroke="#c9a227" stroke-width="1.2" stroke-linejoin="round"/>
+                    <!-- Ổ ngàm vàng giác cắt bát giác -->
+                    <polygon points="50,14 78,26 90,54 78,82 50,92 22,82 10,54 22,26" fill="url(#goldRim1)" stroke="#451a03" stroke-width="1"/>
+                    <!-- Các mặt giác cánh hoa Ruby 3D -->
+                    <polygon points="50,18 74,28 84,54 50,54" fill="url(#rubyF1)"/>
+                    <polygon points="84,54 74,78 50,86 50,54" fill="#4c0519"/>
+                    <polygon points="50,86 26,78 16,54 50,54" fill="url(#rubyF2)"/>
+                    <polygon points="16,54 26,28 50,18 50,54" fill="#be123c"/>
+                    <!-- Tầng giác cắt bên trong -->
+                    <polygon points="50,28 68,36 72,54 50,54" fill="#e11d48"/>
+                    <polygon points="72,54 68,70 50,76 50,54" fill="#881337"/>
+                    <polygon points="50,76 32,70 28,54 50,54" fill="#be123c"/>
+                    <polygon points="28,54 32,36 50,28 50,54" fill="#f43f5e"/>
+                    <!-- Mặt bàn đá quý trung tâm & đinh tán Lego mạ vàng -->
+                    <polygon points="50,38 60,44 60,58 50,64 40,58 40,44" fill="#9f1239" stroke="#fef08a" stroke-width="1.2"/>
+                    <polygon points="50,42 56,46 56,54 50,58 44,54 44,46" fill="#f43f5e"/>
+                    <!-- Tia sáng kim cương -->
+                    <circle cx="47" cy="46" r="2.5" fill="#ffffff" opacity="0.95"/>
+                    <polygon points="50,34 51.5,39 56,40.5 51.5,42 50,47 48.5,42 44,40.5 48.5,39" fill="#ffffff" opacity="0.8"/>
                 </svg>
             </div>
 
-            <!-- Bông 2 -->
-            <div class="rose-item" style="transform: rotate(-15deg);">
-                <svg width="36" height="36" viewBox="0 0 100 100">
-                    <path d="M50 70 Q30 75 25 60 Q40 55 50 70" fill="#14532d" />
-                    <circle cx="50" cy="48" r="28" fill="#9f1239" />
-                    <path d="M25 45 C25 25, 75 25, 75 45 C75 68, 25 68, 25 45 Z" fill="#be123c" />
-                    <path d="M32 40 C38 26, 62 26, 68 40 C68 55, 32 55, 32 40 Z" fill="#e11d48" />
-                    <circle cx="50" cy="44" r="10" fill="#f43f5e" />
+            <!-- Bông 2: Nụ hồng Ruby giác cắt Marquise (Hạt thóc) -->
+            <div class="rose-item" style="transform: rotate(-15deg);" title="Nụ hồng Ruby giác cắt">
+                <svg width="36" height="36" viewBox="0 0 100 100" class="gem-svg">
+                    <defs>
+                        <linearGradient id="goldRim2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fef08a"/>
+                            <stop offset="50%" stop-color="#c9a227"/>
+                            <stop offset="100%" stop-color="#78350f"/>
+                        </linearGradient>
+                        <linearGradient id="rubyM2" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fb7185"/>
+                            <stop offset="50%" stop-color="#be123c"/>
+                            <stop offset="100%" stop-color="#4c0519"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Chấu vàng ngàm giác cắt -->
+                    <polygon points="50,10 76,34 84,60 50,90 16,60 24,34" fill="url(#goldRim2)" stroke="#583101" stroke-width="1"/>
+                    <!-- Các mặt giác ruby đa diện -->
+                    <polygon points="50,14 72,36 50,54" fill="#f43f5e"/>
+                    <polygon points="72,36 80,58 50,54" fill="#881337"/>
+                    <polygon points="80,58 50,86 50,54" fill="#4c0519"/>
+                    <polygon points="50,86 20,58 50,54" fill="#9f1239"/>
+                    <polygon points="20,58 28,36 50,54" fill="#be123c"/>
+                    <polygon points="28,36 50,14 50,54" fill="url(#rubyM2)"/>
+                    <polygon points="50,22 58,40 50,52 42,40" fill="#f43f5e" stroke="#fef08a" stroke-width="1.2"/>
+                    <circle cx="48" cy="36" r="2.5" fill="#ffffff" opacity="0.95"/>
                 </svg>
             </div>
 
-            <!-- Bông 3: TAY CẦM KÉO -->
-            <div id="dragHandle" class="rose-item drag-handle-rose" title="Kéo ra điiiii!">
-                <svg width="44" height="44" viewBox="0 0 100 100">
-                    <path d="M50 75 Q75 90 85 75 Q70 60 50 75" fill="#166534" />
-                    <circle cx="50" cy="50" r="34" fill="#881337" />
-                    <path
-                        d="M18 48 C15 28, 45 15, 50 22 C55 15, 85 28, 82 48 C85 70, 55 80, 50 78 C45 80, 15 70, 18 48 Z"
-                        fill="#be123c" />
-                    <path d="M26 44 C28 28, 72 28, 74 44 C76 62, 24 62, 26 44 Z" fill="#e11d48" />
-                    <circle cx="50" cy="45" r="9" fill="#fda4af" />
-                    <path d="M46 45 A4 4 0 1 1 54 45" stroke="#ffffff" stroke-width="3" fill="none"
-                        stroke-linecap="round" />
+            <!-- Bông 3: HUY HIỆU ĐÁ QUÝ RUBY HOÀNG GIA (TAY CẦM KÉO DRAG HANDLE) -->
+            <div id="dragHandle" class="rose-item drag-handle-rose" title="Kéo để mở danh mục!">
+                <svg width="46" height="46" viewBox="0 0 100 100" class="gem-svg">
+                    <defs>
+                        <linearGradient id="goldBezel3" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fef08a"/>
+                            <stop offset="30%" stop-color="#e5b839"/>
+                            <stop offset="70%" stop-color="#a16207"/>
+                            <stop offset="100%" stop-color="#fde047"/>
+                        </linearGradient>
+                        <linearGradient id="rubyGrandA" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fda4af"/>
+                            <stop offset="35%" stop-color="#f43f5e"/>
+                            <stop offset="70%" stop-color="#be123c"/>
+                            <stop offset="100%" stop-color="#4c0519"/>
+                        </linearGradient>
+                        <linearGradient id="rubyGrandB" x1="100%" y1="100%" x2="0%" y2="0%">
+                            <stop offset="0%" stop-color="#2a030c"/>
+                            <stop offset="50%" stop-color="#881337"/>
+                            <stop offset="100%" stop-color="#e11d48"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Vành huy hiệu 12 cạnh vàng giác cắt -->
+                    <polygon points="50,6 63,14 74,8 80,22 93,25 91,39 100,50 91,61 93,75 80,78 74,92 63,86 50,94 37,86 26,92 20,78 7,75 9,61 0,50 9,39 7,25 20,22 26,8 37,14" fill="url(#goldBezel3)" stroke="#78350f" stroke-width="1"/>
+                    <circle cx="50" cy="50" r="41" fill="#18040a" stroke="url(#goldBezel3)" stroke-width="1.8"/>
+                    <!-- Các tầng cánh hoa Ruby giác cắt 3D lộng lẫy -->
+                    <polygon points="50,13 72,21 50,50" fill="url(#rubyGrandA)"/>
+                    <polygon points="72,21 86,41 50,50" fill="#9f1239"/>
+                    <polygon points="86,41 82,67 50,50" fill="#4c0519"/>
+                    <polygon points="82,67 61,84 50,50" fill="url(#rubyGrandB)"/>
+                    <polygon points="61,84 39,84 50,50" fill="#2a030c"/>
+                    <polygon points="39,84 18,67 50,50" fill="#881337"/>
+                    <polygon points="18,67 14,41 50,50" fill="#be123c"/>
+                    <polygon points="14,41 28,21 50,50" fill="#e11d48"/>
+                    <polygon points="28,21 50,13 50,50" fill="#fb7185"/>
+                    <!-- Tầng giác cắt nhụy hoa bên trong -->
+                    <polygon points="50,22 66,30 50,50" fill="#f43f5e"/>
+                    <polygon points="66,30 74,48 50,50" fill="#be123c"/>
+                    <polygon points="74,48 64,68 50,50" fill="#4c0519"/>
+                    <polygon points="64,68 50,74 50,50" fill="#881337"/>
+                    <polygon points="50,74 36,68 50,50" fill="#58081c"/>
+                    <polygon points="36,68 26,48 50,50" fill="#9f1239"/>
+                    <polygon points="26,48 34,30 50,50" fill="#e11d48"/>
+                    <polygon points="34,30 50,22 50,50" fill="#fda4af"/>
+                    <!-- Nhụy hoa Lego giác cắt vàng & đinh tán phản quang -->
+                    <circle cx="50" cy="50" r="16" fill="url(#goldBezel3)" stroke="#583101" stroke-width="1.2"/>
+                    <polygon points="50,36 61,42 61,58 50,64 39,58 39,42" fill="#be123c" stroke="#fef08a" stroke-width="1"/>
+                    <circle cx="50" cy="50" r="7" fill="#f43f5e"/>
+                    <circle cx="50" cy="50" r="4" fill="#fda4af"/>
+                    <polygon points="50,42 52,47 58,49 53,52 54,58 50,54 46,58 47,52 42,49 48,47" fill="#ffffff" opacity="0.95"/>
+                    <!-- Ký hiệu tay cầm tinh tế (mũi tên vàng chỉ hướng kéo) -->
+                    <path d="M21 50 L26 46 M21 50 L26 54" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round"/>
+                    <path d="M79 50 L74 46 M79 50 L74 54" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round"/>
                 </svg>
             </div>
 
-            <!-- Bông 4 -->
-            <div class="rose-item" style="transform: rotate(20deg);">
-                <svg width="36" height="36" viewBox="0 0 100 100">
-                    <path d="M50 70 Q70 75 75 60 Q60 55 50 70" fill="#14532d" />
-                    <circle cx="50" cy="48" r="28" fill="#9f1239" />
-                    <path d="M25 45 C25 25, 75 25, 75 45 C75 68, 25 68, 25 45 Z" fill="#e11d48" />
-                    <circle cx="50" cy="44" r="10" fill="#fb7185" />
+            <!-- Bông 4: Giọt lệ Ruby giác cắt Pear (Teardrop) -->
+            <div class="rose-item" style="transform: rotate(20deg);" title="Đá Ruby giọt lệ giác cắt">
+                <svg width="36" height="36" viewBox="0 0 100 100" class="gem-svg">
+                    <defs>
+                        <linearGradient id="goldRim4" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fef08a"/>
+                            <stop offset="50%" stop-color="#c9a227"/>
+                            <stop offset="100%" stop-color="#78350f"/>
+                        </linearGradient>
+                    </defs>
+                    <polygon points="50,12 80,45 74,78 50,90 26,78 20,45" fill="url(#goldRim4)" stroke="#451a03" stroke-width="1"/>
+                    <polygon points="50,16 76,46 50,56" fill="#f43f5e"/>
+                    <polygon points="76,46 70,74 50,56" fill="#881337"/>
+                    <polygon points="70,74 50,86 50,56" fill="#4c0519"/>
+                    <polygon points="50,86 30,74 50,56" fill="#9f1239"/>
+                    <polygon points="30,74 24,46 50,56" fill="#be123c"/>
+                    <polygon points="24,46 50,16 50,56" fill="#fb7185"/>
+                    <polygon points="50,26 64,48 50,66 36,48" fill="#e11d48" stroke="#fef08a" stroke-width="1.2"/>
+                    <circle cx="47" cy="42" r="2.5" fill="#ffffff" opacity="0.95"/>
                 </svg>
             </div>
 
-            <!-- Bông 5 -->
-            <div class="rose-item">
-                <svg width="40" height="40" viewBox="0 0 100 100">
-                    <path d="M50 75 Q35 85 20 78 Q35 65 50 75" fill="#14532d" />
-                    <circle cx="50" cy="48" r="30" fill="#881337" />
-                    <path
-                        d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z"
-                        fill="#be123c" />
-                    <path d="M30 40 C35 26, 65 26, 70 40 C70 56, 30 56, 30 40 Z" fill="#f43f5e" />
-                    <circle cx="50" cy="44" r="8" fill="#fda4af" />
+            <!-- Bông 5: Đóa hoa Ruby giác cắt Cushion kèm lá ngọc -->
+            <div class="rose-item" title="Đóa hồng Ruby giác cắt Cushion">
+                <svg width="40" height="40" viewBox="0 0 100 100" class="gem-svg">
+                    <defs>
+                        <linearGradient id="goldRim5" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#fef08a"/>
+                            <stop offset="50%" stop-color="#c9a227"/>
+                            <stop offset="100%" stop-color="#78350f"/>
+                        </linearGradient>
+                        <linearGradient id="emeraldLeaf5" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#34d399"/>
+                            <stop offset="60%" stop-color="#059669"/>
+                            <stop offset="100%" stop-color="#064e3b"/>
+                        </linearGradient>
+                    </defs>
+                    <polygon points="40,80 20,88 12,78 30,70" fill="url(#emeraldLeaf5)" stroke="#c9a227" stroke-width="1.2" stroke-linejoin="round"/>
+                    <polygon points="26,14 74,14 88,28 88,72 74,86 26,86 12,72 12,28" fill="url(#goldRim5)" stroke="#451a03" stroke-width="1"/>
+                    <polygon points="28,18 72,18 50,50" fill="#f43f5e"/>
+                    <polygon points="72,18 84,30 84,70 50,50" fill="#9f1239"/>
+                    <polygon points="84,70 72,82 50,82 50,50" fill="#4c0519"/>
+                    <polygon points="50,82 28,82 16,70 50,50" fill="#881337"/>
+                    <polygon points="16,70 16,30 28,18 50,50" fill="#be123c"/>
+                    <polygon points="36,32 64,32 72,42 72,58 64,68 36,68 28,58 28,42" fill="#be123c" stroke="#fef08a" stroke-width="1.2"/>
+                    <polygon points="42,38 58,38 64,46 64,54 58,62 42,62 36,54 36,46" fill="#e11d48"/>
+                    <circle cx="48" cy="46" r="3" fill="#ffffff" opacity="0.95"/>
+                    <polygon points="50,34 51.5,39 56,40.5 51.5,42 50,47 48.5,42 44,40.5 48.5,39" fill="#ffffff" opacity="0.8"/>
                 </svg>
             </div>
 
