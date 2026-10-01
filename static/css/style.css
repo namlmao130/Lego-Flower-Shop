@@ -1840,14 +1840,26 @@ input::-webkit-search-results-decoration {
     background: #f9fafb;
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
 .chat-msg {
     display: flex;
     flex-direction: column;
     max-width: 84%;
+    margin-bottom: 9px;
     animation: chatMsgFade 0.2s ease-out;
+}
+
+.chat-msg.chat-msg-grouped {
+    margin-bottom: 3px;
+}
+
+.chat-msg-user.chat-msg-grouped .chat-bubble {
+    border-bottom-right-radius: 6px;
+}
+
+.chat-msg-bot.chat-msg-grouped .chat-bubble {
+    border-bottom-left-radius: 6px;
 }
 
 @keyframes chatMsgFade {

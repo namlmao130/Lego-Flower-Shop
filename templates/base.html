@@ -874,21 +874,48 @@
                 return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
             }
 
-            function renderMessageElement(text, isUser = false, timeStr = null) {
+            function renderMessageElement(text, isUser = false, timeStr = null, showTime = true, isGrouped = false) {
                 const msgDiv = document.createElement('div');
-                msgDiv.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-bot'}`;
+                msgDiv.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-bot'}${isGrouped ? ' chat-msg-grouped' : ''}`;
 
                 const bubble = document.createElement('div');
                 bubble.className = 'chat-bubble';
                 bubble.textContent = text;
                 msgDiv.appendChild(bubble);
 
-                const time = document.createElement('span');
-                time.className = 'chat-time';
-                time.textContent = timeStr || getCurrentTimeStr();
-                msgDiv.appendChild(time);
+                if (showTime) {
+                    const time = document.createElement('span');
+                    time.className = 'chat-time';
+                    time.textContent = timeStr || getCurrentTimeStr();
+                    msgDiv.appendChild(time);
+                }
 
                 chatMessages.appendChild(msgDiv);
+                return msgDiv;
+            }
+
+            function appendLiveMessage(text, isUser = false) {
+                const currentTime = getCurrentTimeStr();
+                const targetSenderClass = isUser ? 'chat-msg-user' : 'chat-msg-bot';
+
+                // Tìm tin nhắn gần nhất hiện có (bỏ qua typing indicator hoặc suggestions)
+                const allMsgElements = chatMessages.querySelectorAll('.chat-msg:not(.chat-typing)');
+                const prevMsgElement = allMsgElements.length > 0 ? allMsgElements[allMsgElements.length - 1] : null;
+
+                if (prevMsgElement && prevMsgElement.classList.contains(targetSenderClass)) {
+                    // Cùng một người gửi tin liền mạch: ẩn timestamp của tin nhắn trước và thu gọn khoảng cách
+                    const prevTimeEl = prevMsgElement.querySelector('.chat-time');
+                    if (prevTimeEl) {
+                        if (prevTimeEl.textContent === currentTime) {
+                            prevTimeEl.remove();
+                            prevMsgElement.classList.add('chat-msg-grouped');
+                        }
+                    }
+                }
+
+                renderMessageElement(text, isUser, currentTime, true, false);
+                saveMessageToHistory(text, isUser, currentTime);
+                scrollChatToBottom();
             }
 
             function saveMessageToHistory(text, isUser, timeStr) {
@@ -917,8 +944,12 @@
                         const history = JSON.parse(raw);
                         if (Array.isArray(history) && history.length > 0) {
                             chatMessages.innerHTML = '';
-                            history.forEach(item => {
-                                renderMessageElement(item.text, item.sender === 'user', item.time);
+                            history.forEach((item, index) => {
+                                const next = history[index + 1];
+                                // Tin nhắn liền mạch: cùng người gửi và cùng phút gửi -> chỉ hiện time ở tin cuối cùng của cụm
+                                const isConsecutiveWithNext = next && (next.sender === item.sender) && (next.time === item.time);
+                                const showTime = !isConsecutiveWithNext;
+                                renderMessageElement(item.text, item.sender === 'user', item.time, showTime, isConsecutiveWithNext);
                             });
                             // Nếu đã có tin nhắn trao đổi (trên 1 tin) thì ẩn các nút gợi ý ban đầu
                             if (history.length > 1) {
@@ -945,7 +976,7 @@
                 const welcomeText = 'Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? 💐 Bạn có thể chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp cho shop nhé!';
                 const timeStr = getCurrentTimeStr();
                 chatMessages.innerHTML = '';
-                renderMessageElement(welcomeText, false, timeStr);
+                renderMessageElement(welcomeText, false, timeStr, true, false);
                 localStorage.setItem(STORAGE_KEY, JSON.stringify([{
                     sender: 'bot',
                     text: welcomeText,
@@ -1056,11 +1087,10 @@
             function handleSend(userText, isQuickChip = false) {
                 if (!userText || !userText.trim()) return;
                 const text = userText.trim();
-                const userTime = getCurrentTimeStr();
-                renderMessageElement(text, true, userTime);
-                saveMessageToHistory(text, true, userTime);
+                
+                // Gửi tin nhắn của người dùng với tính năng gom cụm tin nhắn liền mạch
+                appendLiveMessage(text, true);
                 if (chatInput) chatInput.value = '';
-                scrollChatToBottom();
 
                 // Ẩn các nút gợi ý sau khi gửi tin
                 if (chatSuggestions) chatSuggestions.style.display = 'none';
@@ -1071,10 +1101,7 @@
                     setTimeout(() => {
                         removeTypingIndicator();
                         const reply = getBotReply(text);
-                        const botTime = getCurrentTimeStr();
-                        renderMessageElement(reply, false, botTime);
-                        saveMessageToHistory(reply, false, botTime);
-                        scrollChatToBottom();
+                        appendLiveMessage(reply, false);
                     }, 500);
                     return;
                 }
@@ -1098,10 +1125,7 @@
                     setTimeout(() => {
                         removeTypingIndicator();
                         const reply = getBotReply(text);
-                        const botTime = getCurrentTimeStr();
-                        renderMessageElement(reply, false, botTime);
-                        saveMessageToHistory(reply, false, botTime);
-                        scrollChatToBottom();
+                        appendLiveMessage(reply, false);
                     }, 600);
                 }, 1000);
             }
