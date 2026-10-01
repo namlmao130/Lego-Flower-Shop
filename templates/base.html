@@ -41,7 +41,6 @@
                                         @{{ current_user.phone }}
                                     {% endif %}
                                 </div>
-                                <a href="{{ url_for('user_settings') }}" class="user-popover-link">Xem tài khoản của bạn</a>
                             </div>
                         </div>
 
@@ -55,18 +54,6 @@
                                 </svg>
                             </span>
                             <span class="flex-grow-1">Cài đặt tài khoản</span>
-                        </a>
-
-                        <a class="user-popover-item" href="{{ url_for('user_settings') }}#reviews">
-                            <span class="user-popover-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
-                                </svg>
-                            </span>
-                            <span class="flex-grow-1">Đánh giá của tôi</span>
-                            <svg class="user-popover-chevron" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-                            </svg>
                         </a>
 
                         <a class="user-popover-item text-danger-hover" href="{{ url_for('logout') }}">
