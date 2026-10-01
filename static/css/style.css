@@ -1755,6 +1755,24 @@ input::-webkit-search-results-decoration {
     display: inline-block;
 }
 
+.chat-header-action-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    padding: 4px 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+}
+
+.chat-header-action-btn:hover {
+    color: var(--lego-gold-light, #f6d365);
+    background: rgba(255, 255, 255, 0.12);
+}
+
 .chat-close-btn {
     background: transparent;
     border: none;
