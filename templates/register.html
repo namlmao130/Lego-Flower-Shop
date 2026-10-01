@@ -6,14 +6,13 @@
     <div class="col-11 col-sm-9 col-md-6 col-lg-5 col-xl-4">
         <div class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
             <div class="text-center mb-4">
-                <h3 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">Tạo tài khoản</h3>
-                <p class="text-muted small mb-0">Đăng ký thành viên để lưu đơn & đánh giá sản phẩm</p>
+                <h3 class="fw-bold mb-0" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">Tạo tài khoản</h3>
             </div>
 
             <form method="POST" id="registerForm">
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary mb-1">Họ và tên</label>
-                    <input type="text" name="full_name" class="form-control" placeholder="Ví dụ: Nguyễn Văn Nam"
+                    <input type="text" name="full_name" class="form-control" placeholder="Ví dụ: Nguyễn Văn A"
                            maxlength="100" autocomplete="name" value="{{ full_name or '' }}" required autofocus>
                 </div>
 
