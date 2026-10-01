@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Shop Online{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
 
     <!-- Canvas hiệu ứng cánh hoa bay -->
@@ -15,14 +19,16 @@
 
     <nav class="navbar navbar-expand-lg shop-navbar sticky-top">
         <div class="container">
-            <button id="toggleBtn" class="btn btn-link p-0 me-3" type="button" style="color:#EDE6D6; font-size:1.4rem; text-decoration:none;">☰</button>
+            <button id="toggleBtn" class="btn btn-link p-0 me-3" type="button"
+                style="color:#EDE6D6; font-size:1.4rem; text-decoration:none;">☰</button>
             <a class="navbar-brand fw-bold rainbow-brand" href="{{ url_for('index') }}">Lego Flower</a>
             <div class="navbar-nav ms-auto align-items-lg-center">
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="dropdown user-menu-dropdown">
-                    <button class="user-avatar-btn" type="button" id="userMenuBtn" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="{{ current_user.full_name }}">
+                    <button class="user-avatar-btn" type="button" id="userMenuBtn" data-bs-toggle="dropdown"
+                        data-bs-display="static" aria-expanded="false" title="{{ current_user.full_name }}">
                         <span class="user-avatar-circle">
                             {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
                         </span>
@@ -36,9 +42,9 @@
                                 <div class="user-popover-name">{{ current_user.full_name }}</div>
                                 <div class="user-popover-handle">
                                     {% if current_user.email %}
-                                        @{{ current_user.email.split('@')[0] }}
+                                    @{{ current_user.email.split('@')[0] }}
                                     {% else %}
-                                        @{{ current_user.phone }}
+                                    @{{ current_user.phone }}
                                     {% endif %}
                                 </div>
                             </div>
@@ -48,7 +54,8 @@
 
                         <a class="user-popover-item" href="{{ url_for('user_settings') }}">
                             <span class="user-popover-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
@@ -58,7 +65,8 @@
 
                         <a class="user-popover-item text-danger-hover" href="{{ url_for('logout') }}">
                             <span class="user-popover-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                                     <polyline points="16 17 21 12 16 7"></polyline>
                                     <line x1="21" y1="12" x2="9" y2="12"></line>
@@ -96,14 +104,18 @@
                 {% endfor %}
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="border-top my-2 pt-2" style="border-color: rgba(225, 29, 72, 0.25) !important;">
-                    <div class="d-flex align-items-center gap-2 px-3 py-2 mb-2 rounded-3" style="background: rgba(0, 0, 0, 0.2);">
-                        <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.85rem; flex-shrink: 0;">
+                    <div class="d-flex align-items-center gap-2 px-3 py-2 mb-2 rounded-3"
+                        style="background: rgba(0, 0, 0, 0.2);">
+                        <div class="user-avatar-circle"
+                            style="width: 32px; height: 32px; font-size: 0.85rem; flex-shrink: 0;">
                             {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
                         </div>
                         <div class="overflow-hidden">
-                            <div class="text-white fw-bold small text-truncate" style="max-width: 140px;">{{ current_user.full_name }}</div>
+                            <div class="text-white fw-bold small text-truncate" style="max-width: 140px;">{{
+                                current_user.full_name }}</div>
                             <div class="text-white-50 text-truncate" style="font-size: 0.75rem; max-width: 140px;">
-                                {% if current_user.email %}@{{ current_user.email.split('@')[0] }}{% else %}@{{ current_user.phone }}{% endif %}
+                                {% if current_user.email %}@{{ current_user.email.split('@')[0] }}{% else %}@{{
+                                current_user.phone }}{% endif %}
                             </div>
                         </div>
                     </div>
@@ -127,10 +139,13 @@
                     <path d="M50 75 Q40 85 20 80 Q35 65 50 75" fill="#14532d" />
                     <path d="M50 75 Q60 85 80 80 Q65 65 50 75" fill="#166534" />
                     <circle cx="50" cy="48" r="32" fill="#881337" />
-                    <path d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z" fill="#9f1239" />
+                    <path
+                        d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z"
+                        fill="#9f1239" />
                     <path d="M28 42 C30 28, 70 28, 72 42 C74 58, 26 58, 28 42 Z" fill="#be123c" />
                     <path d="M35 36 C42 22, 65 25, 65 38 C65 52, 32 50, 35 36 Z" fill="#e11d48" />
-                    <path d="M42 40 C45 32, 58 32, 58 40 C58 48, 44 48, 45 42" stroke="#fb7185" stroke-width="3.5" fill="#f43f5e" stroke-linecap="round" />
+                    <path d="M42 40 C45 32, 58 32, 58 40 C58 48, 44 48, 45 42" stroke="#fb7185" stroke-width="3.5"
+                        fill="#f43f5e" stroke-linecap="round" />
                 </svg>
             </div>
 
@@ -150,10 +165,13 @@
                 <svg width="44" height="44" viewBox="0 0 100 100">
                     <path d="M50 75 Q75 90 85 75 Q70 60 50 75" fill="#166534" />
                     <circle cx="50" cy="50" r="34" fill="#881337" />
-                    <path d="M18 48 C15 28, 45 15, 50 22 C55 15, 85 28, 82 48 C85 70, 55 80, 50 78 C45 80, 15 70, 18 48 Z" fill="#be123c" />
+                    <path
+                        d="M18 48 C15 28, 45 15, 50 22 C55 15, 85 28, 82 48 C85 70, 55 80, 50 78 C45 80, 15 70, 18 48 Z"
+                        fill="#be123c" />
                     <path d="M26 44 C28 28, 72 28, 74 44 C76 62, 24 62, 26 44 Z" fill="#e11d48" />
                     <circle cx="50" cy="45" r="9" fill="#fda4af" />
-                    <path d="M46 45 A4 4 0 1 1 54 45" stroke="#ffffff" stroke-width="3" fill="none" stroke-linecap="round" />
+                    <path d="M46 45 A4 4 0 1 1 54 45" stroke="#ffffff" stroke-width="3" fill="none"
+                        stroke-linecap="round" />
                 </svg>
             </div>
 
@@ -172,7 +190,9 @@
                 <svg width="40" height="40" viewBox="0 0 100 100">
                     <path d="M50 75 Q35 85 20 78 Q35 65 50 75" fill="#14532d" />
                     <circle cx="50" cy="48" r="30" fill="#881337" />
-                    <path d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z" fill="#be123c" />
+                    <path
+                        d="M22 45 C18 30, 42 18, 50 25 C58 18, 82 30, 78 45 C82 65, 58 75, 50 72 C42 75, 18 65, 22 45 Z"
+                        fill="#be123c" />
                     <path d="M30 40 C35 26, 65 26, 70 40 C70 56, 30 56, 30 40 Z" fill="#f43f5e" />
                     <circle cx="50" cy="44" r="8" fill="#fda4af" />
                 </svg>
@@ -197,11 +217,11 @@
 
     <div class="container my-4">
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ 'danger' if category=='error' else category }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category=='error' else category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         {% block content %}{% endblock %}
@@ -216,11 +236,11 @@
                 <!-- Cột 1: Giới thiệu thương hiệu -->
                 <div class="col-12 col-md-5 col-lg-4">
                     <div class="d-flex align-items-center gap-2 mb-3">
-                        <span style="font-size: 1.8rem;">🥀</span>
                         <h4 class="mb-0 fw-bold rainbow-brand" style="font-size: 1.6rem;">Lego Flower</h4>
                     </div>
                     <p class="text-white-50 mb-3" style="line-height: 1.6; font-size: 0.92rem;">
-                        Bộ sưu tập hoa Lego tinh tế, vĩnh cửu theo thời gian. Món quà ý nghĩa, gửi gắm yêu thương qua từng mảnh ghép tỉ mỉ và sáng tạo.
+                        Bộ sưu tập hoa Lego tinh tế, vĩnh cửu theo thời gian. Món quà ý nghĩa, gửi gắm yêu thương qua
+                        từng mảnh ghép tỉ mỉ và sáng tạo.
                     </p>
                     <div class="d-flex align-items-center gap-2 text-white-50" style="font-size: 0.88rem;">
                         <span>⭐ Chuẩn mảnh ghép</span>
@@ -233,10 +253,13 @@
                 <div class="col-6 col-md-3 col-lg-3">
                     <h5 class="footer-heading mb-3">Khám phá</h5>
                     <ul class="list-unstyled footer-links mb-0">
-                        <li class="mb-2"><a href="{{ url_for('index') }}" class="text-white-50 text-decoration-none">Trang chủ</a></li>
-                        <li class="mb-2"><a href="{{ url_for('products') }}" class="text-white-50 text-decoration-none">Tất cả sản phẩm</a></li>
+                        <li class="mb-2"><a href="{{ url_for('index') }}"
+                                class="text-white-50 text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="{{ url_for('products') }}"
+                                class="text-white-50 text-decoration-none">Tất cả sản phẩm</a></li>
                         {% for cat in nav_categories %}
-                        <li class="mb-2"><a href="{{ url_for('products', category=cat.id) }}" class="text-white-50 text-decoration-none">{{ cat.name }}</a></li>
+                        <li class="mb-2"><a href="{{ url_for('products', category=cat.id) }}"
+                                class="text-white-50 text-decoration-none">{{ cat.name }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -247,7 +270,8 @@
                     <ul class="list-unstyled footer-contact mb-0 text-white-50" style="font-size: 0.92rem;">
                         <li class="mb-2">
                             <strong class="text-white d-block">📞 Hotline / Zalo:</strong>
-                            <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer" class="text-warning text-decoration-none fw-bold">
+                            <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
+                                class="text-warning text-decoration-none fw-bold">
                                 0967.701.565
                             </a>
                         </li>
@@ -264,7 +288,8 @@
             </div>
 
             <!-- Dòng bản quyền dưới cùng -->
-            <div class="footer-bottom mt-4 pt-3 border-top d-flex flex-wrap justify-content-between align-items-center" style="border-color: rgba(255, 255, 255, 0.1) !important;">
+            <div class="footer-bottom mt-4 pt-3 border-top d-flex flex-wrap justify-content-between align-items-center"
+                style="border-color: rgba(255, 255, 255, 0.1) !important;">
                 <p class="mb-0 text-white-50 small">&copy; 2026 Lego Flower Shop. Tất cả các quyền được bảo lưu.</p>
                 <p class="mb-0 text-white-50 small">Trao gửi yêu thương qua từng mảnh ghép 💖</p>
             </div>
@@ -275,6 +300,94 @@
     <button id="backToTopBtn" class="back-to-top-btn" title="Cuộn lên đầu trang" aria-label="Cuộn lên đầu trang">
         ↑
     </button>
+
+    <!-- ============================================ -->
+    <!--   WIDGET CHAT VỚI SHOP (FLOATING LIVE CHAT)  -->
+    <!-- ============================================ -->
+    <div id="chatWidget" class="chat-widget">
+        <!-- Cửa sổ Chat -->
+        <div id="chatWindow" class="chat-window" aria-hidden="true">
+            <!-- Header khung chat -->
+            <div class="chat-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="chat-avatar-badge">🥀</div>
+                    <div>
+                        <div class="chat-header-title">Tiệm Hoa Lego</div>
+                        <div class="chat-header-status">
+                            <span class="chat-status-dot"></span> Đang hoạt động • Sẵn sàng hỗ trợ
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="closeChatBtn" class="chat-close-btn" aria-label="Thu nhỏ chat" title="Đóng chat">
+                    &times;
+                </button>
+            </div>
+
+            <!-- Thanh kênh liên hệ nhanh (Zalo & Hotline) -->
+            <div class="chat-quick-channels">
+                <span class="small text-muted fw-semibold">Liên hệ nhanh:</span>
+                <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer" class="chat-quick-btn chat-zalo-btn" title="Nhắn qua Zalo">
+                    💬 Zalo: 0967.701.565
+                </a>
+                <a href="tel:0967701565" class="chat-quick-btn chat-phone-btn" title="Gọi Hotline">
+                    📞 Hotline
+                </a>
+            </div>
+
+            <!-- Khu vực nội dung tin nhắn -->
+            <div id="chatMessages" class="chat-body">
+                <!-- Tin nhắn chào của shop -->
+                <div class="chat-msg chat-msg-bot">
+                    <div class="chat-bubble">
+                        Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? 💐 Bạn có thể chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp cho shop nhé!
+                    </div>
+                    <span class="chat-time">Vừa xong</span>
+                </div>
+
+                <!-- Các nút câu hỏi gợi ý nhanh -->
+                <div class="chat-suggestions" id="chatSuggestions">
+                    <button type="button" class="chat-chip" data-msg="Shop có những mẫu hoa nào làm quà tặng ý nghĩa?">
+                        🌸 Mẫu hoa quà tặng ý nghĩa
+                    </button>
+                    <button type="button" class="chat-chip" data-msg="Phí vận chuyển và thời gian giao hàng như thế nào?">
+                        🚚 Phí ship & thời gian giao hàng
+                    </button>
+                    <button type="button" class="chat-chip" data-msg="Shop có hỗ trợ viết thiệp và gói quà không?">
+                        🎁 Gói quà & thiệp chúc mừng
+                    </button>
+                    <button type="button" class="chat-chip" data-msg="Tôi muốn liên hệ trực tiếp với chủ tiệm qua Zalo/SĐT.">
+                        📞 Hotline & Zalo trực tiếp
+                    </button>
+                </div>
+            </div>
+
+            <!-- Khung nhập tin nhắn -->
+            <form id="chatForm" class="chat-footer">
+                <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn cho shop..." autocomplete="off" maxlength="300" required>
+                <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Gửi tin nhắn" title="Gửi">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- Nút biểu tượng nổi (Floating Bubble Trigger) -->
+        <button id="chatToggleBtn" class="chat-toggle-btn" type="button" aria-label="Mở khung chat với shop" title="Chat với shop">
+            <span class="chat-online-badge"></span>
+            <span class="chat-icon-open">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </span>
+            <span class="chat-icon-close d-none">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </span>
+        </button>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
@@ -446,11 +559,11 @@
         // Click bông hoa để bung cánh
         setTimeout(() => {
             document.querySelectorAll('.rose-item').forEach(rose => {
-            rose.addEventListener('click', (e) => {
-                const rect = rose.getBoundingClientRect();
-                tryRoseBurst(20, rect.left + 20, rect.top + 20);
+                rose.addEventListener('click', (e) => {
+                    const rect = rose.getBoundingClientRect();
+                    tryRoseBurst(20, rect.left + 20, rect.top + 20);
+                });
             });
-        });
         }, 3000);
 
         // Kéo thả
@@ -564,6 +677,160 @@
                 }
             });
         }
+
+        // =======================================================
+        // BỘ ĐIỀU KHIỂN CHAT VỚI SHOP (FLOATING LIVE CHAT)
+        // =======================================================
+        (function() {
+            const chatToggleBtn = document.getElementById('chatToggleBtn');
+            const chatWindow = document.getElementById('chatWindow');
+            const closeChatBtn = document.getElementById('closeChatBtn');
+            const chatForm = document.getElementById('chatForm');
+            const chatInput = document.getElementById('chatInput');
+            const chatMessages = document.getElementById('chatMessages');
+            const chatSuggestions = document.getElementById('chatSuggestions');
+            const chatIconOpen = chatToggleBtn ? chatToggleBtn.querySelector('.chat-icon-open') : null;
+            const chatIconClose = chatToggleBtn ? chatToggleBtn.querySelector('.chat-icon-close') : null;
+
+            if (!chatToggleBtn || !chatWindow) return;
+
+            let isOpen = false;
+
+            function toggleChat(state) {
+                isOpen = (state !== undefined) ? state : !isOpen;
+                if (isOpen) {
+                    chatWindow.classList.add('open');
+                    chatWindow.setAttribute('aria-hidden', 'false');
+                    if (chatIconOpen) chatIconOpen.classList.add('d-none');
+                    if (chatIconClose) chatIconClose.classList.remove('d-none');
+                    setTimeout(() => chatInput && chatInput.focus(), 250);
+                    scrollChatToBottom();
+                } else {
+                    chatWindow.classList.remove('open');
+                    chatWindow.setAttribute('aria-hidden', 'true');
+                    if (chatIconOpen) chatIconOpen.classList.remove('d-none');
+                    if (chatIconClose) chatIconClose.classList.add('d-none');
+                }
+            }
+
+            chatToggleBtn.addEventListener('click', () => toggleChat());
+            if (closeChatBtn) closeChatBtn.addEventListener('click', () => toggleChat(false));
+
+            function scrollChatToBottom() {
+                if (chatMessages) {
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }
+            }
+
+            const botKnowledge = [
+                {
+                    keywords: ['chào', 'hello', 'hi', 'alo', 'bắt đầu', 'ơi'],
+                    reply: 'Chào bạn! Tiệm Hoa Lego rất vui được đồng hành cùng bạn. Bạn cần tư vấn chọn mẫu hoa, hỏi phí giao hàng hay cần hỗ trợ gì ạ? 💐'
+                },
+                {
+                    keywords: ['quà', 'ý nghĩa', 'chọn hoa', 'tư vấn', 'mẫu nào', 'tặng bạn', 'tặng người yêu', 'sinh nhật', '20/10', '8/3', 'mẫu'],
+                    reply: 'Tiệm có rất nhiều đóa hoa mang ý nghĩa tuyệt vời: 🌹 Hoa hồng (tình yêu vĩnh cửu), 🌻 Hoa hướng dương (năng lượng tích cực & thành công), 🌸 Hoa cẩm tú cầu, hoa tulip... Bạn hãy vào mục "Sản phẩm" trên web hoặc nhắn tin qua Zalo 0967.701.565 để shop gửi ảnh & video mẫu thực tế nhé!'
+                },
+                {
+                    keywords: ['ship', 'vận chuyển', 'giao hàng', 'bao lâu', 'phí ship', 'đến nơi', 'giao nhanh'],
+                    reply: 'Shop giao hàng toàn quốc nha! 🚚 Đơn tại nội thành thường nhận trong 1-2 ngày, các tỉnh thành khác từ 2-4 ngày. Từng sản phẩm đều được bọc chống sốc kỹ càng bảo vệ hoa Lego nguyên vẹn tới tận tay bạn.'
+                },
+                {
+                    keywords: ['thiệp', 'gói quà', 'hộp quà', 'lời chúc', 'gói', 'hộp'],
+                    reply: 'Dạ shop có hỗ trợ viết thiệp chúc mừng theo yêu cầu hoàn toàn MIỄN PHÍ và có hộp quà thắt nơ sang trọng. Bạn chỉ cần ghi chú lúc đặt hàng hoặc nhắn qua Zalo: 0967.701.565 là shop chuẩn bị chu đáo ạ! 🎁'
+                },
+                {
+                    keywords: ['giá', 'bao nhiêu', 'tiền', 'khuyến mãi', 'giảm giá', 'sale'],
+                    reply: 'Giá các mẫu hoa Lego của tiệm dao động từ 150k đến 500k tùy theo kích thước và độ cầu kỳ của từng đóa hoa. Mời bạn duyệt qua danh mục "Sản phẩm" để xem chi tiết từng mẫu nhé!'
+                },
+                {
+                    keywords: ['zalo', 'sđt', 'hotline', 'liên hệ', 'gọi', 'chủ shop', 'điện thoại'],
+                    reply: 'Bạn có thể liên hệ trực tiếp chủ tiệm qua Hotline/Zalo: 0967.701.565 để được tư vấn và hỗ trợ hỏa tốc bất cứ lúc nào ạ! 📞'
+                },
+                {
+                    keywords: ['địa chỉ', 'ở đâu', 'cửa hàng', 'shop ở', 'showroom'],
+                    reply: 'Tiệm Hoa Lego phục vụ đặt hàng trực tuyến và giao hàng toàn quốc. Bạn có thể đặt hàng trực tiếp ngay trên website hoặc nhắn qua Zalo 0967.701.565 để được gửi hàng nhanh nhất nhé!'
+                }
+            ];
+
+            function getBotReply(userText) {
+                const lower = userText.toLowerCase();
+                for (const item of botKnowledge) {
+                    if (item.keywords.some(kw => lower.includes(kw))) {
+                        return item.reply;
+                    }
+                }
+                return 'Cảm ơn tin nhắn của bạn! Đội ngũ tư vấn Tiệm Hoa Lego đã nhận được yêu cầu. Để được tư vấn chi tiết và gửi ảnh thực tế nhanh nhất, bạn hãy bấm nút "Zalo: 0967.701.565" ở ngay thanh trên nhé! 🥀';
+            }
+
+            function appendMessage(text, isUser = false) {
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-bot'}`;
+
+                const bubble = document.createElement('div');
+                bubble.className = 'chat-bubble';
+                bubble.textContent = text;
+                msgDiv.appendChild(bubble);
+
+                const time = document.createElement('span');
+                time.className = 'chat-time';
+                const now = new Date();
+                time.textContent = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                msgDiv.appendChild(time);
+
+                chatMessages.appendChild(msgDiv);
+                scrollChatToBottom();
+            }
+
+            function showTypingIndicator() {
+                const typing = document.createElement('div');
+                typing.className = 'chat-typing chat-msg chat-msg-bot';
+                typing.id = 'chatTypingIndicator';
+                typing.innerHTML = '<span class="chat-dot"></span><span class="chat-dot"></span><span class="chat-dot"></span>';
+                chatMessages.appendChild(typing);
+                scrollChatToBottom();
+                return typing;
+            }
+
+            function removeTypingIndicator() {
+                const typing = document.getElementById('chatTypingIndicator');
+                if (typing) typing.remove();
+            }
+
+            function handleSend(userText) {
+                if (!userText || !userText.trim()) return;
+                const text = userText.trim();
+                appendMessage(text, true);
+                if (chatInput) chatInput.value = '';
+
+                // Ẩn các nút gợi ý sau khi gửi tin
+                if (chatSuggestions) chatSuggestions.style.display = 'none';
+
+                const indicator = showTypingIndicator();
+                setTimeout(() => {
+                    removeTypingIndicator();
+                    appendMessage(getBotReply(text), false);
+                }, 600);
+            }
+
+            if (chatForm) {
+                chatForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    if (chatInput) handleSend(chatInput.value);
+                });
+            }
+
+            // Gợi ý câu hỏi nhanh
+            if (chatSuggestions) {
+                chatSuggestions.querySelectorAll('.chat-chip').forEach(chip => {
+                    chip.addEventListener('click', function() {
+                        const msg = this.getAttribute('data-msg');
+                        if (msg) handleSend(msg);
+                    });
+                });
+            }
+        })();
     </script>
 </body>
+
 </html>

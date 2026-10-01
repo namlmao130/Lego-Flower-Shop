@@ -2,32 +2,40 @@
 {% block title %}{{ product.name }} - My Shop{% endblock %}
 
 {% block content %}
-<a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 mb-3 d-inline-flex align-items-center gap-1 shadow-sm" style="backdrop-filter: blur(8px); background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.3); font-size: 0.85rem;">&larr; Quay lại danh sách</a>
+<a href="{{ url_for('products') }}"
+    class="btn btn-sm btn-outline-light rounded-pill px-3 py-1 mb-3 d-inline-flex align-items-center gap-1 shadow-sm"
+    style="backdrop-filter: blur(8px); background: rgba(0,0,0,0.25); border-color: rgba(255,255,255,0.3); font-size: 0.85rem;">&larr;
+    Quay lại danh sách</a>
 
 <div class="row">
     <div class="col-md-6">
-        <div id="productCarousel" class="carousel slide carousel-fade product-carousel" data-bs-interval="false" data-bs-touch="true">
+        <div id="productCarousel" class="carousel slide carousel-fade product-carousel" data-bs-interval="false"
+            data-bs-touch="true">
             <div class="carousel-inner rounded">
                 {% if product.media %}
-                    {% for m in product.media %}
-                    <div class="carousel-item {% if loop.first %}active{% endif %}">
-                        {% if m.media_type == 'video' %}
-                        <video controls class="d-block w-100 product-detail-media">
-                            <source src="{{ url_for('static', filename='uploads/' + m.filename) }}">
-                        </video>
-                        {% else %}
-                        <img src="{{ url_for('static', filename='uploads/' + m.filename) }}" class="d-block w-100 product-detail-media" alt="{{ product.name }}">
-                        {% endif %}
-                    </div>
-                    {% endfor %}
+                {% for m in product.media %}
+                <div class="carousel-item {% if loop.first %}active{% endif %}">
+                    {% if m.media_type == 'video' %}
+                    <video controls class="d-block w-100 product-detail-media">
+                        <source src="{{ url_for('static', filename='uploads/' + m.filename) }}">
+                    </video>
+                    {% else %}
+                    <img src="{{ url_for('static', filename='uploads/' + m.filename) }}"
+                        class="d-block w-100 product-detail-media" alt="{{ product.name }}">
+                    {% endif %}
+                </div>
+                {% endfor %}
                 {% elif product.image %}
-                    <div class="carousel-item active">
-                        <img src="{{ url_for('static', filename='uploads/' + product.image) }}" class="d-block w-100 product-detail-media" alt="{{ product.name }}">
-                    </div>
+                <div class="carousel-item active">
+                    <img src="{{ url_for('static', filename='uploads/' + product.image) }}"
+                        class="d-block w-100 product-detail-media" alt="{{ product.name }}">
+                </div>
                 {% else %}
-                    <div class="carousel-item active">
-                        <div class="product-detail-media bg-secondary text-white d-flex align-items-center justify-content-center rounded">Chưa có ảnh</div>
-                    </div>
+                <div class="carousel-item active">
+                    <div
+                        class="product-detail-media bg-secondary text-white d-flex align-items-center justify-content-center rounded">
+                        Chưa có ảnh</div>
+                </div>
                 {% endif %}
             </div>
             {% if product.media and product.media|length > 1 %}
@@ -51,13 +59,13 @@
             <div class="d-flex align-items-center gap-2 mb-2">
                 <span class="star-rating" aria-hidden="true">
                     {% set full = product.average_rating | round(0, 'floor') | int %}
-                    {% for i in range(1, 6) %}{% if i <= full %}★{% else %}☆{% endif %}{% endfor %}
-                </span>
-                {% if product.review_count > 0 %}
-                <span class="text-muted small">{{ product.average_rating }}/5 · {{ product.review_count }} đánh giá</span>
-                {% else %}
-                <span class="text-muted small">Chưa có đánh giá</span>
-                {% endif %}
+                    {% for i in range(1, 6) %}{% if i <= full %}★{% else %}☆{% endif %}{% endfor %} </span>
+                        {% if product.review_count > 0 %}
+                        <span class="text-muted small">{{ product.average_rating }}/5 · {{ product.review_count }} đánh
+                            giá</span>
+                        {% else %}
+                        <span class="text-muted small">Chưa có đánh giá</span>
+                        {% endif %}
             </div>
 
             <h3 class="text-danger">{{ "{:,.0f}".format(product.price) }} đ</h3>
@@ -72,22 +80,24 @@
             <p>{{ product.description or "Chưa có mô tả." }}</p>
 
             <!-- Liên hệ đặt mua & tư vấn -->
-            <div class="contact-box mt-4 p-3 rounded-4" style="background: rgba(255, 255, 255, 0.7); border: 1.5px solid var(--lego-gold); backdrop-filter: blur(10px);">
+            <div class="contact-box mt-4 p-3 rounded-4"
+                style="background: rgba(255, 255, 255, 0.7); border: 1.5px solid var(--lego-gold); backdrop-filter: blur(10px);">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span style="font-size: 1.4rem;">💐</span>
                     <div>
-                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa Lego chính hãng</strong>
+                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa Lego chính
+                            hãng</strong>
                         <small class="text-muted">Hỗ trợ tư vấn mẫu hoa và giao hàng toàn quốc</small>
                     </div>
                 </div>
                 <div class="d-flex flex-wrap gap-2 mt-3">
-                    <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer" 
-                       class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2"
-                       style="background: #0068FF !important; border-color: #0068FF !important; color: #fff !important;">
+                    <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2"
+                        style="background: #0068FF !important; border-color: #0068FF !important; color: #fff !important;">
                         <span>💬 Nhắn Zalo tư vấn</span>
                     </a>
-                    <a href="tel:0967701565" 
-                       class="btn btn-outline-dark d-inline-flex align-items-center gap-2 px-3 py-2">
+                    <a href="tel:0967701565"
+                        class="btn btn-outline-dark d-inline-flex align-items-center gap-2 px-3 py-2">
                         <span>📞 Gọi 0967.701.565</span>
                     </a>
                 </div>
@@ -99,7 +109,8 @@
 <!-- ============================================ -->
 <!--   KHU VỰC ĐÁNH GIÁ SẢN PHẨM                  -->
 <!-- ============================================ -->
-<div id="reviews" class="reviews-section mt-5 pt-4 border-top" style="border-color: rgba(201, 162, 39, 0.3) !important;">
+<div id="reviews" class="reviews-section mt-5 pt-4 border-top"
+    style="border-color: rgba(201, 162, 39, 0.3) !important;">
     <h3 class="fw-bold mb-4" style="font-family:'Playfair Display',serif; color:#21243D;">
         ⭐ Đánh giá từ khách hàng
         {% if product.review_count > 0 %}
@@ -109,11 +120,13 @@
 
     <!-- Form viết đánh giá -->
     {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' and my_review %}
-    <div class="review-form-box p-3 p-md-4 rounded-4 mb-4 text-center" style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
-        <p class="mb-0">Bạn đã đánh giá sản phẩm này. Cảm ơn bạn! Bạn có thể xóa đánh giá cũ bên dưới nếu muốn viết lại.</p>
+    <div class="review-form-box p-3 p-md-4 rounded-4 mb-4 text-center"
+        style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
+        <p class="mb-0">Cảm ơn bạn đã đánh giá sản phẩm này!</p>
     </div>
     {% else %}
-    <div class="review-form-box p-3 p-md-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
+    <div class="review-form-box p-3 p-md-4 rounded-4 mb-4"
+        style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
         <h5 class="mb-3" style="color:#21243D;">Viết đánh giá của bạn</h5>
         <form method="post" action="{{ url_for('submit_review', product_id=product.id) }}">
             <div class="row g-3">
@@ -142,7 +155,7 @@
                 <div class="col-12">
                     <label class="form-label">Nhận xét (không bắt buộc)</label>
                     <textarea name="comment" class="form-control" rows="3" maxlength="1000"
-                              placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
+                        placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
                 </div>
             </div>
             <button type="submit" class="btn mt-3 px-4" style="background: var(--lego-gold); color:#fff; border: none;">
@@ -162,79 +175,85 @@
     {% if product.reviews %}
     <div class="review-list d-flex flex-column gap-3">
         {% for r in product.reviews %}
-        <div class="review-item p-3 rounded-4" style="background: rgba(255,255,255,0.6); border: 1px solid rgba(201,162,39,0.25);">
+        <div class="review-item p-3 rounded-4"
+            style="background: rgba(255,255,255,0.6); border: 1px solid rgba(201,162,39,0.25);">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
                 <strong style="color:#21243D;">{{ r.customer_name }}</strong>
                 <small class="text-muted">{{ r.created_at.strftime('%d/%m/%Y') }}</small>
             </div>
             <div class="star-rating my-1" aria-hidden="true">
-                {% for i in range(1, 6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                {% for i in range(1, 6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %} </div>
+                    {% if r.comment %}
+                    <p class="mb-1">{{ r.comment }}</p>
+                    {% endif %}
+                    {% if current_user.is_authenticated %}
+                    {% if current_user.__class__.__name__ == 'Admin' %}
+                    <form method="post" action="{{ url_for('admin_delete_review', review_id=r.id) }}"
+                        onsubmit="return confirm('Xóa đánh giá này?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa (admin)</button>
+                    </form>
+                    {% elif current_user.__class__.__name__ == 'Customer' and r.customer_id == current_user.id %}
+                    <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
+                        onsubmit="return confirm('Xóa đánh giá của bạn?');">
+                        <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa đánh giá của tôi</button>
+                    </form>
+                    {% endif %}
+                    {% endif %}
             </div>
-            {% if r.comment %}
-            <p class="mb-1">{{ r.comment }}</p>
-            {% endif %}
-            {% if current_user.is_authenticated %}
-                {% if current_user.__class__.__name__ == 'Admin' %}
-                <form method="post" action="{{ url_for('admin_delete_review', review_id=r.id) }}"
-                      onsubmit="return confirm('Xóa đánh giá này?');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa (admin)</button>
-                </form>
-                {% elif current_user.__class__.__name__ == 'Customer' and r.customer_id == current_user.id %}
-                <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
-                      onsubmit="return confirm('Xóa đánh giá của bạn?');">
-                    <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa đánh giá của tôi</button>
-                </form>
-                {% endif %}
-            {% endif %}
+            {% endfor %}
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <p class="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
-    {% endif %}
-</div>
-
-<!-- ============================================ -->
-<!--   SẢN PHẨM CÙNG DANH MỤC / GỢI Ý THÊM       -->
-<!-- ============================================ -->
-{% if related_products %}
-<div class="related-products-section mt-5 pt-4 border-top" style="border-color: rgba(201, 162, 39, 0.3) !important;">
-    <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
-        <div>
-            <h3 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">🌸 Sản phẩm cùng danh mục</h3>
-            <p class="text-muted mb-0 small">Các mẫu hoa cùng bộ sưu tập được nhiều khách hàng yêu thích</p>
-        </div>
-        {% if product.category_id %}
-        <a href="{{ url_for('products', category=product.category_id) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
-            Xem tất cả {{ product.category.name if product.category else '' }} &rarr;
-        </a>
+        {% else %}
+        <p class="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
         {% endif %}
     </div>
 
-    <div class="row row-cols-2 row-cols-md-4 g-2 g-md-4">
-        {% for r in related_products %}
-        <div class="col">
-            <a href="{{ url_for('product_detail', product_id=r.id) }}" class="text-decoration-none text-reset">
-                <div class="card h-100 shadow-sm">
-                    {% if r.thumbnail %}
-                    <img src="{{ url_for('static', filename='uploads/' + r.thumbnail) }}" class="card-img-top product-card-image" alt="{{ r.name }}" loading="lazy" decoding="async">
-                    {% else %}
-                    <div class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">Chưa có ảnh</div>
-                    {% endif %}
-                    <div class="card-body d-flex flex-column">
-                        {% if r.category %}
-                        <span class="badge product-cat-badge mb-1 align-self-start">{{ r.category.name }}</span>
+    <!-- ============================================ -->
+    <!--   SẢN PHẨM CÙNG DANH MỤC / GỢI Ý THÊM       -->
+    <!-- ============================================ -->
+    {% if related_products %}
+    <div class="related-products-section mt-5 pt-4 border-top"
+        style="border-color: rgba(201, 162, 39, 0.3) !important;">
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+            <div>
+                <h3 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Sản phẩm cùng
+                    danh mục</h3>
+                <p class="text-muted mb-0 small">Các mẫu hoa cùng bộ sưu tập được nhiều khách hàng yêu thích</p>
+            </div>
+            {% if product.category_id %}
+            <a href="{{ url_for('products', category=product.category_id) }}"
+                class="btn btn-sm btn-outline-dark rounded-pill px-3">
+                Xem tất cả {{ product.category.name if product.category else '' }} &rarr;
+            </a>
+            {% endif %}
+        </div>
+
+        <div class="row row-cols-2 row-cols-md-4 g-2 g-md-4">
+            {% for r in related_products %}
+            <div class="col">
+                <a href="{{ url_for('product_detail', product_id=r.id) }}" class="text-decoration-none text-reset">
+                    <div class="card h-100 shadow-sm">
+                        {% if r.thumbnail %}
+                        <img src="{{ url_for('static', filename='uploads/' + r.thumbnail) }}"
+                            class="card-img-top product-card-image" alt="{{ r.name }}" loading="lazy" decoding="async">
+                        {% else %}
+                        <div
+                            class="card-img-top product-card-image bg-secondary d-flex align-items-center justify-content-center text-white">
+                            Chưa có ảnh</div>
                         {% endif %}
-                        <h5 class="card-title">{{ r.name }}</h5>
-                        <div class="mt-auto pt-1">
-                            <span class="product-price">{{ "{:,.0f}".format(r.price) }} đ</span>
+                        <div class="card-body d-flex flex-column">
+                            {% if r.category %}
+                            <span class="badge product-cat-badge mb-1 align-self-start">{{ r.category.name }}</span>
+                            {% endif %}
+                            <h5 class="card-title">{{ r.name }}</h5>
+                            <div class="mt-auto pt-1">
+                                <span class="product-price">{{ "{:,.0f}".format(r.price) }} đ</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </a>
+                </a>
+            </div>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
-</div>
-{% endif %}
-{% endblock %}
+    {% endif %}
+    {% endblock %}
