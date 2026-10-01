@@ -189,12 +189,12 @@
                     {% if current_user.is_authenticated %}
                     {% if current_user.__class__.__name__ == 'Admin' %}
                     <form method="post" action="{{ url_for('admin_delete_review', review_id=r.id) }}"
-                        onsubmit="return confirm('Xóa đánh giá này?');">
+                        data-confirm="Bạn có chắc muốn xóa đánh giá này?" data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay" data-confirm-type="danger">
                         <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa (admin)</button>
                     </form>
                     {% elif current_user.__class__.__name__ == 'Customer' and r.customer_id == current_user.id %}
                     <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
-                        onsubmit="return confirm('Xóa đánh giá của bạn?');">
+                        data-confirm="Bạn có chắc muốn xóa đánh giá của bạn?" data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay" data-confirm-type="danger">
                         <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa đánh giá của tôi</button>
                     </form>
                     {% endif %}

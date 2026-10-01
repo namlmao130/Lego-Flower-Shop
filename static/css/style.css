@@ -2007,3 +2007,161 @@ input::-webkit-search-results-decoration {
         height: 480px;
     }
 }
+
+/* =======================================================
+   MODAL HỘP THOẠI XÁC NHẬN SANG TRỌNG (CUSTOM CONFIRM DIALOG)
+   ======================================================= */
+.app-confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10500;
+    background: rgba(12, 14, 26, 0.72);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease-in-out, visibility 0.22s ease-in-out;
+}
+
+.app-confirm-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.app-confirm-dialog {
+    background: #1e2238;
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    border-radius: 20px;
+    max-width: 420px;
+    width: 100%;
+    padding: 28px 24px 24px;
+    box-shadow: 0 24px 50px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    text-align: center;
+    transform: scale(0.9) translateY(14px);
+    transition: transform 0.26s cubic-bezier(0.34, 1.45, 0.64, 1);
+    color: #EDE6D6;
+}
+
+.app-confirm-overlay.open .app-confirm-dialog {
+    transform: scale(1) translateY(0);
+}
+
+.app-confirm-icon-wrap {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    margin: 0 auto 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.app-confirm-icon-wrap.icon-warning {
+    background: rgba(201, 162, 39, 0.16);
+    color: #e5b839;
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    box-shadow: 0 0 20px rgba(201, 162, 39, 0.2);
+}
+
+.app-confirm-icon-wrap.icon-danger {
+    background: rgba(239, 68, 68, 0.16);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+}
+
+.app-confirm-icon-wrap.icon-info {
+    background: rgba(59, 130, 246, 0.16);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.35);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+.app-confirm-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    margin-bottom: 10px;
+    letter-spacing: -0.01em;
+}
+
+.app-confirm-message {
+    font-size: 0.94rem;
+    line-height: 1.55;
+    color: rgba(237, 230, 214, 0.85);
+    margin-bottom: 24px;
+    word-break: break-word;
+}
+
+.app-confirm-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.app-confirm-btn {
+    padding: 11px 20px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 0.92rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.app-confirm-btn-cancel {
+    background: rgba(255, 255, 255, 0.08);
+    color: #EDE6D6;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.app-confirm-btn-cancel:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.app-confirm-btn-ok {
+    background: linear-gradient(135deg, #c9a227 0%, #dfba47 100%);
+    color: #1e2238;
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
+}
+
+.app-confirm-btn-ok:hover {
+    background: linear-gradient(135deg, #dfba47 0%, #f0c952 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(201, 162, 39, 0.45);
+}
+
+.app-confirm-btn-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.app-confirm-btn-danger:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #dc2626 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45);
+}
+
+@media (max-width: 576px) {
+    .app-confirm-dialog {
+        padding: 24px 20px 20px;
+        border-radius: 18px;
+    }
+    .app-confirm-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+}
+

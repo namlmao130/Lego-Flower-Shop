@@ -399,8 +399,141 @@
         </button>
     </div>
 
+    <!-- ======================================================= -->
+    <!--   MODAL HỘP THOẠI XÁC NHẬN SANG TRỌNG (CUSTOM CONFIRM)  -->
+    <!-- ======================================================= -->
+    <div id="appConfirmModal" class="app-confirm-overlay" aria-hidden="true">
+        <div class="app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="appConfirmTitle">
+            <div class="app-confirm-icon-wrap icon-warning" id="appConfirmIconWrap">
+                <svg id="appConfirmIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+            </div>
+            <div class="app-confirm-content">
+                <h5 class="app-confirm-title" id="appConfirmTitle">Xác nhận</h5>
+                <p class="app-confirm-message" id="appConfirmMessage">Bạn có muốn làm mới cuộc trò chuyện này không?</p>
+            </div>
+            <div class="app-confirm-actions">
+                <button type="button" class="app-confirm-btn app-confirm-btn-cancel" id="appConfirmCancelBtn">Hủy</button>
+                <button type="button" class="app-confirm-btn app-confirm-btn-ok" id="appConfirmOkBtn">Xác nhận</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // =======================================================
+        // HỆ THỐNG HỘP THOẠI XÁC NHẬN SANG TRỌNG (WINDOW.APPCONFIRM)
+        // =======================================================
+        window.appConfirm = function(options) {
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('appConfirmModal');
+                if (!overlay) {
+                    const msg = typeof options === 'string' ? options : (options && options.message ? options.message : '');
+                    resolve(window.confirm(msg));
+                    return;
+                }
+
+                const titleEl = document.getElementById('appConfirmTitle');
+                const msgEl = document.getElementById('appConfirmMessage');
+                const iconWrap = document.getElementById('appConfirmIconWrap');
+                const okBtn = document.getElementById('appConfirmOkBtn');
+                const cancelBtn = document.getElementById('appConfirmCancelBtn');
+
+                const opts = typeof options === 'string' ? { message: options } : (options || {});
+                const title = opts.title || 'Xác nhận';
+                const message = opts.message || 'Bạn có chắc chắn muốn thực hiện hành động này?';
+                const confirmText = opts.confirmText || 'Xác nhận';
+                const cancelText = opts.cancelText || 'Hủy';
+                const type = opts.type || 'warning';
+
+                if (titleEl) titleEl.textContent = title;
+                if (msgEl) msgEl.textContent = message;
+                if (okBtn) okBtn.textContent = confirmText;
+                if (cancelBtn) cancelBtn.textContent = cancelText;
+
+                if (iconWrap && okBtn) {
+                    if (type === 'danger') {
+                        iconWrap.className = 'app-confirm-icon-wrap icon-danger';
+                        okBtn.className = 'app-confirm-btn app-confirm-btn-danger';
+                        iconWrap.innerHTML = `
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>`;
+                    } else if (type === 'info') {
+                        iconWrap.className = 'app-confirm-icon-wrap icon-info';
+                        okBtn.className = 'app-confirm-btn app-confirm-btn-ok';
+                        iconWrap.innerHTML = `
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>`;
+                    } else {
+                        iconWrap.className = 'app-confirm-icon-wrap icon-warning';
+                        okBtn.className = 'app-confirm-btn app-confirm-btn-ok';
+                        iconWrap.innerHTML = `
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>`;
+                    }
+                }
+
+                overlay.classList.add('open');
+                overlay.setAttribute('aria-hidden', 'false');
+                setTimeout(() => okBtn && okBtn.focus(), 80);
+
+                function cleanup(result) {
+                    overlay.classList.remove('open');
+                    overlay.setAttribute('aria-hidden', 'true');
+                    if (okBtn) okBtn.removeEventListener('click', onOk);
+                    if (cancelBtn) cancelBtn.removeEventListener('click', onCancel);
+                    overlay.removeEventListener('click', onOverlayClick);
+                    document.removeEventListener('keydown', onKeyDown);
+                    resolve(result);
+                }
+
+                function onOk(e) { e.preventDefault(); cleanup(true); }
+                function onCancel(e) { e.preventDefault(); cleanup(false); }
+                function onOverlayClick(e) {
+                    if (e.target === overlay) cleanup(false);
+                }
+                function onKeyDown(e) {
+                    if (e.key === 'Escape') cleanup(false);
+                }
+
+                if (okBtn) okBtn.addEventListener('click', onOk);
+                if (cancelBtn) cancelBtn.addEventListener('click', onCancel);
+                overlay.addEventListener('click', onOverlayClick);
+                document.addEventListener('keydown', onKeyDown);
+            });
+        };
+
+        // Bắt sự kiện submit tự động cho mọi form có data-confirm
+        document.addEventListener('submit', async function(e) {
+            const form = e.target;
+            const confirmMsg = form.getAttribute('data-confirm');
+            if (confirmMsg && !form.dataset.confirmed) {
+                e.preventDefault();
+                const ok = await window.appConfirm({
+                    title: form.getAttribute('data-confirm-title') || 'Xác nhận',
+                    message: confirmMsg,
+                    confirmText: form.getAttribute('data-confirm-ok') || 'Đồng ý',
+                    cancelText: form.getAttribute('data-confirm-cancel') || 'Hủy',
+                    type: form.getAttribute('data-confirm-type') || 'warning'
+                });
+                if (ok) {
+                    form.dataset.confirmed = 'true';
+                    form.submit();
+                }
+            }
+        });
+
         // -------------------------------------------------------
         // ENGINE VẼ CÁNH HOA BAY (CANVAS)
         // -------------------------------------------------------
@@ -828,9 +961,16 @@
 
             // Nút làm mới / xóa lịch sử chat
             if (clearChatBtn) {
-                clearChatBtn.addEventListener('click', function(e) {
+                clearChatBtn.addEventListener('click', async function(e) {
                     e.stopPropagation();
-                    if (confirm('Bạn có muốn làm mới cuộc trò chuyện này không?')) {
+                    const ok = await window.appConfirm({
+                        title: 'Làm mới cuộc trò chuyện',
+                        message: 'Bạn có muốn làm mới cuộc trò chuyện này không?',
+                        confirmText: 'Làm mới',
+                        cancelText: 'Hủy',
+                        type: 'warning'
+                    });
+                    if (ok) {
                         localStorage.removeItem(STORAGE_KEY);
                         localStorage.removeItem(AUTOREPLY_KEY);
                         resetToWelcome();
