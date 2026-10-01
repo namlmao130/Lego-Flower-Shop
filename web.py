@@ -52,6 +52,18 @@ def admin_required(f):
     return decorated
 
 
+def customer_required(f):
+    """Bắt buộc người dùng phải đăng nhập và là tài khoản Khách hàng (Customer)."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('login', next=request.path))
+        if not isinstance(current_user, Customer):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated
+
+
 @app.context_processor
 def inject_nav_categories():
     # Giúp mọi trang (kể cả sidebar trong base.html) đều lấy được danh sách danh mục
@@ -220,7 +232,47 @@ def delete_own_review(review_id):
     db.session.delete(review)
     db.session.commit()
     flash('Đã xóa đánh giá của bạn.', 'success')
+
+    next_url = request.form.get('next')
+    if next_url and next_url.startswith('/'):
+        return redirect(next_url)
     return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
+
+
+@app.route('/settings', methods=['GET', 'POST'])
+@customer_required
+def user_settings():
+    if request.method == 'POST':
+        action = request.form.get('action')
+        if action == 'update_profile':
+            full_name = request.form.get('full_name', '').strip()
+            if not full_name:
+                flash('Họ và tên không được để trống.', 'error')
+            else:
+                current_user.full_name = full_name[:100]
+                db.session.commit()
+                flash('Cập nhật thông tin thành công!', 'success')
+            return redirect(url_for('user_settings'))
+
+        elif action == 'change_password':
+            current_pwd = request.form.get('current_password', '')
+            new_pwd = request.form.get('new_password', '')
+            confirm_pwd = request.form.get('confirm_password', '')
+
+            if not current_user.check_password(current_pwd):
+                flash('Mật khẩu hiện tại không chính xác.', 'error')
+            elif len(new_pwd) < 6:
+                flash('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error')
+            elif new_pwd != confirm_pwd:
+                flash('Mật khẩu xác nhận không khớp.', 'error')
+            else:
+                current_user.set_password(new_pwd)
+                db.session.commit()
+                flash('Đổi mật khẩu thành công!', 'success')
+            return redirect(url_for('user_settings') + '#password')
+
+    my_reviews = Review.query.filter_by(customer_id=current_user.id).order_by(Review.created_at.desc()).all()
+    return render_template('user_settings.html', my_reviews=my_reviews)
 
 
 @app.route('/login', methods=['GET', 'POST'])

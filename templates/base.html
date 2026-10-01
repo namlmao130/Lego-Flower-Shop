@@ -21,10 +21,11 @@
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
-                <span class="nav-link user-greeting" title="{{ current_user.full_name }}">
+                <a class="nav-link user-greeting text-decoration-none" href="{{ url_for('user_settings') }}" title="Cài đặt tài khoản: {{ current_user.full_name }}">
                     <span class="user-greeting-prefix">Xin chào,</span>
                     <strong class="user-display-name">{{ current_user.short_name }}</strong>
-                </span>
+                </a>
+                <a class="nav-link" href="{{ url_for('user_settings') }}">Cài đặt</a>
                 <a class="nav-link" href="{{ url_for('logout') }}">Đăng xuất</a>
                 {% else %}
                 <a class="nav-link" href="{{ url_for('login') }}">Đăng nhập</a>
@@ -52,6 +53,12 @@
                 {% for cat in nav_categories %}
                 <a href="{{ url_for('products', category=cat.id) }}" class="nav-item"> {{ cat.name }}</a>
                 {% endfor %}
+                {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
+                <div class="border-top my-2 pt-2" style="border-color: rgba(225, 29, 72, 0.25) !important;">
+                    <a href="{{ url_for('user_settings') }}" class="nav-item">Cài đặt tài khoản</a>
+                    <a href="{{ url_for('logout') }}" class="nav-item" style="color: #fda4af;">Đăng xuất</a>
+                </div>
+                {% endif %}
             </nav>
         </div>
 

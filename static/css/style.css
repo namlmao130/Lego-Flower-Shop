@@ -1272,3 +1272,21 @@ input::-webkit-search-results-decoration {
     color: #9A7714;
     text-decoration: underline;
 }
+
+/* ===== User Settings Avatar ===== */
+.settings-avatar {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1B2140 0%, #21243D 100%);
+    color: var(--lego-gold-light);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--lego-gold);
+    box-shadow: 0 4px 12px rgba(201, 162, 39, 0.25);
+    flex-shrink: 0;
+}
