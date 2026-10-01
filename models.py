@@ -120,6 +120,7 @@ class Customer(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True, index=True)
     full_name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    avatar = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     @property
@@ -159,3 +160,35 @@ class Admin(UserMixin, db.Model):
     def get_id(self):
         # Tiền tố "admin-" để phân biệt với Customer trong cùng 1 Flask-Login session
         return f'admin-{self.id}'
+
+
+class ChatMessage(db.Model):
+    """Tin nhắn chat giữa khách hàng và Admin / Shop."""
+    __tablename__ = 'chat_messages'
+
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.String(64), nullable=False, index=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    sender_type = db.Column(db.String(20), nullable=False)  # 'customer' hoặc 'admin'
+    sender_name = db.Column(db.String(100), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    is_read = db.Column(db.Boolean, default=False)
+
+    customer = db.relationship('Customer', backref=db.backref('chat_messages', lazy=True))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'session_id': self.session_id,
+            'customer_id': self.customer_id,
+            'sender_type': self.sender_type,
+            'sender_name': self.sender_name,
+            'message': self.message,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+            'time_str': self.created_at.strftime('%H:%M'),
+            'is_read': self.is_read
+        }
+
+    def __repr__(self):
+        return f'<ChatMessage {self.id} from {self.sender_type} ({self.sender_name})>'

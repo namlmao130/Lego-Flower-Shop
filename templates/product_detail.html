@@ -177,8 +177,17 @@
         {% for r in product.reviews %}
         <div class="review-item p-3 rounded-4"
             style="background: rgba(255,255,255,0.6); border: 1px solid rgba(201,162,39,0.25);">
-            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
-                <strong style="color:#21243D;">{{ r.customer_name }}</strong>
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-1">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="review-avatar-box">
+                        {% if r.customer and r.customer.avatar %}
+                        <img src="{{ url_for('static', filename='uploads/avatars/' + r.customer.avatar) }}" alt="{{ r.customer_name }}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover; border: 1.5px solid var(--lego-gold);">
+                        {% else %}
+                        <div class="user-avatar-circle" style="width: 28px; height: 28px; font-size: 0.78rem;">{{ r.customer_name[:1].upper() }}</div>
+                        {% endif %}
+                    </div>
+                    <strong style="color:#21243D;">{{ r.customer_name }}</strong>
+                </div>
                 <small class="text-muted">{{ r.created_at.strftime('%d/%m/%Y') }}</small>
             </div>
             <div class="star-rating my-1" aria-hidden="true">

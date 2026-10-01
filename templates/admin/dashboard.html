@@ -25,6 +25,10 @@
             <span class="navbar-brand">🛠️ Admin - Quản lý sản phẩm</span>
             <div>
                 <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2" target="_blank">🌐 Xem trang web</a>
+                <a href="{{ url_for('admin_chat') }}" class="btn btn-warning btn-sm me-2 fw-semibold position-relative">
+                    💬 Tin nhắn khách
+                    <span id="adminUnreadChatBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
+                </a>
                 <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm me-2">Danh mục</a>
                 <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">Đăng xuất</a>
             </div>
@@ -282,6 +286,27 @@
                 form.submit();
             }
         }
+
+        // Cập nhật số tin nhắn chưa đọc từ khách hàng
+        async function updateAdminChatBadge() {
+            try {
+                const res = await fetch('/api/admin/chat/unread_count');
+                if (res.ok) {
+                    const data = await res.json();
+                    const badge = document.getElementById('adminUnreadChatBadge');
+                    if (badge) {
+                        if (data.unread_count > 0) {
+                            badge.textContent = data.unread_count;
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+        updateAdminChatBadge();
+        setInterval(updateAdminChatBadge, 4000);
     </script>
 </body>
 </html>

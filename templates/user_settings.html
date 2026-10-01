@@ -26,8 +26,13 @@
         <div class="settings-hero-card mb-4">
             <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="settings-hero-avatar">
+                    <div class="settings-hero-avatar" id="heroAvatarBox" title="Bấm để xem phóng to ảnh đại diện">
+                        {% if current_user.avatar %}
+                        <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"
+                            alt="{{ current_user.full_name }}" class="user-avatar-img">
+                        {% else %}
                         {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                        {% endif %}
                     </div>
                     <div>
                         <h4 class="fw-bold mb-0 text-dark"
@@ -90,7 +95,7 @@
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                     <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
-                <span>Bảo mật & Đổi mật khẩu</span>
+                <span>Bảo mật</span>
             </button>
 
             <button class="settings-tab-pill" id="tab-btn-reviews" data-bs-toggle="pill" data-bs-target="#panel-reviews"
@@ -115,8 +120,75 @@
                         <div>
                             <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Thông
                                 tin cá nhân</h4>
-                            <p class="text-muted small mb-0">Cập nhật họ tên, số điện thoại và email nhận thông báo của
-                                bạn.</p>
+                            <p class="text-muted small mb-0">Cập nhật ảnh đại diện, họ tên, số điện thoại và email nhận
+                                thông báo của bạn.</p>
+                        </div>
+                    </div>
+
+                    <!-- KHUNG ĐỔI ẢNH ĐẠI DIỆN (AVATAR) -->
+                    <div class="settings-avatar-section">
+                        <div class="settings-avatar-display-box" id="avatarDisplayBox"
+                            title="Bấm để xem phóng to ảnh đại diện">
+                            {% if current_user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"
+                                alt="{{ current_user.full_name }}" id="avatarImgPreview">
+                            <span id="avatarLetterPreview" class="d-none">{{ current_user.full_name[:1].upper() if
+                                current_user.full_name else 'U' }}</span>
+                            {% else %}
+                            <span id="avatarLetterPreview">{{ current_user.full_name[:1].upper() if
+                                current_user.full_name else 'U' }}</span>
+                            <img src="" alt="Preview" id="avatarImgPreview" class="d-none">
+                            {% endif %}
+                        </div>
+                        <div class="settings-avatar-info">
+                            <h5 class="fw-bold mb-1" style="color: #21243D; font-size: 1.05rem;">Ảnh đại diện</h5>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <form method="POST" action="{{ url_for('user_settings') }}"
+                                    enctype="multipart/form-data" id="avatarUploadForm"
+                                    class="d-inline-flex gap-2 align-items-center m-0">
+                                    <input type="hidden" name="action" value="update_avatar">
+                                    <input type="file" id="avatarInput" name="avatar"
+                                        accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" class="d-none">
+                                    <label for="avatarInput" class="settings-avatar-btn-upload">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                            <polyline points="17 8 12 3 7 8"></polyline>
+                                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                                        </svg>
+                                        <span>Chọn ảnh mới</span>
+                                    </label>
+                                    <button type="submit" id="btnSaveAvatar"
+                                        class="btn btn-sm btn-success d-none fw-bold px-3 py-2 rounded-3 shadow-sm">
+                                        Lưu ảnh này
+                                    </button>
+                                    <button type="button" id="btnCancelAvatar"
+                                        class="btn btn-sm btn-outline-secondary d-none px-3 py-2 rounded-3">
+                                        Hủy
+                                    </button>
+                                </form>
+                                {% if current_user.avatar %}
+                                <form method="POST" action="{{ url_for('user_settings') }}" class="d-inline m-0">
+                                    <input type="hidden" name="action" value="delete_avatar">
+                                    <button type="submit" class="settings-avatar-btn-delete"
+                                        title="Xóa ảnh và dùng chữ cái mặc định"
+                                        data-confirm="Bạn có chắc muốn gỡ ảnh đại diện này và dùng chữ cái đại diện mặc định?"
+                                        data-confirm-title="Gỡ ảnh đại diện" data-confirm-ok="Gỡ ảnh"
+                                        data-confirm-type="danger">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                            stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path
+                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                                            </path>
+                                        </svg>
+                                        <span>Gỡ ảnh</span>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
 
@@ -189,8 +261,7 @@
             <div class="tab-pane fade" id="panel-security" role="tabpanel" aria-labelledby="tab-btn-security">
                 <div id="password" class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
                     <div class="mb-4 pb-2 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
-                        <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Bảo mật &
-                            Đổi mật khẩu</h4>
+
                     </div>
 
                     <form method="POST" action="{{ url_for('user_settings') }}" id="pwdChangeForm">
@@ -353,7 +424,9 @@
                                     {% endif %}
 
                                     <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
-                                        data-confirm="Bạn có chắc muốn xóa đánh giá này?" data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay" data-confirm-type="danger">
+                                        data-confirm="Bạn có chắc muốn xóa đánh giá này?"
+                                        data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay"
+                                        data-confirm-type="danger">
                                         <input type="hidden" name="next" value="{{ url_for('user_settings') }}#reviews">
                                         <button type="submit"
                                             class="btn btn-sm btn-link text-danger p-0 text-decoration-none small d-inline-flex align-items-center gap-1">
@@ -387,6 +460,63 @@
 
             </div>
 
+        </div>
+    </div>
+
+    <!-- MODAL 1: XEM PHÓNG TO ẢNH ĐẠI DIỆN (AVATAR LIGHTBOX VIEWER) -->
+    <div id="avatarLightboxModal" class="avatar-lightbox-backdrop" aria-hidden="true" title="Bấm ra ngoài để đóng">
+        <button type="button" class="avatar-lightbox-close-btn" id="lightboxCloseBtn" title="Đóng (Esc)">✕</button>
+        <div class="avatar-lightbox-dialog" id="lightboxDialog">
+            <img src="" alt="Ảnh đại diện" id="lightboxImg">
+        </div>
+    </div>
+
+    <!-- MODAL 2: CẮT & CHỈNH PHÓNG TO/THU NHỎ KHI CHỌN ẢNH MỚI (AVATAR CROPPER) -->
+    <div id="avatarCropperModal" class="avatar-cropper-backdrop" aria-hidden="true">
+        <div class="avatar-cropper-dialog">
+            <div class="avatar-cropper-header">
+                <h5>Chỉnh sửa & Căn chỉnh Avatar</h5>
+                <button type="button" class="lightbox-btn lightbox-btn-close" id="cropperCloseBtn"
+                    title="Đóng">✕</button>
+            </div>
+
+            <div class="avatar-cropper-stage" id="cropperStage" title="Kéo ảnh để căn chỉnh vị trí khuôn mặt">
+                <div class="avatar-cropper-mask"></div>
+                <div class="avatar-cropper-img-wrapper" id="cropperImgWrapper">
+                    <img src="" alt="Crop preview" id="cropperImg">
+                </div>
+            </div>
+
+            <div class="avatar-cropper-controls">
+                <div class="avatar-cropper-slider-row">
+                    <label for="cropperZoomSlider">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            <line x1="11" y1="8" x2="11" y2="14"></line>
+                            <line x1="8" y1="11" x2="14" y2="11"></line>
+                        </svg>
+                        Phóng to:
+                    </label>
+                    <input type="range" id="cropperZoomSlider" min="100" max="400" value="100" step="5"
+                        class="lightbox-slider flex-grow-1">
+                    <span id="cropperZoomVal" class="lightbox-zoom-val">1.0x</span>
+                </div>
+                <div class="small text-muted" style="font-size: 0.78rem;">
+                    Kéo ảnh để căn chỉnh khuôn mặt vào giữa vòng tròn vàng.
+                </div>
+                <div class="avatar-cropper-actions">
+                    <button type="button" class="btn btn-sm btn-outline-secondary px-3 py-2 rounded-3"
+                        id="cropperCancelBtn">
+                        Hủy
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success fw-bold px-3 py-2 rounded-3 shadow-sm"
+                        id="cropperApplyBtn">
+                        Áp dụng & Lưu ảnh
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -522,6 +652,258 @@
                     }
                 });
             }
+
+            // =============================================================
+            // A. XEM ẢNH ĐẠI DIỆN PHÓNG TO (AVATAR LIGHTBOX VIEWER)
+            // =============================================================
+            var lightboxModal = document.getElementById('avatarLightboxModal');
+            var lightboxImg = document.getElementById('lightboxImg');
+            var lightboxCloseBtn = document.getElementById('lightboxCloseBtn');
+            var heroAvatarBox = document.getElementById('heroAvatarBox');
+            var avatarDisplayBox = document.getElementById('avatarDisplayBox');
+            var avatarImgPreview = document.getElementById('avatarImgPreview');
+
+            function openLightbox(imgSrc) {
+                if (!imgSrc || !lightboxModal || !lightboxImg) return;
+                lightboxImg.src = imgSrc;
+                lightboxModal.classList.add('active');
+                lightboxModal.setAttribute('aria-hidden', 'false');
+            }
+
+            function closeLightbox() {
+                if (!lightboxModal) return;
+                lightboxModal.classList.remove('active');
+                lightboxModal.setAttribute('aria-hidden', 'true');
+            }
+
+            function getCurrentAvatarSrc() {
+                if (avatarImgPreview && !avatarImgPreview.classList.contains('d-none') && avatarImgPreview.src) {
+                    return avatarImgPreview.src;
+                }
+                {% if current_user.avatar %}
+                return "{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}";
+                {% else %}
+                return null;
+                {% endif %}
+            }
+
+            function handleAvatarClick() {
+                var src = getCurrentAvatarSrc();
+                if (src) {
+                    openLightbox(src);
+                } else {
+                    alert('Bạn chưa cài đặt ảnh đại diện. Vui lòng bấm "Chọn ảnh mới" để tải lên nhé!');
+                }
+            }
+
+            if (avatarDisplayBox) avatarDisplayBox.addEventListener('click', handleAvatarClick);
+            if (heroAvatarBox) heroAvatarBox.addEventListener('click', handleAvatarClick);
+            if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLightbox);
+
+            if (lightboxModal) {
+                lightboxModal.addEventListener('click', function (e) {
+                    // Bấm vào nền hoặc bấm nút đóng để đóng lightbox
+                    if (e.target === lightboxModal || e.target.id === 'lightboxDialog') {
+                        closeLightbox();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && lightboxModal && lightboxModal.classList.contains('active')) {
+                    closeLightbox();
+                }
+            });
+
+            // =============================================================
+            // B. CẮT & CHỈNH PHÓNG TO THU NHỎ KHI CHỌN ẢNH MỚI (AVATAR CROPPER)
+            // =============================================================
+            var cropperModal = document.getElementById('avatarCropperModal');
+            var cropperStage = document.getElementById('cropperStage');
+            var cropperImg = document.getElementById('cropperImg');
+            var cropperImgWrapper = document.getElementById('cropperImgWrapper');
+            var cropperSlider = document.getElementById('cropperZoomSlider');
+            var cropperZoomVal = document.getElementById('cropperZoomVal');
+            var cropperCloseBtn = document.getElementById('cropperCloseBtn');
+            var cropperCancelBtn = document.getElementById('cropperCancelBtn');
+            var cropperApplyBtn = document.getElementById('cropperApplyBtn');
+            var avatarInput = document.getElementById('avatarInput');
+
+            var cropScale = 1;
+            var cropPanX = 0;
+            var cropPanY = 0;
+            var isCropDragging = false;
+            var cropStartX = 0;
+            var cropStartY = 0;
+            var baseImgW = 0;
+            var baseImgH = 0;
+
+            function updateCropperTransform() {
+                if (cropperImgWrapper) {
+                    cropperImgWrapper.style.transform = 'translate(' + cropPanX + 'px, ' + cropPanY + 'px) scale(' + cropScale + ')';
+                }
+                if (cropperSlider) cropperSlider.value = Math.round(cropScale * 100);
+                if (cropperZoomVal) cropperZoomVal.textContent = cropScale.toFixed(1) + 'x';
+            }
+
+            function openCropper(file) {
+                var url = URL.createObjectURL(file);
+                cropperImg.onload = function () {
+                    var naturalW = cropperImg.naturalWidth;
+                    var naturalH = cropperImg.naturalHeight;
+                    var targetSize = 240;
+                    var scaleFit = Math.max(targetSize / naturalW, targetSize / naturalH);
+                    baseImgW = naturalW * scaleFit;
+                    baseImgH = naturalH * scaleFit;
+                    cropperImg.style.width = baseImgW + 'px';
+                    cropperImg.style.height = baseImgH + 'px';
+
+                    cropScale = 1;
+                    cropPanX = 0;
+                    cropPanY = 0;
+                    updateCropperTransform();
+
+                    cropperModal.classList.add('active');
+                    cropperModal.setAttribute('aria-hidden', 'false');
+                };
+                cropperImg.src = url;
+            }
+
+            function closeCropper() {
+                cropperModal.classList.remove('active');
+                cropperModal.setAttribute('aria-hidden', 'true');
+                if (avatarInput) avatarInput.value = '';
+            }
+
+            if (avatarInput) {
+                avatarInput.addEventListener('change', function () {
+                    var file = this.files && this.files[0];
+                    if (file) {
+                        if (file.size > 12 * 1024 * 1024) {
+                            alert('Ảnh quá lớn (tối đa 12MB). Vui lòng chọn ảnh khác.');
+                            this.value = '';
+                            return;
+                        }
+                        openCropper(file);
+                    }
+                });
+            }
+
+            if (cropperCloseBtn) cropperCloseBtn.addEventListener('click', closeCropper);
+            if (cropperCancelBtn) cropperCancelBtn.addEventListener('click', closeCropper);
+            if (cropperModal) {
+                cropperModal.addEventListener('click', function (e) {
+                    if (e.target === cropperModal) closeCropper();
+                });
+            }
+
+            if (cropperSlider) {
+                cropperSlider.addEventListener('input', function () {
+                    cropScale = parseFloat(this.value) / 100;
+                    updateCropperTransform();
+                });
+            }
+
+            if (cropperStage) {
+                cropperStage.addEventListener('wheel', function (e) {
+                    e.preventDefault();
+                    var delta = e.deltaY < 0 ? 0.1 : -0.1;
+                    cropScale = Math.max(1.0, Math.min(4.0, cropScale + delta));
+                    updateCropperTransform();
+                }, { passive: false });
+
+                cropperStage.addEventListener('pointerdown', function (e) {
+                    isCropDragging = true;
+                    cropStartX = e.clientX - cropPanX;
+                    cropStartY = e.clientY - cropPanY;
+                    cropperStage.classList.add('dragging');
+                    cropperStage.setPointerCapture?.(e.pointerId);
+                });
+
+                cropperStage.addEventListener('pointermove', function (e) {
+                    if (!isCropDragging) return;
+                    cropPanX = e.clientX - cropStartX;
+                    cropPanY = e.clientY - cropStartY;
+                    updateCropperTransform();
+                });
+
+                function endCropDrag(e) {
+                    if (!isCropDragging) return;
+                    isCropDragging = false;
+                    cropperStage.classList.remove('dragging');
+                    if (cropperStage.hasPointerCapture?.(e.pointerId)) {
+                        cropperStage.releasePointerCapture(e.pointerId);
+                    }
+                }
+                cropperStage.addEventListener('pointerup', endCropDrag);
+                cropperStage.addEventListener('pointercancel', endCropDrag);
+            }
+
+            // Áp dụng crop và gửi lên server
+            if (cropperApplyBtn) {
+                cropperApplyBtn.addEventListener('click', function () {
+                    cropperApplyBtn.disabled = true;
+                    cropperApplyBtn.innerHTML = 'Đang lưu ảnh...';
+
+                    var canvas = document.createElement('canvas');
+                    var outputSize = 360;
+                    canvas.width = outputSize;
+                    canvas.height = outputSize;
+                    var ctx = canvas.getContext('2d');
+
+                    var viewSize = 240;
+                    var stageRect = cropperStage.getBoundingClientRect();
+                    var viewCenterX = stageRect.width / 2;
+                    var viewCenterY = stageRect.height / 2;
+
+                    var curW = baseImgW * cropScale;
+                    var curH = baseImgH * cropScale;
+                    var imgLeft = viewCenterX + cropPanX - curW / 2;
+                    var imgTop = viewCenterY + cropPanY - curH / 2;
+
+                    var cropLeftInImg = (viewCenterX - 120 - imgLeft) / curW * cropperImg.naturalWidth;
+                    var cropTopInImg = (viewCenterY - 120 - imgTop) / curH * cropperImg.naturalHeight;
+                    var cropWInImg = (viewSize / curW) * cropperImg.naturalWidth;
+                    var cropHInImg = (viewSize / curH) * cropperImg.naturalHeight;
+
+                    ctx.drawImage(
+                        cropperImg,
+                        cropLeftInImg, cropTopInImg, cropWInImg, cropHInImg,
+                        0, 0, outputSize, outputSize
+                    );
+
+                    canvas.toBlob(function (blob) {
+                        if (!blob) {
+                            alert('Không thể xuất ảnh.');
+                            cropperApplyBtn.disabled = false;
+                            cropperApplyBtn.innerHTML = 'Áp dụng & Lưu ảnh';
+                            return;
+                        }
+                        var formData = new FormData();
+                        formData.append('action', 'update_avatar');
+                        formData.append('avatar', blob, 'avatar.webp');
+
+                        fetch("{{ url_for('user_settings') }}", {
+                            method: 'POST',
+                            body: formData
+                        }).then(function (res) {
+                            window.location.reload();
+                        }).catch(function (err) {
+                            alert('Có lỗi xảy ra khi lưu ảnh: ' + err);
+                            cropperApplyBtn.disabled = false;
+                            cropperApplyBtn.innerHTML = 'Áp dụng & Lưu ảnh';
+                        });
+                    }, 'image/webp', 0.92);
+                });
+            }
+
+            // Nhấn phím Escape để đóng nhanh
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') {
+                    if (cropperModal && cropperModal.classList.contains('active')) closeCropper();
+                    if (lightboxModal && lightboxModal.classList.contains('active')) closeLightbox();
+                }
+            });
         });
     </script>
     {% endblock %}

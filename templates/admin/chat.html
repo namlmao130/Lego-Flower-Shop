@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý tin nhắn khách hàng - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        .chat-app-container {
+            height: calc(100vh - 80px);
+            min-height: 600px;
+            display: flex;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            overflow: hidden;
+            margin-top: 16px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        /* Cột bên trái: Danh sách cuộc trò chuyện */
+        .chat-sidebar {
+            width: 340px;
+            flex-shrink: 0;
+            border-right: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            background: #ffffff;
+        }
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #fafafa;
+        }
+        .conversation-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
+        }
+        .conv-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            position: relative;
+            margin-bottom: 4px;
+            border: 1px solid transparent;
+        }
+        .conv-item:hover {
+            background-color: #f8fafc;
+        }
+        .conv-item.active {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+        }
+        .conv-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1B2140 0%, #21243D 100%);
+            color: #e5b839;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 16px;
+            flex-shrink: 0;
+            overflow: hidden;
+            border: 1.5px solid rgba(201, 162, 39, 0.3);
+        }
+        .conv-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .conv-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .conv-name {
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .conv-preview {
+            font-size: 0.8rem;
+            color: #64748b;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+        .conv-meta {
+            text-align: right;
+            font-size: 0.72rem;
+            color: #94a3b8;
+            flex-shrink: 0;
+        }
+        /* Cột bên phải: Khung chat chính */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            min-width: 0;
+        }
+        .chat-main-header {
+            padding: 14px 20px;
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .chat-thread {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .admin-msg-bubble {
+            max-width: 75%;
+            padding: 10px 16px;
+            border-radius: 16px;
+            font-size: 0.92rem;
+            line-height: 1.45;
+            position: relative;
+            word-break: break-word;
+        }
+        .admin-msg-customer {
+            align-self: flex-start;
+            background: #ffffff;
+            color: #1e293b;
+            border: 1px solid #e2e8f0;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .admin-msg-me {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #1B2140 0%, #21243D 100%);
+            color: #ffffff;
+            border-bottom-right-radius: 4px;
+            box-shadow: 0 4px 12px rgba(33, 36, 61, 0.2);
+        }
+        .admin-msg-time {
+            font-size: 0.7rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .admin-msg-me .admin-msg-time {
+            color: rgba(255, 255, 255, 0.65);
+            text-align: right;
+        }
+        .chat-composer {
+            padding: 14px 20px;
+            background: #ffffff;
+            border-top: 1px solid #e2e8f0;
+        }
+        .quick-chips-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 8px;
+        }
+        .quick-chip-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            font-size: 0.78rem;
+            padding: 4px 10px;
+            border-radius: 14px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.15s ease;
+        }
+        .quick-chip-btn:hover {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .empty-chat-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #94a3b8;
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand fw-bold">
+                🛠️ Admin - Tin nhắn khách hàng
+            </span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm" target="_blank">🌐 Xem trang web</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">📦 Quản lý sản phẩm</a>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm">📂 Danh mục</a>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Đăng xuất</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4">
+        <div class="chat-app-container">
+            <!-- CỘT TRÁI: DANH SÁCH CUỘC HỘI THOẠI -->
+            <div class="chat-sidebar">
+                <div class="sidebar-header">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <h6 class="fw-bold mb-0 text-dark">Hộp thư khách hàng</h6>
+                        <span id="unreadTotalBadge" class="badge bg-danger rounded-pill d-none">0 mới</span>
+                    </div>
+                    <input type="text" id="searchConvInput" class="form-control form-control-sm" placeholder="Tìm theo tên, SĐT khách...">
+                </div>
+
+                <div class="conversation-list" id="conversationList">
+                    <div class="text-center py-4 text-muted small">Đang tải cuộc trò chuyện...</div>
+                </div>
+            </div>
+
+            <!-- CỘT PHẢI: KHUNG TRÒ CHUYỆN VỚI KHÁCH -->
+            <div class="chat-main" id="chatMain">
+                <!-- Khi chưa chọn khách -->
+                <div class="empty-chat-state" id="noActiveChat">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-3 text-secondary">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <h5 class="fw-bold text-secondary">Chọn một cuộc trò chuyện</h5>
+                    <p class="small text-muted mb-0">Bấm vào khách hàng ở danh sách bên trái để xem và trả lời tin nhắn.</p>
+                </div>
+
+                <!-- Khung chat chi tiết khi đã chọn -->
+                <div class="d-flex flex-column h-100 d-none" id="activeChatBox">
+                    <div class="chat-main-header">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="conv-avatar" id="activeAvatar">U</div>
+                            <div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="fw-bold mb-0 text-dark" id="activeName">Khách hàng</h6>
+                                    <span id="activeBadge" class="badge bg-secondary rounded-pill" style="font-size: 0.65rem;">Khách vãng lai</span>
+                                </div>
+                                <div class="text-muted small mt-1" id="activeContact" style="font-size: 0.78rem;">
+                                    Chưa có số điện thoại
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshActiveBtn" title="Làm mới cuộc trò chuyện">
+                                🔄 Tải lại
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-thread" id="chatThread">
+                        <!-- Tin nhắn sẽ được render động ở đây -->
+                    </div>
+
+                    <div class="chat-composer">
+                        <!-- Tin nhắn mẫu nhanh -->
+                        <div class="quick-chips-row">
+                            <button type="button" class="quick-chip-btn" data-text="Dạ Tiệm Hoa Lego xin chào bạn ạ! 🌸">🌸 Chào khách</button>
+                            <button type="button" class="quick-chip-btn" data-text="Dạ mẫu hoa này hiện đang có sẵn tại tiệm nha bạn! 💐">💐 Báo còn hàng</button>
+                            <button type="button" class="quick-chip-btn" data-text="Shop có hỗ trợ giao hỏa tốc và tặng kèm thiệp chúc mừng miễn phí nhé!">🎁 Quà tặng & Thiệp</button>
+                            <button type="button" class="quick-chip-btn" data-text="Bạn có thể để lại số điện thoại hoặc nhắn qua Zalo 0967.701.565 để shop gửi ảnh thật nhé!">📞 Xin Zalo</button>
+                        </div>
+
+                        <form id="adminReplyForm" class="d-flex gap-2">
+                            <input type="text" id="adminReplyInput" class="form-control" placeholder="Nhập tin nhắn phản hồi cho khách... (Nhấn Enter để gửi)" autocomplete="off" required>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-1" id="btnSendReply">
+                                <span>Gửi</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let activeSessionId = null;
+            let conversationsData = [];
+            const conversationList = document.getElementById('conversationList');
+            const searchInput = document.getElementById('searchConvInput');
+            const unreadBadge = document.getElementById('unreadTotalBadge');
+            const noActiveChat = document.getElementById('noActiveChat');
+            const activeChatBox = document.getElementById('activeChatBox');
+            const chatThread = document.getElementById('chatThread');
+            const adminReplyForm = document.getElementById('adminReplyForm');
+            const adminReplyInput = document.getElementById('adminReplyInput');
+            const refreshActiveBtn = document.getElementById('refreshActiveBtn');
+
+            const activeAvatar = document.getElementById('activeAvatar');
+            const activeName = document.getElementById('activeName');
+            const activeBadge = document.getElementById('activeBadge');
+            const activeContact = document.getElementById('activeContact');
+
+            // Quick canned responses
+            document.querySelectorAll('.quick-chip-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    adminReplyInput.value = this.getAttribute('data-text');
+                    adminReplyInput.focus();
+                });
+            });
+
+            // 1. Tải danh sách cuộc trò chuyện
+            async function fetchConversations() {
+                try {
+                    const res = await fetch('/api/admin/chat/conversations');
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    conversationsData = data.conversations || [];
+                    renderConversations(conversationsData);
+                    updateTotalUnread();
+                } catch (e) {
+                    console.error('Lỗi tải cuộc trò chuyện:', e);
+                }
+            }
+
+            function updateTotalUnread() {
+                let total = 0;
+                conversationsData.forEach(c => total += (c.unread_count || 0));
+                if (total > 0) {
+                    unreadBadge.textContent = total + ' mới';
+                    unreadBadge.classList.remove('d-none');
+                } else {
+                    unreadBadge.classList.add('d-none');
+                }
+            }
+
+            function renderConversations(list) {
+                const query = (searchInput.value || '').trim().toLowerCase();
+                const filtered = list.filter(item => {
+                    if (!query) return true;
+                    const name = (item.customer.name || '').toLowerCase();
+                    const phone = (item.customer.phone || '').toLowerCase();
+                    const lastMsg = (item.last_message || '').toLowerCase();
+                    return name.includes(query) || phone.includes(query) || lastMsg.includes(query);
+                });
+
+                if (filtered.length === 0) {
+                    conversationList.innerHTML = '<div class="text-center py-4 text-muted small">Không tìm thấy cuộc trò chuyện nào.</div>';
+                    return;
+                }
+
+                conversationList.innerHTML = '';
+                filtered.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = `conv-item ${item.session_id === activeSessionId ? 'active' : ''}`;
+                    el.setAttribute('data-session', item.session_id);
+
+                    const avatarHtml = item.customer.avatar 
+                        ? `<img src="/static/uploads/avatars/${item.customer.avatar}" alt="${item.customer.name}">`
+                        : (item.customer.name ? item.customer.name.charAt(0).toUpperCase() : 'K');
+
+                    const unreadBadgeHtml = item.unread_count > 0 
+                        ? `<span class="badge bg-danger rounded-pill">${item.unread_count}</span>` 
+                        : '';
+
+                    const memberBadge = item.customer.is_member 
+                        ? '<span class="badge bg-success-subtle text-success border border-success-subtle ms-1" style="font-size:0.65rem;">Thành viên</span>' 
+                        : '';
+
+                    el.innerHTML = `
+                        <div class="conv-avatar">${avatarHtml}</div>
+                        <div class="conv-info">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="conv-name">${item.customer.name} ${memberBadge}</div>
+                                <div class="conv-meta">${item.last_time}</div>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="conv-preview">${item.sender_type === 'admin' ? '<b>Bạn:</b> ' : ''}${escapeHtml(item.last_message)}</div>
+                                <div>${unreadBadgeHtml}</div>
+                            </div>
+                        </div>
+                    `;
+
+                    el.addEventListener('click', () => selectConversation(item.session_id));
+                    conversationList.appendChild(el);
+                });
+            }
+
+            searchInput.addEventListener('input', () => renderConversations(conversationsData));
+
+            // 2. Chọn một cuộc trò chuyện và tải tin nhắn
+            async function selectConversation(sessionId) {
+                activeSessionId = sessionId;
+                renderConversations(conversationsData);
+
+                noActiveChat.classList.add('d-none');
+                activeChatBox.classList.remove('d-none');
+                await loadActiveMessages();
+                adminReplyInput.focus();
+            }
+
+            async function loadActiveMessages() {
+                if (!activeSessionId) return;
+                try {
+                    const res = await fetch(`/api/admin/chat/messages/${encodeURIComponent(activeSessionId)}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    
+                    // Cập nhật thông tin khách ở Header
+                    const cust = data.customer || {};
+                    activeName.textContent = cust.name || 'Khách vãng lai';
+                    
+                    if (cust.avatar) {
+                        activeAvatar.innerHTML = `<img src="/static/uploads/avatars/${cust.avatar}" alt="${cust.name}">`;
+                    } else {
+                        activeAvatar.textContent = cust.name ? cust.name.charAt(0).toUpperCase() : 'K';
+                    }
+
+                    if (cust.is_member) {
+                        activeBadge.className = 'badge bg-success rounded-pill';
+                        activeBadge.textContent = 'Khách thành viên';
+                        activeContact.innerHTML = `📞 ${cust.phone || 'Chưa có SĐT'} • ✉️ ${cust.email || 'Chưa có email'} • Ngày tham gia: ${cust.created_at || 'Mới'}`;
+                    } else {
+                        activeBadge.className = 'badge bg-secondary rounded-pill';
+                        activeBadge.textContent = 'Khách vãng lai';
+                        activeContact.textContent = 'Khách chưa đăng ký tài khoản (Chat qua Web)';
+                    }
+
+                    // Render danh sách tin nhắn
+                    renderMessages(data.messages || []);
+                    fetchConversations(); // Cập nhật lại unread count
+                } catch (e) {
+                    console.error('Lỗi tải tin nhắn cuộc trò chuyện:', e);
+                }
+            }
+
+            function renderMessages(messages) {
+                chatThread.innerHTML = '';
+                if (messages.length === 0) {
+                    chatThread.innerHTML = '<div class="text-center text-muted small my-auto">Chưa có tin nhắn nào trong cuộc trò chuyện này.</div>';
+                    return;
+                }
+
+                messages.forEach(msg => {
+                    const bubble = document.createElement('div');
+                    const isMe = msg.sender_type === 'admin';
+                    bubble.className = `admin-msg-bubble ${isMe ? 'admin-msg-me' : 'admin-msg-customer'}`;
+
+                    bubble.innerHTML = `
+                        <div>${escapeHtml(msg.message)}</div>
+                        <div class="admin-msg-time">${isMe ? 'Bạn • ' : ''}${msg.time_str || ''}</div>
+                    `;
+                    chatThread.appendChild(bubble);
+                });
+
+                chatThread.scrollTop = chatThread.scrollHeight;
+            }
+
+            // 3. Admin gửi tin nhắn trả lời
+            adminReplyForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const text = adminReplyInput.value.trim();
+                if (!text || !activeSessionId) return;
+
+                adminReplyInput.disabled = true;
+                try {
+                    const res = await fetch('/api/admin/chat/reply', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: activeSessionId,
+                            message: text
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        adminReplyInput.value = '';
+                        await loadActiveMessages();
+                    } else {
+                        alert(data.error || 'Không thể gửi tin nhắn.');
+                    }
+                } catch (e) {
+                    console.error('Lỗi khi gửi phản hồi:', e);
+                } finally {
+                    adminReplyInput.disabled = false;
+                    adminReplyInput.focus();
+                }
+            });
+
+            if (refreshActiveBtn) {
+                refreshActiveBtn.addEventListener('click', loadActiveMessages);
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                return text
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            // Polling định kỳ mỗi 3.5 giây để cập nhật tin nhắn mới
+            fetchConversations();
+            setInterval(fetchConversations, 3500);
+            setInterval(() => {
+                if (activeSessionId) loadActiveMessages();
+            }, 3500);
+        });
+    </script>
+</body>
+</html>

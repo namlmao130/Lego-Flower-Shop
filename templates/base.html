@@ -30,13 +30,23 @@
                     <button class="user-avatar-btn" type="button" id="userMenuBtn" data-bs-toggle="dropdown"
                         data-bs-display="static" aria-expanded="false" title="{{ current_user.full_name }}">
                         <span class="user-avatar-circle">
+                            {% if current_user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"
+                                alt="{{ current_user.full_name }}" class="user-avatar-img">
+                            {% else %}
                             {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                            {% endif %}
                         </span>
                     </button>
                     <div class="dropdown-menu dropdown-menu-end user-popover-menu" aria-labelledby="userMenuBtn">
                         <div class="user-popover-header">
                             <div class="user-popover-avatar">
+                                {% if current_user.avatar %}
+                                <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"
+                                    alt="{{ current_user.full_name }}" class="user-avatar-img">
+                                {% else %}
                                 {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                                {% endif %}
                             </div>
                             <div class="user-popover-meta">
                                 <div class="user-popover-name">{{ current_user.full_name }}</div>
@@ -89,26 +99,29 @@
 
         <div>
             <div class="toolbar-header">
-                <div class="toolbar-logo">🥀</div>
                 <div>
-                    <div class="toolbar-title">Lego Flower</div>
+                    <br>
                     <div class="toolbar-subtitle">Danh mục</div>
                 </div>
             </div>
 
             <nav class="toolbar-nav">
-                <a href="{{ url_for('index') }}" class="nav-item"> Trang chủ</a>
                 <a href="{{ url_for('products') }}" class="nav-item"> Tất cả sản phẩm</a>
                 {% for cat in nav_categories %}
                 <a href="{{ url_for('products', category=cat.id) }}" class="nav-item"> {{ cat.name }}</a>
                 {% endfor %}
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
-                <div class="border-top my-2 pt-2" style="border-color: rgba(225, 29, 72, 0.25) !important;">
+                <div class="border-top my-2 pt-2" style="border-color: rgba(255, 255, 255, 0.15) !important;">
                     <div class="d-flex align-items-center gap-2 px-3 py-2 mb-2 rounded-3"
                         style="background: rgba(0, 0, 0, 0.2);">
                         <div class="user-avatar-circle"
                             style="width: 32px; height: 32px; font-size: 0.85rem; flex-shrink: 0;">
+                            {% if current_user.avatar %}
+                            <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.avatar) }}"
+                                alt="{{ current_user.full_name }}" class="user-avatar-img">
+                            {% else %}
                             {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                            {% endif %}
                         </div>
                         <div class="overflow-hidden">
                             <div class="text-white fw-bold small text-truncate" style="max-width: 140px;">{{
@@ -130,194 +143,9 @@
             <span>● Lego Flower Shop</span>
         </div>
 
-        <!-- DẢI ĐÁ QUÝ RUBY & HOA LEGO 3D BÊN PHẢI TOOLBAR -->
-        <div class="rose-vine-border">
-
-            <!-- Bông 1: Đóa hoa Ruby giác cắt Octagon -->
-            <div class="rose-item" title="Đóa hồng Ruby 3D • Chạm để bung cánh hoa">
-                <svg width="42" height="42" viewBox="0 0 100 100" class="gem-svg">
-                    <defs>
-                        <linearGradient id="goldRim1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="50%" stop-color="#c9a227"/>
-                            <stop offset="100%" stop-color="#78350f"/>
-                        </linearGradient>
-                        <linearGradient id="rubyF1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#f43f5e"/>
-                            <stop offset="50%" stop-color="#be123c"/>
-                            <stop offset="100%" stop-color="#4c0519"/>
-                        </linearGradient>
-                        <linearGradient id="rubyF2" x1="100%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" stop-color="#fda4af"/>
-                            <stop offset="60%" stop-color="#e11d48"/>
-                            <stop offset="100%" stop-color="#881337"/>
-                        </linearGradient>
-                        <linearGradient id="emeraldLeaf1" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#34d399"/>
-                            <stop offset="60%" stop-color="#059669"/>
-                            <stop offset="100%" stop-color="#064e3b"/>
-                        </linearGradient>
-                    </defs>
-                    <!-- Lá ngọc lục bảo giác cắt -->
-                    <polygon points="35,76 18,84 14,74 28,68" fill="url(#emeraldLeaf1)" stroke="#c9a227" stroke-width="1.2" stroke-linejoin="round"/>
-                    <polygon points="65,76 82,84 86,74 72,68" fill="url(#emeraldLeaf1)" stroke="#c9a227" stroke-width="1.2" stroke-linejoin="round"/>
-                    <!-- Ổ ngàm vàng giác cắt bát giác -->
-                    <polygon points="50,14 78,26 90,54 78,82 50,92 22,82 10,54 22,26" fill="url(#goldRim1)" stroke="#451a03" stroke-width="1"/>
-                    <!-- Các mặt giác cánh hoa Ruby 3D -->
-                    <polygon points="50,18 74,28 84,54 50,54" fill="url(#rubyF1)"/>
-                    <polygon points="84,54 74,78 50,86 50,54" fill="#4c0519"/>
-                    <polygon points="50,86 26,78 16,54 50,54" fill="url(#rubyF2)"/>
-                    <polygon points="16,54 26,28 50,18 50,54" fill="#be123c"/>
-                    <!-- Tầng giác cắt bên trong -->
-                    <polygon points="50,28 68,36 72,54 50,54" fill="#e11d48"/>
-                    <polygon points="72,54 68,70 50,76 50,54" fill="#881337"/>
-                    <polygon points="50,76 32,70 28,54 50,54" fill="#be123c"/>
-                    <polygon points="28,54 32,36 50,28 50,54" fill="#f43f5e"/>
-                    <!-- Mặt bàn đá quý trung tâm & đinh tán Lego mạ vàng -->
-                    <polygon points="50,38 60,44 60,58 50,64 40,58 40,44" fill="#9f1239" stroke="#fef08a" stroke-width="1.2"/>
-                    <polygon points="50,42 56,46 56,54 50,58 44,54 44,46" fill="#f43f5e"/>
-                    <!-- Tia sáng kim cương -->
-                    <circle cx="47" cy="46" r="2.5" fill="#ffffff" opacity="0.95"/>
-                    <polygon points="50,34 51.5,39 56,40.5 51.5,42 50,47 48.5,42 44,40.5 48.5,39" fill="#ffffff" opacity="0.8"/>
-                </svg>
-            </div>
-
-            <!-- Bông 2: Nụ hồng Ruby giác cắt Marquise (Hạt thóc) -->
-            <div class="rose-item" style="transform: rotate(-15deg);" title="Nụ hồng Ruby giác cắt">
-                <svg width="36" height="36" viewBox="0 0 100 100" class="gem-svg">
-                    <defs>
-                        <linearGradient id="goldRim2" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="50%" stop-color="#c9a227"/>
-                            <stop offset="100%" stop-color="#78350f"/>
-                        </linearGradient>
-                        <linearGradient id="rubyM2" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fb7185"/>
-                            <stop offset="50%" stop-color="#be123c"/>
-                            <stop offset="100%" stop-color="#4c0519"/>
-                        </linearGradient>
-                    </defs>
-                    <!-- Chấu vàng ngàm giác cắt -->
-                    <polygon points="50,10 76,34 84,60 50,90 16,60 24,34" fill="url(#goldRim2)" stroke="#583101" stroke-width="1"/>
-                    <!-- Các mặt giác ruby đa diện -->
-                    <polygon points="50,14 72,36 50,54" fill="#f43f5e"/>
-                    <polygon points="72,36 80,58 50,54" fill="#881337"/>
-                    <polygon points="80,58 50,86 50,54" fill="#4c0519"/>
-                    <polygon points="50,86 20,58 50,54" fill="#9f1239"/>
-                    <polygon points="20,58 28,36 50,54" fill="#be123c"/>
-                    <polygon points="28,36 50,14 50,54" fill="url(#rubyM2)"/>
-                    <polygon points="50,22 58,40 50,52 42,40" fill="#f43f5e" stroke="#fef08a" stroke-width="1.2"/>
-                    <circle cx="48" cy="36" r="2.5" fill="#ffffff" opacity="0.95"/>
-                </svg>
-            </div>
-
-            <!-- Bông 3: HUY HIỆU ĐÁ QUÝ RUBY HOÀNG GIA (TAY CẦM KÉO DRAG HANDLE) -->
-            <div id="dragHandle" class="rose-item drag-handle-rose" title="Kéo để mở danh mục!">
-                <svg width="46" height="46" viewBox="0 0 100 100" class="gem-svg">
-                    <defs>
-                        <linearGradient id="goldBezel3" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="30%" stop-color="#e5b839"/>
-                            <stop offset="70%" stop-color="#a16207"/>
-                            <stop offset="100%" stop-color="#fde047"/>
-                        </linearGradient>
-                        <linearGradient id="rubyGrandA" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fda4af"/>
-                            <stop offset="35%" stop-color="#f43f5e"/>
-                            <stop offset="70%" stop-color="#be123c"/>
-                            <stop offset="100%" stop-color="#4c0519"/>
-                        </linearGradient>
-                        <linearGradient id="rubyGrandB" x1="100%" y1="100%" x2="0%" y2="0%">
-                            <stop offset="0%" stop-color="#2a030c"/>
-                            <stop offset="50%" stop-color="#881337"/>
-                            <stop offset="100%" stop-color="#e11d48"/>
-                        </linearGradient>
-                    </defs>
-                    <!-- Vành huy hiệu 12 cạnh vàng giác cắt -->
-                    <polygon points="50,6 63,14 74,8 80,22 93,25 91,39 100,50 91,61 93,75 80,78 74,92 63,86 50,94 37,86 26,92 20,78 7,75 9,61 0,50 9,39 7,25 20,22 26,8 37,14" fill="url(#goldBezel3)" stroke="#78350f" stroke-width="1"/>
-                    <circle cx="50" cy="50" r="41" fill="#18040a" stroke="url(#goldBezel3)" stroke-width="1.8"/>
-                    <!-- Các tầng cánh hoa Ruby giác cắt 3D lộng lẫy -->
-                    <polygon points="50,13 72,21 50,50" fill="url(#rubyGrandA)"/>
-                    <polygon points="72,21 86,41 50,50" fill="#9f1239"/>
-                    <polygon points="86,41 82,67 50,50" fill="#4c0519"/>
-                    <polygon points="82,67 61,84 50,50" fill="url(#rubyGrandB)"/>
-                    <polygon points="61,84 39,84 50,50" fill="#2a030c"/>
-                    <polygon points="39,84 18,67 50,50" fill="#881337"/>
-                    <polygon points="18,67 14,41 50,50" fill="#be123c"/>
-                    <polygon points="14,41 28,21 50,50" fill="#e11d48"/>
-                    <polygon points="28,21 50,13 50,50" fill="#fb7185"/>
-                    <!-- Tầng giác cắt nhụy hoa bên trong -->
-                    <polygon points="50,22 66,30 50,50" fill="#f43f5e"/>
-                    <polygon points="66,30 74,48 50,50" fill="#be123c"/>
-                    <polygon points="74,48 64,68 50,50" fill="#4c0519"/>
-                    <polygon points="64,68 50,74 50,50" fill="#881337"/>
-                    <polygon points="50,74 36,68 50,50" fill="#58081c"/>
-                    <polygon points="36,68 26,48 50,50" fill="#9f1239"/>
-                    <polygon points="26,48 34,30 50,50" fill="#e11d48"/>
-                    <polygon points="34,30 50,22 50,50" fill="#fda4af"/>
-                    <!-- Nhụy hoa Lego giác cắt vàng & đinh tán phản quang -->
-                    <circle cx="50" cy="50" r="16" fill="url(#goldBezel3)" stroke="#583101" stroke-width="1.2"/>
-                    <polygon points="50,36 61,42 61,58 50,64 39,58 39,42" fill="#be123c" stroke="#fef08a" stroke-width="1"/>
-                    <circle cx="50" cy="50" r="7" fill="#f43f5e"/>
-                    <circle cx="50" cy="50" r="4" fill="#fda4af"/>
-                    <polygon points="50,42 52,47 58,49 53,52 54,58 50,54 46,58 47,52 42,49 48,47" fill="#ffffff" opacity="0.95"/>
-                    <!-- Ký hiệu tay cầm tinh tế (mũi tên vàng chỉ hướng kéo) -->
-                    <path d="M21 50 L26 46 M21 50 L26 54" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round"/>
-                    <path d="M79 50 L74 46 M79 50 L74 54" stroke="#fef08a" stroke-width="2.2" stroke-linecap="round"/>
-                </svg>
-            </div>
-
-            <!-- Bông 4: Giọt lệ Ruby giác cắt Pear (Teardrop) -->
-            <div class="rose-item" style="transform: rotate(20deg);" title="Đá Ruby giọt lệ giác cắt">
-                <svg width="36" height="36" viewBox="0 0 100 100" class="gem-svg">
-                    <defs>
-                        <linearGradient id="goldRim4" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="50%" stop-color="#c9a227"/>
-                            <stop offset="100%" stop-color="#78350f"/>
-                        </linearGradient>
-                    </defs>
-                    <polygon points="50,12 80,45 74,78 50,90 26,78 20,45" fill="url(#goldRim4)" stroke="#451a03" stroke-width="1"/>
-                    <polygon points="50,16 76,46 50,56" fill="#f43f5e"/>
-                    <polygon points="76,46 70,74 50,56" fill="#881337"/>
-                    <polygon points="70,74 50,86 50,56" fill="#4c0519"/>
-                    <polygon points="50,86 30,74 50,56" fill="#9f1239"/>
-                    <polygon points="30,74 24,46 50,56" fill="#be123c"/>
-                    <polygon points="24,46 50,16 50,56" fill="#fb7185"/>
-                    <polygon points="50,26 64,48 50,66 36,48" fill="#e11d48" stroke="#fef08a" stroke-width="1.2"/>
-                    <circle cx="47" cy="42" r="2.5" fill="#ffffff" opacity="0.95"/>
-                </svg>
-            </div>
-
-            <!-- Bông 5: Đóa hoa Ruby giác cắt Cushion kèm lá ngọc -->
-            <div class="rose-item" title="Đóa hồng Ruby giác cắt Cushion">
-                <svg width="40" height="40" viewBox="0 0 100 100" class="gem-svg">
-                    <defs>
-                        <linearGradient id="goldRim5" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#fef08a"/>
-                            <stop offset="50%" stop-color="#c9a227"/>
-                            <stop offset="100%" stop-color="#78350f"/>
-                        </linearGradient>
-                        <linearGradient id="emeraldLeaf5" x1="0%" y1="0%" x2="100%" y2="100%">
-                            <stop offset="0%" stop-color="#34d399"/>
-                            <stop offset="60%" stop-color="#059669"/>
-                            <stop offset="100%" stop-color="#064e3b"/>
-                        </linearGradient>
-                    </defs>
-                    <polygon points="40,80 20,88 12,78 30,70" fill="url(#emeraldLeaf5)" stroke="#c9a227" stroke-width="1.2" stroke-linejoin="round"/>
-                    <polygon points="26,14 74,14 88,28 88,72 74,86 26,86 12,72 12,28" fill="url(#goldRim5)" stroke="#451a03" stroke-width="1"/>
-                    <polygon points="28,18 72,18 50,50" fill="#f43f5e"/>
-                    <polygon points="72,18 84,30 84,70 50,50" fill="#9f1239"/>
-                    <polygon points="84,70 72,82 50,82 50,50" fill="#4c0519"/>
-                    <polygon points="50,82 28,82 16,70 50,50" fill="#881337"/>
-                    <polygon points="16,70 16,30 28,18 50,50" fill="#be123c"/>
-                    <polygon points="36,32 64,32 72,42 72,58 64,68 36,68 28,58 28,42" fill="#be123c" stroke="#fef08a" stroke-width="1.2"/>
-                    <polygon points="42,38 58,38 64,46 64,54 58,62 42,62 36,54 36,46" fill="#e11d48"/>
-                    <circle cx="48" cy="46" r="3" fill="#ffffff" opacity="0.95"/>
-                    <polygon points="50,34 51.5,39 56,40.5 51.5,42 50,47 48.5,42 44,40.5 48.5,39" fill="#ffffff" opacity="0.8"/>
-                </svg>
-            </div>
-
+        <!-- TAY CẦM KÉO/MỞ MENU TỐI GIẢN & SANG TRỌNG -->
+        <div id="dragHandle" class="sidebar-drag-tab" title="Kéo hoặc nhấn để mở menu">
+            <span class="drag-tab-icon">›</span>
         </div>
     </aside>
 
@@ -439,15 +267,18 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-1">
-                    <button type="button" id="clearChatBtn" class="chat-header-action-btn" aria-label="Làm mới đoạn chat" title="Làm mới cuộc trò chuyện">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button" id="clearChatBtn" class="chat-header-action-btn"
+                        aria-label="Làm mới đoạn chat" title="Làm mới cuộc trò chuyện">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
                             <path d="M21 3v5h-5"></path>
                             <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
                             <path d="M3 21v-5h5"></path>
                         </svg>
                     </button>
-                    <button type="button" id="closeChatBtn" class="chat-close-btn" aria-label="Thu nhỏ chat" title="Đóng chat">
+                    <button type="button" id="closeChatBtn" class="chat-close-btn" aria-label="Thu nhỏ chat"
+                        title="Đóng chat">
                         &times;
                     </button>
                 </div>
@@ -456,7 +287,8 @@
             <!-- Thanh kênh liên hệ nhanh (Zalo & Hotline) -->
             <div class="chat-quick-channels">
                 <span class="small text-muted fw-semibold">Liên hệ nhanh:</span>
-                <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer" class="chat-quick-btn chat-zalo-btn" title="Nhắn qua Zalo">
+                <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
+                    class="chat-quick-btn chat-zalo-btn" title="Nhắn qua Zalo">
                     💬 Zalo: 0967.701.565
                 </a>
                 <a href="tel:0967701565" class="chat-quick-btn chat-phone-btn" title="Gọi Hotline">
@@ -469,7 +301,8 @@
                 <!-- Tin nhắn chào của shop -->
                 <div class="chat-msg chat-msg-bot">
                     <div class="chat-bubble">
-                        Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? 💐 Bạn có thể chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp cho shop nhé!
+                        Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? 💐 Bạn có thể chọn câu hỏi gợi ý
+                        bên dưới hoặc nhắn trực tiếp cho shop nhé!
                     </div>
                     <span class="chat-time">Vừa xong</span>
                 </div>
@@ -479,13 +312,15 @@
                     <button type="button" class="chat-chip" data-msg="Shop có những mẫu hoa nào làm quà tặng ý nghĩa?">
                         🌸 Mẫu hoa quà tặng ý nghĩa
                     </button>
-                    <button type="button" class="chat-chip" data-msg="Phí vận chuyển và thời gian giao hàng như thế nào?">
+                    <button type="button" class="chat-chip"
+                        data-msg="Phí vận chuyển và thời gian giao hàng như thế nào?">
                         🚚 Phí ship & thời gian giao hàng
                     </button>
                     <button type="button" class="chat-chip" data-msg="Shop có hỗ trợ viết thiệp và gói quà không?">
                         🎁 Gói quà & thiệp chúc mừng
                     </button>
-                    <button type="button" class="chat-chip" data-msg="Tôi muốn liên hệ trực tiếp với chủ tiệm qua Zalo/SĐT.">
+                    <button type="button" class="chat-chip"
+                        data-msg="Tôi muốn liên hệ trực tiếp với chủ tiệm qua Zalo/SĐT.">
                         📞 Hotline & Zalo trực tiếp
                     </button>
                 </div>
@@ -493,25 +328,30 @@
 
             <!-- Khung nhập tin nhắn -->
             <form id="chatForm" class="chat-footer">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn cho shop..." autocomplete="off" maxlength="300" required>
+                <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn cho shop..."
+                    autocomplete="off" maxlength="300" required>
                 <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Gửi tin nhắn" title="Gửi">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                     </svg>
                 </button>
             </form>
         </div>
 
         <!-- Nút biểu tượng nổi (Floating Bubble Trigger) -->
-        <button id="chatToggleBtn" class="chat-toggle-btn" type="button" aria-label="Mở khung chat với shop" title="Chat với shop">
+        <button id="chatToggleBtn" class="chat-toggle-btn position-relative" type="button" aria-label="Mở khung chat với shop"
+            title="Chat với shop">
             <span class="chat-online-badge"></span>
+            <span id="chatCustomerUnreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none shadow-sm" style="font-size: 0.72rem;">0</span>
             <span class="chat-icon-open">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
             </span>
             <span class="chat-icon-close d-none">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
@@ -525,7 +365,8 @@
     <div id="appConfirmModal" class="app-confirm-overlay" aria-hidden="true">
         <div class="app-confirm-dialog" role="dialog" aria-modal="true" aria-labelledby="appConfirmTitle">
             <div class="app-confirm-icon-wrap icon-warning" id="appConfirmIconWrap">
-                <svg id="appConfirmIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg id="appConfirmIcon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
@@ -536,7 +377,8 @@
                 <p class="app-confirm-message" id="appConfirmMessage">Bạn có muốn làm mới cuộc trò chuyện này không?</p>
             </div>
             <div class="app-confirm-actions">
-                <button type="button" class="app-confirm-btn app-confirm-btn-cancel" id="appConfirmCancelBtn">Hủy</button>
+                <button type="button" class="app-confirm-btn app-confirm-btn-cancel"
+                    id="appConfirmCancelBtn">Hủy</button>
                 <button type="button" class="app-confirm-btn app-confirm-btn-ok" id="appConfirmOkBtn">Xác nhận</button>
             </div>
         </div>
@@ -547,7 +389,7 @@
         // =======================================================
         // HỆ THỐNG HỘP THOẠI XÁC NHẬN SANG TRỌNG (WINDOW.APPCONFIRM)
         // =======================================================
-        window.appConfirm = function(options) {
+        window.appConfirm = function (options) {
             return new Promise((resolve) => {
                 const overlay = document.getElementById('appConfirmModal');
                 if (!overlay) {
@@ -635,7 +477,7 @@
         };
 
         // Bắt sự kiện submit tự động cho mọi form có data-confirm
-        document.addEventListener('submit', async function(e) {
+        document.addEventListener('submit', async function (e) {
             const form = e.target;
             const confirmMsg = form.getAttribute('data-confirm');
             if (confirmMsg && !form.dataset.confirmed) {
@@ -680,7 +522,7 @@
                 this.flipSpeed = Math.random() * 0.03 + 0.02;
                 this.opacity = Math.random() * 0.4 + 0.6;
                 this.decay = Math.random() * 0.003 + 0.002;
-                const shades = ['#e11d48', '#be123c', '#9f1239', '#f43f5e', '#881337', '#fda4af'];
+                const shades = ['#f472b6', '#fbcfe8', '#fda4af', '#f43f5e', '#ffffff', '#fed7aa', '#ec4899'];
                 this.color = shades[Math.floor(Math.random() * shades.length)];
             }
             update() {
@@ -766,7 +608,7 @@
         let startX = 0;
         let lastRoseBurstAt = 0;
         const roseBurstCooldown = 3000;
-        const getMinX = () => (window.innerWidth < 768 ? -295 : -215);
+        const getMinX = () => (window.innerWidth < 768 ? -295 : -270);
         let minX = getMinX();
         const maxX = 0;
         let currentX = minX;
@@ -799,35 +641,21 @@
             }
 
             if (isOpen) {
-                // Bung cánh hoa chung
-                tryRoseBurst(35, 270);
-
-                // Lấy vị trí 2 bông hoa trên cùng và bung thêm nhiều cánh hơn
-                setTimeout(() => {
-                    const roseItems = document.querySelectorAll('.rose-item');
-                    if (roseItems[0]) {
-                        const r0 = roseItems[0].getBoundingClientRect();
-                        tryRoseBurst(30, r0.left + r0.width / 2, r0.top + r0.height / 2);
-                    }
-                    if (roseItems[1]) {
-                        const r1 = roseItems[1].getBoundingClientRect();
-                        tryRoseBurst(30, r1.left + r1.width / 2, r1.top + r1.height / 2);
-                    }
-                }, 200); // Chờ toolbar trượt ra rồi mới bung
+                tryRoseBurst(30, 270);
+            }
+            if (dragHandle) {
+                const icon = dragHandle.querySelector('.drag-tab-icon');
+                if (icon) icon.textContent = isOpen ? '‹' : '›';
             }
         }
 
         toggleBtn.addEventListener('click', () => toggle(!isOpen));
 
-        // Click bông hoa để bung cánh
-        setTimeout(() => {
-            document.querySelectorAll('.rose-item').forEach(rose => {
-                rose.addEventListener('click', (e) => {
-                    const rect = rose.getBoundingClientRect();
-                    tryRoseBurst(20, rect.left + 20, rect.top + 20);
-                });
+        if (dragHandle) {
+            dragHandle.addEventListener('click', () => {
+                if (!hasDragged) toggle(!isOpen);
             });
-        }, 3000);
+        }
 
         // Kéo thả
         function dragStart(e) {
@@ -901,6 +729,8 @@
         });
         updateToolbarPos(minX, false);
 
+
+
         // Nút tròn nổi cuộn lên đầu trang (Back to top) với requestAnimationFrame throttling
         const backToTopBtn = document.getElementById('backToTopBtn');
         if (backToTopBtn) {
@@ -944,7 +774,7 @@
         // =======================================================
         // BỘ ĐIỀU KHIỂN CHAT VỚI SHOP (FLOATING LIVE CHAT)
         // =======================================================
-        (function() {
+        (function () {
             const chatToggleBtn = document.getElementById('chatToggleBtn');
             const chatWindow = document.getElementById('chatWindow');
             const closeChatBtn = document.getElementById('closeChatBtn');
@@ -960,8 +790,19 @@
 
             const STORAGE_KEY = 'lego_flower_chat_history';
             const STATE_KEY = 'lego_flower_chat_open';
+            const SESSION_KEY = 'lego_flower_chat_session_id';
+            const customerUnreadBadge = document.getElementById('chatCustomerUnreadBadge');
 
             let isOpen = false;
+            let unreadAdminCount = 0;
+            let lastLoadedMsgId = 0;
+
+            // Lấy hoặc tạo sessionId định danh phiên chat của khách
+            let chatSessionId = localStorage.getItem(SESSION_KEY);
+            if (!chatSessionId) {
+                chatSessionId = 'session_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+                localStorage.setItem(SESSION_KEY, chatSessionId);
+            }
 
             function toggleChat(state) {
                 isOpen = (state !== undefined) ? state : !isOpen;
@@ -971,6 +812,8 @@
                     if (chatIconOpen) chatIconOpen.classList.add('d-none');
                     if (chatIconClose) chatIconClose.classList.remove('d-none');
                     sessionStorage.setItem(STATE_KEY, '1');
+                    unreadAdminCount = 0;
+                    if (customerUnreadBadge) customerUnreadBadge.classList.add('d-none');
                     setTimeout(() => chatInput && chatInput.focus(), 250);
                     scrollChatToBottom();
                 } else {
@@ -1014,8 +857,8 @@
                 return msgDiv;
             }
 
-            function appendLiveMessage(text, isUser = false) {
-                const currentTime = getCurrentTimeStr();
+            function appendLiveMessage(text, isUser = false, customTime = null) {
+                const currentTime = customTime || getCurrentTimeStr();
                 const targetSenderClass = isUser ? 'chat-msg-user' : 'chat-msg-bot';
 
                 // Tìm tin nhắn gần nhất hiện có (bỏ qua typing indicator hoặc suggestions)
@@ -1052,12 +895,79 @@
                         time: timeStr || getCurrentTimeStr()
                     });
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-                } catch (e) {
-                    console.error('Lỗi khi lưu tin nhắn chat vào localStorage:', e);
+                } catch (e) {}
+            }
+
+            // Gửi tin nhắn lên máy chủ (để Admin nhận được)
+            async function sendToServer(text) {
+                try {
+                    const res = await fetch('/api/chat/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            session_id: chatSessionId,
+                            message: text
+                        })
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.message && data.message.id) {
+                            lastLoadedMsgId = Math.max(lastLoadedMsgId, data.message.id);
+                        }
+                    }
+                } catch (err) {
+                    console.error('Lỗi khi gửi tin nhắn lên server:', err);
                 }
             }
 
-            function loadChatHistory() {
+            // Kiểm tra tin nhắn mới từ Admin (Polling)
+            async function pollAdminMessages() {
+                try {
+                    const res = await fetch(`/api/chat/messages?session_id=${encodeURIComponent(chatSessionId)}&after_id=${lastLoadedMsgId}`);
+                    if (!res.ok) return;
+                    const data = await res.json();
+                    const msgs = data.messages || [];
+                    if (msgs.length > 0) {
+                        msgs.forEach(msg => {
+                            lastLoadedMsgId = Math.max(lastLoadedMsgId, msg.id);
+                            if (msg.sender_type === 'admin') {
+                                appendLiveMessage(msg.message, false, msg.time_str);
+                                if (!isOpen) {
+                                    unreadAdminCount++;
+                                    if (customerUnreadBadge) {
+                                        customerUnreadBadge.textContent = unreadAdminCount;
+                                        customerUnreadBadge.classList.remove('d-none');
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (e) {}
+            }
+
+            async function loadChatHistory() {
+                // Ưu tiên tải tin nhắn từ server trước
+                try {
+                    const res = await fetch(`/api/chat/messages?session_id=${encodeURIComponent(chatSessionId)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const msgs = data.messages || [];
+                        if (msgs.length > 0) {
+                            chatMessages.innerHTML = '';
+                            msgs.forEach((item, index) => {
+                                lastLoadedMsgId = Math.max(lastLoadedMsgId, item.id);
+                                const next = msgs[index + 1];
+                                const isConsecutive = next && (next.sender_type === item.sender_type) && (next.time_str === item.time_str);
+                                renderMessageElement(item.message, item.sender_type === 'customer', item.time_str, !isConsecutive, isConsecutive);
+                            });
+                            if (chatSuggestions) chatSuggestions.style.display = 'none';
+                            scrollChatToBottom();
+                            return;
+                        }
+                    }
+                } catch (e) {}
+
+                // Nếu server chưa có (phiên mới), đọc từ localStorage
                 try {
                     const raw = localStorage.getItem(STORAGE_KEY);
                     if (raw) {
@@ -1066,12 +976,9 @@
                             chatMessages.innerHTML = '';
                             history.forEach((item, index) => {
                                 const next = history[index + 1];
-                                // Tin nhắn liền mạch: cùng người gửi và cùng phút gửi -> chỉ hiện time ở tin cuối cùng của cụm
                                 const isConsecutiveWithNext = next && (next.sender === item.sender) && (next.time === item.time);
-                                const showTime = !isConsecutiveWithNext;
-                                renderMessageElement(item.text, item.sender === 'user', item.time, showTime, isConsecutiveWithNext);
+                                renderMessageElement(item.text, item.sender === 'user', item.time, !isConsecutiveWithNext, isConsecutiveWithNext);
                             });
-                            // Nếu đã có tin nhắn trao đổi (trên 1 tin) thì ẩn các nút gợi ý ban đầu
                             if (history.length > 1) {
                                 if (chatSuggestions) chatSuggestions.style.display = 'none';
                             } else {
@@ -1084,11 +991,8 @@
                             return;
                         }
                     }
-                } catch (e) {
-                    console.error('Lỗi khi đọc lịch sử chat:', e);
-                }
+                } catch (e) {}
 
-                // Nếu chưa có lịch sử, khởi tạo tin nhắn chào đầu tiên
                 resetToWelcome();
             }
 
@@ -1112,7 +1016,7 @@
 
             // Nút làm mới / xóa lịch sử chat
             if (clearChatBtn) {
-                clearChatBtn.addEventListener('click', async function(e) {
+                clearChatBtn.addEventListener('click', async function (e) {
                     e.stopPropagation();
                     const ok = await window.appConfirm({
                         title: 'Làm mới cuộc trò chuyện',
@@ -1122,8 +1026,11 @@
                         type: 'warning'
                     });
                     if (ok) {
+                        chatSessionId = 'session_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+                        localStorage.setItem(SESSION_KEY, chatSessionId);
                         localStorage.removeItem(STORAGE_KEY);
                         localStorage.removeItem(AUTOREPLY_KEY);
+                        lastLoadedMsgId = 0;
                         resetToWelcome();
                     }
                 });
@@ -1142,7 +1049,7 @@
                             if (botMsgs.length > 1) return true;
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
                 return false;
             }
 
@@ -1207,10 +1114,13 @@
             function handleSend(userText, isQuickChip = false) {
                 if (!userText || !userText.trim()) return;
                 const text = userText.trim();
-                
+
                 // Gửi tin nhắn của người dùng với tính năng gom cụm tin nhắn liền mạch
                 appendLiveMessage(text, true);
                 if (chatInput) chatInput.value = '';
+
+                // GỬI LÊN SERVER ĐỂ ADMIN NHẬN ĐƯỢC
+                sendToServer(text);
 
                 // Ẩn các nút gợi ý sau khi gửi tin
                 if (chatSuggestions) chatSuggestions.style.display = 'none';
@@ -1229,15 +1139,12 @@
                 // Nếu là khách tự gõ chữ:
                 // Tuyệt đối KHÔNG spam tin nhắn tự động sau mỗi câu chat của khách.
                 // Chỉ phản hồi xác nhận tối đa 1 lần duy nhất trong toàn bộ cuộc trò chuyện.
-                // Các câu chat tiếp theo của khách sẽ được lưu và hiển thị tự nhiên, không bị bot nhảy ra quấy rầy.
                 if (hasAlreadyAutoReplied()) {
                     return;
                 }
 
-                // Đánh dấu đã gửi phản hồi tự động
                 localStorage.setItem(AUTOREPLY_KEY, '1');
 
-                // Nếu khách nhắn liên tiếp nhiều câu nhanh, hủy timer cũ để gom lại, không nhảy liên tục
                 if (botReplyTimeout) clearTimeout(botReplyTimeout);
 
                 botReplyTimeout = setTimeout(() => {
@@ -1251,7 +1158,7 @@
             }
 
             if (chatForm) {
-                chatForm.addEventListener('submit', function(e) {
+                chatForm.addEventListener('submit', function (e) {
                     e.preventDefault();
                     if (chatInput) handleSend(chatInput.value, false);
                 });
@@ -1260,15 +1167,16 @@
             // Gợi ý câu hỏi nhanh
             if (chatSuggestions) {
                 chatSuggestions.querySelectorAll('.chat-chip').forEach(chip => {
-                    chip.addEventListener('click', function() {
+                    chip.addEventListener('click', function () {
                         const msg = this.getAttribute('data-msg');
                         if (msg) handleSend(msg, true);
                     });
                 });
             }
 
-            // Khởi tạo lịch sử chat
+            // Khởi tạo lịch sử chat & kích hoạt kiểm tra tin nhắn mới từ Admin
             loadChatHistory();
+            setInterval(pollAdminMessages, 3500);
 
             // Khôi phục trạng thái mở chat từ sessionStorage nếu trước đó đang mở
             if (sessionStorage.getItem(STATE_KEY) === '1') {

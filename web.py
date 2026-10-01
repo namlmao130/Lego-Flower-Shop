@@ -1,22 +1,25 @@
 import os
+import time
 import smtplib
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, render_template, request, redirect, url_for, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
+from PIL import Image, ImageOps
 
 from config import Config
-from models import db, Product, Category, Admin, ProductMedia, Review, Customer, PHONE_REGEX, EMAIL_REGEX, normalize_phone
+from models import db, Product, Category, Admin, ProductMedia, Review, Customer, ChatMessage, PHONE_REGEX, EMAIL_REGEX, normalize_phone
 
 app = Flask(__name__)
 app.config.from_object(Config)
 
 # Tự động tạo thư mục uploads nếu chưa tồn tại (tránh lỗi FileNotFoundError khi upload ảnh)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(app.config.get('AVATAR_UPLOAD_FOLDER', os.path.join(app.config['UPLOAD_FOLDER'], 'avatars')), exist_ok=True)
 
 # Khởi tạo database
 db.init_app(app)
@@ -314,15 +317,96 @@ def delete_own_review(review_id):
     return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
 
 
+def process_and_save_avatar(file_storage, customer_id):
+    """
+    Xử lý ảnh đại diện của khách hàng:
+    - Kiểm tra định dạng (png, jpg, jpeg, webp, gif)
+    - Xoay đúng chiều theo EXIF camera
+    - Cắt vuông chính giữa (center crop)
+    - Resize về kích thước chuẩn 320x320
+    - Lưu định dạng WEBP siêu nét và nhẹ (~30KB)
+    - Trả về (tên_file, None) nếu thành công hoặc (None, lỗi)
+    """
+    if not file_storage or not file_storage.filename:
+        return None, 'Chưa chọn tệp ảnh.'
+
+    filename = file_storage.filename.lower()
+    ext = filename.rsplit('.', 1)[-1] if '.' in filename else ''
+    allowed_exts = app.config.get('ALLOWED_AVATAR_EXTENSIONS', {'png', 'jpg', 'jpeg', 'gif', 'webp'})
+    if ext not in allowed_exts:
+        return None, 'Định dạng ảnh không được hỗ trợ. Vui lòng chọn ảnh JPG, PNG, WEBP hoặc GIF.'
+
+    try:
+        img = Image.open(file_storage.stream)
+        img = ImageOps.exif_transpose(img)
+
+        if img.mode in ('RGBA', 'LA') or (img.mode == 'P' and 'transparency' in img.info):
+            img = img.convert('RGBA')
+        else:
+            img = img.convert('RGB')
+
+        w, h = img.size
+        min_dim = min(w, h)
+        left = (w - min_dim) // 2
+        top = (h - min_dim) // 2
+        img = img.crop((left, top, left + min_dim, top + min_dim))
+        img = img.resize((320, 320), Image.Resampling.LANCZOS)
+
+        avatar_filename = f"avatar_{customer_id}_{int(time.time())}.webp"
+        save_path = os.path.join(app.config['AVATAR_UPLOAD_FOLDER'], avatar_filename)
+        img.save(save_path, format='WEBP', quality=88, method=6)
+        return avatar_filename, None
+    except Exception as e:
+        return None, f'Không thể xử lý tệp ảnh: {str(e)}'
+
+
+def remove_old_avatar(avatar_filename):
+    """Xóa file ảnh đại diện cũ khỏi đĩa để giải phóng dung lượng."""
+    if avatar_filename:
+        try:
+            old_path = os.path.join(app.config['AVATAR_UPLOAD_FOLDER'], avatar_filename)
+            if os.path.exists(old_path):
+                os.remove(old_path)
+        except Exception:
+            pass
+
+
 @app.route('/settings', methods=['GET', 'POST'])
 @customer_required
 def user_settings():
     if request.method == 'POST':
         action = request.form.get('action')
-        if action == 'update_profile':
+
+        if action == 'update_avatar':
+            avatar_file = request.files.get('avatar')
+            if not avatar_file or not avatar_file.filename:
+                flash('Vui lòng chọn một tệp ảnh để làm ảnh đại diện.', 'error')
+            else:
+                new_avatar, err = process_and_save_avatar(avatar_file, current_user.id)
+                if err:
+                    flash(err, 'error')
+                else:
+                    remove_old_avatar(current_user.avatar)
+                    current_user.avatar = new_avatar
+                    db.session.commit()
+                    flash('Cập nhật ảnh đại diện thành công!', 'success')
+            return redirect(url_for('user_settings'))
+
+        elif action == 'delete_avatar':
+            if current_user.avatar:
+                remove_old_avatar(current_user.avatar)
+                current_user.avatar = None
+                db.session.commit()
+                flash('Đã gỡ ảnh đại diện, chuyển về biểu tượng mặc định.', 'success')
+            else:
+                flash('Bạn hiện chưa cài đặt ảnh đại diện riêng.', 'info')
+            return redirect(url_for('user_settings'))
+
+        elif action == 'update_profile':
             full_name = request.form.get('full_name', '').strip()
             phone_raw = request.form.get('phone', '').strip()
             email = request.form.get('email', '').strip().lower()
+            avatar_file = request.files.get('avatar')
             errors = []
 
             if not full_name:
@@ -348,6 +432,14 @@ def user_settings():
                 for e in errors:
                     flash(e, 'error')
             else:
+                if avatar_file and avatar_file.filename:
+                    new_avatar, err = process_and_save_avatar(avatar_file, current_user.id)
+                    if err:
+                        flash(err, 'error')
+                    else:
+                        remove_old_avatar(current_user.avatar)
+                        current_user.avatar = new_avatar
+
                 current_user.full_name = full_name[:100]
                 current_user.phone = phone
                 current_user.email = email or None
@@ -811,6 +903,195 @@ def admin_delete_category(category_id):
     db.session.commit()
     flash('Đã xóa danh mục!', 'success')
     return redirect(url_for('admin_categories'))
+
+
+# ============================================
+#   HỆ THỐNG LIVE CHAT TRỰC TIẾP KHÁCH - ADMIN
+# ============================================
+
+@app.route('/api/chat/send', methods=['POST'])
+def api_chat_send():
+    """Khách hàng gửi tin nhắn lên server."""
+    data = request.get_json(silent=True) or request.form
+    session_id = (data.get('session_id') or '').strip()
+    message = (data.get('message') or '').strip()
+
+    if not session_id:
+        return jsonify({'error': 'Thiếu session_id'}), 400
+    if not message:
+        return jsonify({'error': 'Tin nhắn không được để trống'}), 400
+    if len(message) > 2000:
+        return jsonify({'error': 'Tin nhắn quá dài (tối đa 2000 ký tự)'}), 400
+
+    customer_id = None
+    sender_name = 'Khách vãng lai'
+
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        customer_id = current_user.id
+        sender_name = current_user.full_name or f'Khách hàng #{current_user.id}'
+        # Cập nhật các tin nhắn cũ chưa gắn customer_id của session này
+        ChatMessage.query.filter_by(session_id=session_id, customer_id=None).update({
+            'customer_id': customer_id,
+            'sender_name': sender_name
+        })
+
+    msg = ChatMessage(
+        session_id=session_id,
+        customer_id=customer_id,
+        sender_type='customer',
+        sender_name=sender_name,
+        message=message,
+        is_read=False
+    )
+    db.session.add(msg)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': msg.to_dict()})
+
+
+@app.route('/api/chat/messages', methods=['GET'])
+def api_chat_messages():
+    """Khách hàng lấy danh sách tin nhắn của phiên chat hiện tại."""
+    session_id = (request.args.get('session_id') or '').strip()
+    after_id = request.args.get('after_id', 0, type=int)
+
+    if not session_id:
+        return jsonify({'error': 'Thiếu session_id'}), 400
+
+    query = ChatMessage.query.filter_by(session_id=session_id)
+    if after_id > 0:
+        query = query.filter(ChatMessage.id > after_id)
+
+    msgs = query.order_by(ChatMessage.id.asc()).all()
+
+    # Đánh dấu các tin nhắn của Admin gửi cho khách này là đã đọc
+    ChatMessage.query.filter_by(session_id=session_id, sender_type='admin', is_read=False).update({'is_read': True})
+    db.session.commit()
+
+    return jsonify({'messages': [m.to_dict() for m in msgs]})
+
+
+@app.route('/admin/chat')
+@admin_required
+def admin_chat():
+    """Giao diện quản lý tin nhắn và chat trực tiếp với khách hàng của Admin."""
+    return render_template('admin/chat.html')
+
+
+@app.route('/api/admin/chat/conversations')
+@admin_required
+def api_admin_chat_conversations():
+    """Lấy danh sách các cuộc trò chuyện từ tất cả khách hàng."""
+    subquery = db.session.query(
+        ChatMessage.session_id,
+        func.max(ChatMessage.id).label('max_id')
+    ).group_by(ChatMessage.session_id).subquery()
+
+    latest_messages = db.session.query(ChatMessage).join(
+        subquery,
+        ChatMessage.id == subquery.c.max_id
+    ).order_by(ChatMessage.id.desc()).all()
+
+    conversations = []
+    for msg in latest_messages:
+        unread = ChatMessage.query.filter_by(
+            session_id=msg.session_id,
+            sender_type='customer',
+            is_read=False
+        ).count()
+
+        cust = msg.customer
+        cust_info = {
+            'id': cust.id if cust else None,
+            'name': cust.full_name if cust else msg.sender_name,
+            'phone': cust.phone if cust else '',
+            'email': cust.email if cust else '',
+            'avatar': cust.avatar if cust else None,
+            'is_member': bool(cust)
+        }
+
+        conversations.append({
+            'session_id': msg.session_id,
+            'customer': cust_info,
+            'last_message': msg.message,
+            'last_time': msg.created_at.strftime('%H:%M %d/%m'),
+            'sender_type': msg.sender_type,
+            'unread_count': unread
+        })
+
+    return jsonify({'conversations': conversations})
+
+
+@app.route('/api/admin/chat/messages/<session_id>')
+@admin_required
+def api_admin_chat_messages(session_id):
+    """Lấy toàn bộ tin nhắn trong một cuộc trò chuyện và đánh dấu đã đọc."""
+    msgs = ChatMessage.query.filter_by(session_id=session_id).order_by(ChatMessage.id.asc()).all()
+
+    # Đánh dấu các tin nhắn của khách đã được admin xem
+    ChatMessage.query.filter_by(
+        session_id=session_id,
+        sender_type='customer',
+        is_read=False
+    ).update({'is_read': True})
+    db.session.commit()
+
+    first_cust_msg = ChatMessage.query.filter(
+        ChatMessage.session_id == session_id,
+        ChatMessage.customer_id.isnot(None)
+    ).first()
+    cust = first_cust_msg.customer if first_cust_msg else None
+
+    cust_info = {
+        'id': cust.id if cust else None,
+        'name': cust.full_name if cust else (msgs[0].sender_name if msgs else 'Khách vãng lai'),
+        'phone': cust.phone if cust else '',
+        'email': cust.email if cust else '',
+        'avatar': cust.avatar if cust else None,
+        'is_member': bool(cust),
+        'created_at': cust.created_at.strftime('%d/%m/%Y') if cust else ''
+    }
+
+    return jsonify({
+        'messages': [m.to_dict() for m in msgs],
+        'customer': cust_info
+    })
+
+
+@app.route('/api/admin/chat/reply', methods=['POST'])
+@admin_required
+def api_admin_chat_reply():
+    """Admin trả lời tin nhắn của một khách hàng."""
+    data = request.get_json(silent=True) or request.form
+    session_id = (data.get('session_id') or '').strip()
+    message = (data.get('message') or '').strip()
+
+    if not session_id or not message:
+        return jsonify({'error': 'Thiếu session_id hoặc nội dung tin nhắn'}), 400
+
+    last_msg = ChatMessage.query.filter_by(session_id=session_id).first()
+    customer_id = last_msg.customer_id if last_msg else None
+
+    reply_msg = ChatMessage(
+        session_id=session_id,
+        customer_id=customer_id,
+        sender_type='admin',
+        sender_name=getattr(current_user, 'username', 'Quản trị viên'),
+        message=message,
+        is_read=False
+    )
+    db.session.add(reply_msg)
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': reply_msg.to_dict()})
+
+
+@app.route('/api/admin/chat/unread_count')
+@admin_required
+def api_admin_chat_unread_count():
+    """Lấy tổng số tin nhắn chưa đọc từ khách hàng cho huy hiệu Admin."""
+    unread_count = ChatMessage.query.filter_by(sender_type='customer', is_read=False).count()
+    return jsonify({'unread_count': unread_count})
 
 
 # ============================================
