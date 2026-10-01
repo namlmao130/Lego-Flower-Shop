@@ -6,46 +6,54 @@
     <div class="col-11 col-sm-9 col-md-6 col-lg-5 col-xl-4">
         <div class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
             <div class="text-center mb-4">
-                <h3 class="fw-bold mb-0" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">Tạo tài khoản</h3>
+                <h3 class="fw-bold mb-0"
+                    style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">Tạo tài khoản
+                </h3>
             </div>
 
             <form method="POST" id="registerForm">
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary mb-1">Họ và tên</label>
                     <input type="text" name="full_name" class="form-control" placeholder="Ví dụ: Nguyễn Văn A"
-                           maxlength="100" autocomplete="name" value="{{ full_name or '' }}" required autofocus>
+                        maxlength="100" autocomplete="name" value="{{ full_name or '' }}" required autofocus>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại</label>
                     <input type="tel" name="phone" id="registerPhone" class="form-control" placeholder="0912345678"
-                           inputmode="numeric" autocomplete="tel" maxlength="10" pattern="0[35789][0-9]{8}"
-                           value="{{ phone or '' }}" required>
-                    <div class="form-text small" style="color: #6c757d;">Số di động 10 chữ số để liên hệ xác nhận đơn hàng.</div>
+                        inputmode="numeric" autocomplete="tel" maxlength="10" pattern="0[35789][0-9]{8}"
+                        value="{{ phone or '' }}" required>
+
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary mb-1">Địa chỉ Email</label>
-                    <input type="email" name="email" id="registerEmail" class="form-control" placeholder="example@gmail.com"
-                           autocomplete="email" maxlength="120"
-                           value="{{ email or '' }}" required>
-                    <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập và khôi phục mật khẩu khi cần.</div>
+                    <input type="email" name="email" id="registerEmail" class="form-control"
+                        placeholder="example@gmail.com" autocomplete="email" maxlength="120" value="{{ email or '' }}"
+                        required>
+                    <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập và khôi phục mật khẩu.</div>
                 </div>
 
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary mb-1">Mật khẩu</label>
                     <div class="input-group">
                         <input type="password" name="password" id="regPassword" class="form-control"
-                               placeholder="Tối thiểu 6 ký tự" minlength="6" autocomplete="new-password" required>
+                            placeholder="Tối thiểu 6 ký tự" minlength="6" autocomplete="new-password" required>
                         <button class="btn btn-outline-secondary toggle-password-btn" type="button"
-                                data-target="regPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
-                            <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/>
-                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                            data-target="regPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
+                            <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z" />
+                                <path
+                                    d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
                             </svg>
-                            <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/>
-                                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/>
+                            <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z" />
+                                <path
+                                    d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z" />
                             </svg>
                         </button>
                     </div>
@@ -56,16 +64,22 @@
                     <label class="form-label small fw-semibold text-secondary mb-1">Xác nhận mật khẩu</label>
                     <div class="input-group">
                         <input type="password" name="password2" id="regPassword2" class="form-control"
-                               placeholder="Nhập lại mật khẩu" minlength="6" autocomplete="new-password" required>
+                            placeholder="Nhập lại mật khẩu" minlength="6" autocomplete="new-password" required>
                         <button class="btn btn-outline-secondary toggle-password-btn" type="button"
-                                data-target="regPassword2" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
-                            <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/>
-                                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                            data-target="regPassword2" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
+                            <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z" />
+                                <path
+                                    d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0" />
                             </svg>
-                            <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/>
-                                <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/>
+                            <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                fill="currentColor" viewBox="0 0 16 16">
+                                <path
+                                    d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z" />
+                                <path
+                                    d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z" />
                             </svg>
                         </button>
                     </div>
@@ -87,102 +101,102 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Nút ẩn/hiện mật khẩu (SVG)
-    document.querySelectorAll('.toggle-password-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var targetId = this.getAttribute('data-target');
-            var input = document.getElementById(targetId);
-            if (input) {
-                var isPassword = input.type === 'password';
-                input.type = isPassword ? 'text' : 'password';
-                var openIcon = this.querySelector('.eye-open');
-                var closedIcon = this.querySelector('.eye-closed');
-                if (openIcon && closedIcon) {
-                    if (isPassword) {
-                        openIcon.classList.add('d-none');
-                        closedIcon.classList.remove('d-none');
-                    } else {
-                        openIcon.classList.remove('d-none');
-                        closedIcon.classList.add('d-none');
+    document.addEventListener('DOMContentLoaded', function () {
+        // Nút ẩn/hiện mật khẩu (SVG)
+        document.querySelectorAll('.toggle-password-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var targetId = this.getAttribute('data-target');
+                var input = document.getElementById(targetId);
+                if (input) {
+                    var isPassword = input.type === 'password';
+                    input.type = isPassword ? 'text' : 'password';
+                    var openIcon = this.querySelector('.eye-open');
+                    var closedIcon = this.querySelector('.eye-closed');
+                    if (openIcon && closedIcon) {
+                        if (isPassword) {
+                            openIcon.classList.add('d-none');
+                            closedIcon.classList.remove('d-none');
+                        } else {
+                            openIcon.classList.remove('d-none');
+                            closedIcon.classList.add('d-none');
+                        }
                     }
+                    input.focus();
                 }
-                input.focus();
-            }
+            });
         });
-    });
 
-    // Tự động chuẩn hóa số điện thoại khi gõ/dán
-    var phoneInput = document.getElementById('registerPhone');
-    if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
-            var val = this.value;
-            if (val.startsWith('+84')) {
-                this.value = '+84' + val.slice(3).replace(/\D/g, '').slice(0, 9);
-            } else {
-                this.value = val.replace(/\D/g, '').slice(0, 10);
-            }
-        });
-    }
-
-    // Kiểm tra trực tiếp độ dài và so khớp mật khẩu ngay khi gõ
-    var p1 = document.getElementById('regPassword');
-    var p2 = document.getElementById('regPassword2');
-    var ruleLen = document.getElementById('pwdRuleLength');
-    var matchMsg = document.getElementById('pwdMatchMsg');
-
-    function checkPasswords() {
-        if (!p1 || !p2) return;
-        var v1 = p1.value;
-        var v2 = p2.value;
-
-        if (v1.length >= 6) {
-            ruleLen.className = 'small mt-1 text-success';
-            ruleLen.textContent = 'Độ dài hợp lệ (từ 6 ký tự)';
-        } else {
-            ruleLen.className = 'small mt-1 text-muted';
-            ruleLen.textContent = 'Tối thiểu 6 ký tự';
+        // Tự động chuẩn hóa số điện thoại khi gõ/dán
+        var phoneInput = document.getElementById('registerPhone');
+        if (phoneInput) {
+            phoneInput.addEventListener('input', function () {
+                var val = this.value;
+                if (val.startsWith('+84')) {
+                    this.value = '+84' + val.slice(3).replace(/\D/g, '').slice(0, 9);
+                } else {
+                    this.value = val.replace(/\D/g, '').slice(0, 10);
+                }
+            });
         }
 
-        if (v2.length > 0) {
-            matchMsg.style.display = 'block';
-            if (v1 === v2) {
-                matchMsg.className = 'small mt-1 text-success';
-                matchMsg.textContent = 'Mật khẩu xác nhận trùng khớp';
+        // Kiểm tra trực tiếp độ dài và so khớp mật khẩu ngay khi gõ
+        var p1 = document.getElementById('regPassword');
+        var p2 = document.getElementById('regPassword2');
+        var ruleLen = document.getElementById('pwdRuleLength');
+        var matchMsg = document.getElementById('pwdMatchMsg');
+
+        function checkPasswords() {
+            if (!p1 || !p2) return;
+            var v1 = p1.value;
+            var v2 = p2.value;
+
+            if (v1.length >= 6) {
+                ruleLen.className = 'small mt-1 text-success';
+                ruleLen.textContent = 'Độ dài hợp lệ (từ 6 ký tự)';
             } else {
-                matchMsg.className = 'small mt-1 text-danger';
-                matchMsg.textContent = 'Mật khẩu xác nhận chưa khớp';
+                ruleLen.className = 'small mt-1 text-muted';
+                ruleLen.textContent = 'Tối thiểu 6 ký tự';
             }
-        } else {
-            matchMsg.style.display = 'none';
-        }
-    }
 
-    if (p1 && p2) {
-        p1.addEventListener('input', checkPasswords);
-        p2.addEventListener('input', checkPasswords);
-    }
-
-    // Hiệu ứng loading nút và chống click lặp
-    var form = document.getElementById('registerForm');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            if (p1 && p2 && p1.value !== p2.value) {
-                e.preventDefault();
+            if (v2.length > 0) {
                 matchMsg.style.display = 'block';
-                matchMsg.className = 'small mt-1 text-danger';
-                matchMsg.textContent = 'Hai mật khẩu không khớp nhau, vui lòng kiểm tra lại.';
-                p2.focus();
-                return;
+                if (v1 === v2) {
+                    matchMsg.className = 'small mt-1 text-success';
+                    matchMsg.textContent = 'Mật khẩu xác nhận trùng khớp';
+                } else {
+                    matchMsg.className = 'small mt-1 text-danger';
+                    matchMsg.textContent = 'Mật khẩu xác nhận chưa khớp';
+                }
+            } else {
+                matchMsg.style.display = 'none';
             }
-            var btn = document.getElementById('registerSubmitBtn');
-            if (btn && !btn.disabled) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...';
-                form.submit();
-            }
-        });
-    }
-});
+        }
+
+        if (p1 && p2) {
+            p1.addEventListener('input', checkPasswords);
+            p2.addEventListener('input', checkPasswords);
+        }
+
+        // Hiệu ứng loading nút và chống click lặp
+        var form = document.getElementById('registerForm');
+        if (form) {
+            form.addEventListener('submit', function (e) {
+                if (p1 && p2 && p1.value !== p2.value) {
+                    e.preventDefault();
+                    matchMsg.style.display = 'block';
+                    matchMsg.className = 'small mt-1 text-danger';
+                    matchMsg.textContent = 'Hai mật khẩu không khớp nhau, vui lòng kiểm tra lại.';
+                    p2.focus();
+                    return;
+                }
+                var btn = document.getElementById('registerSubmitBtn');
+                if (btn && !btn.disabled) {
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Đang xử lý...';
+                    form.submit();
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}

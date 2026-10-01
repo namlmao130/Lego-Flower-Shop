@@ -1465,7 +1465,7 @@ input::-webkit-search-results-decoration {
     text-decoration: underline;
 }
 
-/* ===== User Settings Avatar ===== */
+/* ===== User Settings Avatar & Hero Card ===== */
 .settings-avatar {
     width: 52px;
     height: 52px;
@@ -1481,4 +1481,149 @@ input::-webkit-search-results-decoration {
     border: 2px solid var(--lego-gold);
     box-shadow: 0 4px 12px rgba(201, 162, 39, 0.25);
     flex-shrink: 0;
+}
+
+.settings-hero-card {
+    background: #ffffff;
+    border: 1px solid rgba(201, 162, 39, 0.28);
+    border-radius: 18px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.settings-hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #D4AF37 0%, #21243D 50%, #D4AF37 100%);
+}
+
+.settings-hero-avatar {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1B2140 0%, #21243D 100%);
+    color: var(--lego-gold-light, #f6d365);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2.5px solid var(--lego-gold, #c9a227);
+    box-shadow: 0 6px 16px rgba(201, 162, 39, 0.3);
+    flex-shrink: 0;
+}
+
+.settings-tabs-wrapper {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.settings-tab-pill {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1.5px solid rgba(33, 36, 61, 0.12);
+    border-radius: 12px;
+    color: #4b5563;
+    font-weight: 700;
+    font-size: 0.92rem;
+    padding: 10px 18px;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.settings-tab-pill:hover {
+    color: #21243D;
+    background: #ffffff;
+    border-color: var(--lego-gold, #c9a227);
+    transform: translateY(-1px);
+}
+
+.settings-tab-pill.active {
+    background: linear-gradient(135deg, #21243D 0%, #15182a 100%) !important;
+    color: var(--lego-gold-light, #f6d365) !important;
+    border-color: #21243D !important;
+    box-shadow: 0 4px 14px rgba(33, 36, 61, 0.25);
+}
+
+.settings-tab-pill .badge {
+    background: rgba(201, 162, 39, 0.22);
+    color: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+}
+
+.settings-tab-pill.active .badge {
+    background: var(--lego-gold, #c9a227);
+    color: #ffffff;
+}
+
+.settings-input-group .input-group-text {
+    background: #ffffff;
+    border: 1.5px solid rgba(33, 36, 61, 0.18);
+    border-right: none;
+    border-top-left-radius: 10px;
+    border-bottom-left-radius: 10px;
+    color: #8c857b;
+    padding: 0 13px;
+    transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.settings-input-group .form-control {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+}
+
+.settings-input-group:focus-within .input-group-text {
+    border-color: var(--lego-gold, #c9a227);
+    color: var(--lego-gold, #c9a227);
+}
+
+.review-item-card {
+    background: #ffffff;
+    border: 1px solid rgba(201, 162, 39, 0.22);
+    border-radius: 14px;
+    padding: 16px;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.review-item-card:hover {
+    border-color: var(--lego-gold, #c9a227);
+    box-shadow: 0 6px 18px rgba(201, 162, 39, 0.12);
+}
+
+.review-product-thumb {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #f8f9fa;
+    flex-shrink: 0;
+}
+
+.review-product-thumb-placeholder {
+    width: 54px;
+    height: 54px;
+    border-radius: 10px;
+    background: #fdfaf2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+    border: 1px solid rgba(201, 162, 39, 0.2);
 }

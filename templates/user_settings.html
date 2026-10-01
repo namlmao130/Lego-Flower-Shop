@@ -5,62 +5,165 @@
 <div class="row justify-content-center my-3 my-md-4">
     <div class="col-12 col-lg-10 col-xl-9">
 
-        <!-- Tiêu đề trang -->
+        <!-- Đường dẫn điều hướng (Breadcrumb) & Tiêu đề -->
         <div class="mb-4">
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small mb-1">
-                    <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--lego-gold);">Trang chủ</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--lego-gold);">Trang chủ</a>
+                    </li>
                     <li class="breadcrumb-item active text-dark" aria-current="page">Cài đặt tài khoản</li>
                 </ol>
             </nav>
-            <h2 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">Cài đặt tài khoản</h2>
-            <p class="text-muted small mb-0">Quản lý thông tin cá nhân, bảo mật mật khẩu và lịch sử đánh giá của bạn.</p>
+            <h2 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">
+                Cài đặt tài khoản
+            </h2>
+            <p class="text-muted small mb-0">Quản lý hồ sơ cá nhân, bảo mật mật khẩu và lịch sử đánh giá sản phẩm.</p>
         </div>
 
-        <div class="row g-4">
-            <!-- Cột trái: Thông tin cá nhân & Đổi mật khẩu -->
-            <div class="col-12 col-md-6">
-
-                <!-- Card 1: Thông tin cá nhân -->
-                <div class="auth-card p-4 rounded-4 shadow-sm mb-4">
-                    <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
-                        <div class="settings-avatar">
-                            {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+        <!-- Thẻ tóm tắt thông tin tài khoản (Hero Summary Card) -->
+        <div class="settings-hero-card mb-4">
+            <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="settings-hero-avatar">
+                        {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0 text-dark" style="font-family:'Playfair Display',serif; letter-spacing: -0.2px;">
+                            {{ current_user.full_name }}
+                        </h4>
+                        <div class="text-muted small mt-1">
+                            {% if current_user.email %}
+                                @{{ current_user.email.split('@')[0] }}
+                            {% else %}
+                                @{{ current_user.phone }}
+                            {% endif %}
                         </div>
+                        <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                            <span class="badge rounded-pill bg-light text-secondary border small">
+                                🛡️ Khách hàng thành viên
+                            </span>
+                            <span class="text-muted small">
+                                📅 Tham gia: {{ current_user.created_at.strftime('%d/%m/%Y') }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thống kê nhanh -->
+                <div class="d-flex gap-2 align-items-center pt-2 pt-md-0 border-top border-md-0" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                    <div class="px-3 py-2 rounded-3 text-center border" style="background: rgba(253, 250, 242, 0.7); border-color: rgba(201, 162, 39, 0.25) !important;">
+                        <div class="small text-muted" style="font-size: 0.75rem;">Đánh giá đã viết</div>
+                        <div class="fw-bold fs-5" style="color: #21243D;">{{ my_reviews|length }}</div>
+                    </div>
+                    <div class="px-3 py-2 rounded-3 text-center border" style="background: rgba(253, 250, 242, 0.7); border-color: rgba(201, 162, 39, 0.25) !important;">
+                        <div class="small text-muted" style="font-size: 0.75rem;">Trạng thái</div>
+                        <div class="fw-bold fs-6 text-success mt-1">Đang hoạt động</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Thanh điều hướng Tab chuyển mục -->
+        <div class="settings-tabs-wrapper mb-4" id="settingsTabsWrapper" role="tablist">
+            <button class="settings-tab-pill active" id="tab-btn-profile" data-bs-toggle="pill" data-bs-target="#panel-profile" type="button" role="tab" aria-controls="panel-profile" aria-selected="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span>Hồ sơ cá nhân</span>
+            </button>
+
+            <button class="settings-tab-pill" id="tab-btn-security" data-bs-toggle="pill" data-bs-target="#panel-security" type="button" role="tab" aria-controls="panel-security" aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Bảo mật & Đổi mật khẩu</span>
+            </button>
+
+            <button class="settings-tab-pill" id="tab-btn-reviews" data-bs-toggle="pill" data-bs-target="#panel-reviews" type="button" role="tab" aria-controls="panel-reviews" aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                <span>Đánh giá của tôi</span>
+                <span class="badge">{{ my_reviews|length }}</span>
+            </button>
+        </div>
+
+        <!-- Nội dung chi tiết từng Tab -->
+        <div class="tab-content" id="settingsTabContent">
+
+            <!-- TAB 1: HỒ SƠ CÁ NHÂN -->
+            <div class="tab-pane fade show active" id="panel-profile" role="tabpanel" aria-labelledby="tab-btn-profile">
+                <div class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">{{ current_user.full_name }}</h5>
-                            <div class="text-muted small">{% if current_user.email %}@{{ current_user.email.split('@')[0] }}{% else %}@{{ current_user.phone }}{% endif %}</div>
-                            <span class="badge bg-light text-secondary border small mt-1">Khách hàng thành viên</span>
-                            <div class="text-muted small mt-1">Ngày tham gia: {{ current_user.created_at.strftime('%d/%m/%Y') }}</div>
+                            <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Thông tin cá nhân</h4>
+                            <p class="text-muted small mb-0">Cập nhật họ tên, số điện thoại và email nhận thông báo của bạn.</p>
                         </div>
                     </div>
 
-                    <h5 class="fw-bold mb-3" style="color:#21243D; font-size: 1.05rem;">Cập nhật thông tin</h5>
-                    <form method="POST" action="{{ url_for('user_settings') }}">
+                    <form method="POST" action="{{ url_for('user_settings') }}" id="profileForm">
                         <input type="hidden" name="action" value="update_profile">
+
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary mb-1">Họ và tên</label>
-                            <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" maxlength="100" required>
+                            <div class="input-group settings-input-group">
+                                <span class="input-group-text">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </span>
+                                <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" maxlength="100" autocomplete="name" placeholder="Ví dụ: Nguyễn Văn A" required>
+                            </div>
                         </div>
+
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại</label>
-                            <input type="tel" name="phone" id="userPhone" class="form-control" value="{{ current_user.phone }}" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="0[35789][0-9]{8}" placeholder="0912345678" required>
-                            <div class="form-text small" style="color: #6c757d;">Số di động 10 chữ số để đăng nhập và liên hệ xác nhận đơn hàng.</div>
+                            <div class="input-group settings-input-group">
+                                <span class="input-group-text">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                </span>
+                                <input type="tel" name="phone" id="userPhone" class="form-control" value="{{ current_user.phone }}" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="0[35789][0-9]{8}" placeholder="0912345678" required>
+                            </div>
+                            <div class="form-text small" style="color: #6c757d;">Số di động 10 chữ số chuẩn dùng để đăng nhập và liên hệ xác nhận đơn hàng.</div>
                         </div>
-                        <div class="mb-3">
+
+                        <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-1">Địa chỉ Email</label>
-                            <input type="email" name="email" class="form-control" value="{{ current_user.email or '' }}" placeholder="example@gmail.com" maxlength="120">
-                            <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập và nhận liên kết khôi phục mật khẩu khi cần.</div>
+                            <div class="input-group settings-input-group">
+                                <span class="input-group-text">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                                        <polyline points="22,6 12,13 2,6"></polyline>
+                                    </svg>
+                                </span>
+                                <input type="email" name="email" class="form-control" value="{{ current_user.email or '' }}" placeholder="example@gmail.com" maxlength="120" autocomplete="email">
+                            </div>
+                            <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập phụ và nhận liên kết khôi phục mật khẩu khi cần.</div>
                         </div>
-                        <button type="submit" class="btn btn-auth px-4 py-2 fw-semibold">
-                            Lưu thay đổi
-                        </button>
+
+                        <div class="pt-2">
+                            <button type="submit" class="btn btn-auth px-4 py-2 fw-semibold">
+                                Lưu thay đổi
+                            </button>
+                        </div>
                     </form>
                 </div>
+            </div>
 
-                <!-- Card 2: Đổi mật khẩu -->
-                <div id="password" class="auth-card p-4 rounded-4 shadow-sm">
-                    <h5 class="fw-bold mb-3" style="color:#21243D; font-size: 1.05rem;">Bảo mật & Đổi mật khẩu</h5>
+            <!-- TAB 2: BẢO MẬT & ĐỔI MẬT KHẨU -->
+            <div class="tab-pane fade" id="panel-security" role="tabpanel" aria-labelledby="tab-btn-security">
+                <div id="password" class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
+                    <div class="mb-4 pb-2 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                        <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Bảo mật & Đổi mật khẩu</h4>
+                        <p class="text-muted small mb-0">Thiết lập mật khẩu an toàn tối thiểu 6 ký tự để bảo vệ tài khoản của bạn.</p>
+                    </div>
+
                     <form method="POST" action="{{ url_for('user_settings') }}" id="pwdChangeForm">
                         <input type="hidden" name="action" value="change_password">
 
@@ -69,8 +172,14 @@
                             <div class="input-group">
                                 <input type="password" name="current_password" id="curPassword" class="form-control" placeholder="Nhập mật khẩu hiện tại" required autocomplete="current-password">
                                 <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="curPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
-                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
-                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/><path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/></svg>
+                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/>
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                    </svg>
+                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/>
+                                        <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -80,64 +189,113 @@
                             <div class="input-group">
                                 <input type="password" name="new_password" id="newPassword" class="form-control" placeholder="Tối thiểu 6 ký tự" minlength="6" required autocomplete="new-password">
                                 <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="newPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
-                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
-                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/><path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/></svg>
+                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/>
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                    </svg>
+                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/>
+                                        <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/>
+                                    </svg>
                                 </button>
                             </div>
                             <div id="newPwdRule" class="small mt-1 text-muted">Tối thiểu 6 ký tự</div>
                         </div>
 
-                        <div class="mb-3">
+                        <div class="mb-4">
                             <label class="form-label small fw-semibold text-secondary mb-1">Xác nhận mật khẩu mới</label>
                             <div class="input-group">
                                 <input type="password" name="confirm_password" id="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu mới" minlength="6" required autocomplete="new-password">
                                 <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="confirmPassword" title="Hiện/ẩn mật khẩu" aria-label="Hiện/ẩn mật khẩu">
-                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/><path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/></svg>
-                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/><path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/></svg>
+                                    <svg class="eye-open" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13.1 13.1 0 0 0 1.66 2.043C4.12 11.332 5.88 12.5 8 12.5s3.879-1.168 5.168-2.457A13.1 13.1 0 0 0 14.828 8q-.086-.13-.195-.288c-.335-.48-.83-1.12-1.465-1.755C11.879 4.668 10.119 3.5 8 3.5s-3.879 1.168-5.168 2.457A13.1 13.1 0 0 0 1.172 8z"/>
+                                        <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                                    </svg>
+                                    <svg class="eye-closed d-none" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                        <path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474L2.09 4.213C.953 5.378 0 6.8 0 8s3 5.5 8 5.5c1.026 0 1.98-.24 2.79-.588M5.21 3.088A7 7 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.07-2.07a3.5 3.5 0 0 0-4.474-4.474z"/>
+                                        <path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6L2.293 2.293l.707-.707 11.354 11.354z"/>
+                                    </svg>
                                 </button>
                             </div>
                             <div id="confirmPwdMsg" class="small mt-1" style="display:none;"></div>
                         </div>
 
-                        <button type="submit" class="btn btn-auth px-4 py-2 fw-semibold">
-                            Cập nhật mật khẩu
-                        </button>
+                        <div class="pt-2">
+                            <button type="submit" class="btn btn-auth px-4 py-2 fw-semibold">
+                                Cập nhật mật khẩu
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Cột phải: Lịch sử đánh giá của khách hàng -->
-            <div class="col-12 col-md-6">
-                <div id="reviews" class="auth-card p-4 rounded-4 shadow-sm h-100">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold mb-0" style="color:#21243D; font-size: 1.05rem;">Đánh giá của bạn</h5>
-                        <span class="badge bg-light text-secondary border small">{{ my_reviews|length }} đánh giá</span>
+            <!-- TAB 3: ĐÁNH GIÁ CỦA TÔI -->
+            <div class="tab-pane fade" id="panel-reviews" role="tabpanel" aria-labelledby="tab-btn-reviews">
+                <div id="reviews" class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                        <div>
+                            <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">Đánh giá của bạn</h4>
+                            <p class="text-muted small mb-0">Các nhận xét và cảm nhận của bạn về sản phẩm đã trải nghiệm.</p>
+                        </div>
+                        <span class="badge bg-light text-secondary border small px-3 py-2 rounded-pill">
+                            {{ my_reviews|length }} đánh giá
+                        </span>
                     </div>
 
                     {% if my_reviews %}
-                    <div class="d-flex flex-column gap-3 mt-3">
+                    <div class="d-flex flex-column gap-3">
                         {% for r in my_reviews %}
-                        <div class="p-3 rounded-3" style="background: rgba(255,255,255,0.7); border: 1px solid rgba(201, 162, 39, 0.25);">
-                            <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
-                                <a href="{{ url_for('product_detail', product_id=r.product.id) }}" class="fw-bold text-decoration-none text-dark" style="transition: color 0.2s;">
-                                    {{ r.product.name }}
-                                </a>
-                                <small class="text-muted text-nowrap">{{ r.created_at.strftime('%d/%m/%Y') }}</small>
+                        <div class="review-item-card">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    {% if r.product and r.product.thumbnail %}
+                                    <img src="{{ url_for('static', filename='uploads/' + r.product.thumbnail) }}" alt="{{ r.product.name }}" class="review-product-thumb">
+                                    {% else %}
+                                    <div class="review-product-thumb-placeholder">🥀</div>
+                                    {% endif %}
+                                    <div>
+                                        {% if r.product %}
+                                        <a href="{{ url_for('product_detail', product_id=r.product.id) }}" class="fw-bold text-decoration-none text-dark hover-gold" style="font-size: 1.02rem;">
+                                            {{ r.product.name }}
+                                        </a>
+                                        {% else %}
+                                        <span class="fw-bold text-dark">Sản phẩm hoa Lego</span>
+                                        {% endif %}
+                                        <div class="star-rating small mt-1" aria-hidden="true" style="color: #f59e0b; font-size: 0.95rem; letter-spacing: 2px;">
+                                            {% for i in range(1, 6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-muted border small text-nowrap">
+                                    {{ r.created_at.strftime('%d/%m/%Y') }}
+                                </span>
                             </div>
-                            <div class="star-rating small mb-2" aria-hidden="true">
-                                {% for i in range(1, 6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
-                            </div>
+
                             {% if r.comment %}
-                            <p class="text-secondary small mb-2" style="line-height: 1.5;">{{ r.comment }}</p>
+                            <div class="mt-3 p-3 rounded-3" style="background: rgba(248, 249, 250, 0.7); border-left: 3px solid var(--lego-gold, #c9a227);">
+                                <p class="text-secondary small mb-0" style="line-height: 1.6; font-style: italic;">
+                                    "{{ r.comment }}"
+                                </p>
+                            </div>
                             {% endif %}
-                            <div class="d-flex justify-content-between align-items-center pt-2 border-top" style="border-color: rgba(0,0,0,0.06) !important;">
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 mt-3 border-top" style="border-color: rgba(0,0,0,0.06) !important;">
+                                {% if r.product %}
                                 <a href="{{ url_for('product_detail', product_id=r.product.id) }}" class="small text-decoration-none fw-semibold" style="color: var(--lego-gold);">
-                                    Xem sản phẩm &rarr;
+                                    Xem lại sản phẩm &rarr;
                                 </a>
+                                {% else %}
+                                <span></span>
+                                {% endif %}
+
                                 <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}" onsubmit="return confirm('Bạn có chắc muốn xóa đánh giá này?');">
-                                    <input type="hidden" name="next" value="{{ url_for('user_settings') }}">
-                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none small">
-                                        Xóa đánh giá
+                                    <input type="hidden" name="next" value="{{ url_for('user_settings') }}#reviews">
+                                    <button type="submit" class="btn btn-sm btn-link text-danger p-0 text-decoration-none small d-inline-flex align-items-center gap-1">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                        </svg>
+                                        <span>Xóa nhận xét</span>
                                     </button>
                                 </form>
                             </div>
@@ -145,27 +303,68 @@
                         {% endfor %}
                     </div>
                     {% else %}
-                    <div class="text-center py-5 text-muted">
-                        <p class="mb-1 fw-semibold text-dark">Bạn chưa có đánh giá nào</p>
-                        <p class="small mb-3">Khi mua sắm và trải nghiệm sản phẩm, hãy để lại cảm nhận của bạn nhé!</p>
-                        <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-dark rounded-pill px-3">
-                            Khám phá sản phẩm
+                    <div class="text-center py-5">
+                        <div style="font-size: 3rem; opacity: 0.75;" class="mb-2">🥀</div>
+                        <h5 class="fw-bold mb-1 text-dark">Bạn chưa có đánh giá nào</h5>
+                        <p class="text-muted small mb-4">Khi mua sắm và nhận được các đóa hoa Lego xinh đẹp, hãy để lại nhận xét để chia sẻ cùng mọi người nhé!</p>
+                        <a href="{{ url_for('products') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 small fw-semibold">
+                            Khám phá bộ sưu tập hoa
                         </a>
                     </div>
                     {% endif %}
                 </div>
             </div>
+
         </div>
 
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Tự động chuẩn hóa và giới hạn số điện thoại đúng 10 số
+document.addEventListener('DOMContentLoaded', function () {
+    // -------------------------------------------------------------
+    // 1. Tự động đồng bộ Tab theo URL hash (#password hoặc #reviews)
+    // -------------------------------------------------------------
+    function activateTabByHash() {
+        var hash = window.location.hash;
+        if (hash === '#password') {
+            var btnSec = document.getElementById('tab-btn-security');
+            if (btnSec && window.bootstrap && bootstrap.Tab) {
+                new bootstrap.Tab(btnSec).show();
+            } else if (btnSec) {
+                btnSec.click();
+            }
+        } else if (hash === '#reviews') {
+            var btnRev = document.getElementById('tab-btn-reviews');
+            if (btnRev && window.bootstrap && bootstrap.Tab) {
+                new bootstrap.Tab(btnRev).show();
+            } else if (btnRev) {
+                btnRev.click();
+            }
+        }
+    }
+    activateTabByHash();
+
+    // Cập nhật hash khi đổi tab để người dùng F5 không bị mất tab đang xem
+    document.querySelectorAll('.settings-tab-pill').forEach(function(pill) {
+        pill.addEventListener('shown.bs.tab', function(e) {
+            var target = e.target.getAttribute('data-bs-target');
+            if (target === '#panel-security') {
+                history.replaceState(null, '', '#password');
+            } else if (target === '#panel-reviews') {
+                history.replaceState(null, '', '#reviews');
+            } else {
+                history.replaceState(null, '', window.location.pathname);
+            }
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 2. Tự động chuẩn hóa và chặn gõ vượt quá 10 số điện thoại
+    // -------------------------------------------------------------
     var phoneInput = document.getElementById('userPhone');
     if (phoneInput) {
-        phoneInput.addEventListener('input', function() {
+        phoneInput.addEventListener('input', function () {
             var val = this.value;
             if (val.startsWith('+84')) {
                 this.value = '+84' + val.slice(3).replace(/\D/g, '').slice(0, 9);
@@ -175,9 +374,11 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Nút ẩn/hiện mật khẩu (SVG)
-    document.querySelectorAll('.toggle-password-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+    // -------------------------------------------------------------
+    // 3. Nút ẩn/hiện mật khẩu (SVG icon)
+    // -------------------------------------------------------------
+    document.querySelectorAll('.toggle-password-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
             var targetId = this.getAttribute('data-target');
             var input = document.getElementById(targetId);
             if (input) {
@@ -199,7 +400,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // So khớp mật khẩu mới
+    // -------------------------------------------------------------
+    // 4. So khớp mật khẩu mới theo thời gian thực
+    // -------------------------------------------------------------
     var newPwd = document.getElementById('newPassword');
     var confirmPwd = document.getElementById('confirmPassword');
     var newRule = document.getElementById('newPwdRule');
@@ -212,7 +415,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (v1.length >= 6) {
             newRule.className = 'small mt-1 text-success';
-            newRule.textContent = 'Độ dài hợp lệ (từ 6 ký tự)';
+            newRule.textContent = '✓ Độ dài hợp lệ (từ 6 ký tự)';
         } else {
             newRule.className = 'small mt-1 text-muted';
             newRule.textContent = 'Tối thiểu 6 ký tự';
@@ -222,10 +425,10 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmMsg.style.display = 'block';
             if (v1 === v2) {
                 confirmMsg.className = 'small mt-1 text-success';
-                confirmMsg.textContent = 'Mật khẩu xác nhận trùng khớp';
+                confirmMsg.textContent = '✓ Mật khẩu xác nhận trùng khớp';
             } else {
                 confirmMsg.className = 'small mt-1 text-danger';
-                confirmMsg.textContent = 'Mật khẩu xác nhận chưa khớp';
+                confirmMsg.textContent = '✕ Mật khẩu xác nhận chưa khớp';
             }
         } else {
             confirmMsg.style.display = 'none';
@@ -239,7 +442,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     var pwdForm = document.getElementById('pwdChangeForm');
     if (pwdForm) {
-        pwdForm.addEventListener('submit', function(e) {
+        pwdForm.addEventListener('submit', function (e) {
             if (newPwd && confirmPwd && newPwd.value !== confirmPwd.value) {
                 e.preventDefault();
                 confirmMsg.style.display = 'block';
