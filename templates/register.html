@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Đăng ký - Lego Flower{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="p-4 p-md-5 rounded-4" style="background: rgba(255,255,255,0.75); border: 1.5px solid var(--lego-gold);">
+            <h3 class="text-center mb-4" style="font-family:'Playfair Display',serif; color:#21243D;">Tạo tài khoản</h3>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Họ và tên</label>
+                    <input type="text" name="full_name" class="form-control" maxlength="100"
+                           value="{{ full_name or '' }}" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="0912345678"
+                           inputmode="numeric" value="{{ phone or '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" name="password" class="form-control" minlength="6" required>
+                    <div class="form-text">Ít nhất 6 ký tự.</div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Nhập lại mật khẩu</label>
+                    <input type="password" name="password2" class="form-control" minlength="6" required>
+                </div>
+                <button type="submit" class="btn w-100" style="background: var(--lego-gold); color:#fff; border:none;">
+                    Đăng ký
+                </button>
+            </form>
+
+            <p class="text-center mt-3 mb-0">
+                Đã có tài khoản? <a href="{{ url_for('login') }}" style="color: var(--lego-gold);">Đăng nhập</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

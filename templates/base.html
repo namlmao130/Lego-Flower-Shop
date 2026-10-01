@@ -17,9 +17,16 @@
         <div class="container">
             <button id="toggleBtn" class="btn btn-link p-0 me-3" type="button" style="color:#EDE6D6; font-size:1.4rem; text-decoration:none;">☰</button>
             <a class="navbar-brand fw-bold rainbow-brand" href="{{ url_for('index') }}">Lego Flower</a>
-            <div class="navbar-nav ms-auto">
+            <div class="navbar-nav ms-auto align-items-lg-center">
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
+                {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
+                <span class="nav-link" style="color:#EDE6D6; opacity:0.85;">Xin chào, {{ current_user.full_name }}</span>
+                <a class="nav-link" href="{{ url_for('logout') }}">Đăng xuất</a>
+                {% else %}
+                <a class="nav-link" href="{{ url_for('login') }}">Đăng nhập</a>
+                <a class="nav-link" href="{{ url_for('register') }}">Đăng ký</a>
+                {% endif %}
             </div>
         </div>
     </nav>

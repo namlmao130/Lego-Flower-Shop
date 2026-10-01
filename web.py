@@ -1,10 +1,11 @@
 import os
-from flask import Flask, render_template, request, redirect, url_for, flash
+from functools import wraps
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 
 from config import Config
-from models import db, Product, Category, Admin, ProductMedia
+from models import db, Product, Category, Admin, ProductMedia, Review, Customer, PHONE_REGEX, normalize_phone
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -15,7 +16,8 @@ os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 # Khởi tạo database
 db.init_app(app)
 
-# Khởi tạo Flask-Login (chỉ dùng cho trang admin)
+# Khởi tạo Flask-Login — dùng chung cho cả Admin (quản trị) và Customer (khách hàng).
+# Hai loại tài khoản được phân biệt bằng tiền tố trong get_id(): "admin-<id>" / "customer-<id>"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'admin_login'  # nếu chưa login mà vào trang admin -> đá về đây
@@ -23,7 +25,31 @@ login_manager.login_view = 'admin_login'  # nếu chưa login mà vào trang adm
 
 @login_manager.user_loader
 def load_user(user_id):
-    return Admin.query.get(int(user_id))
+    try:
+        account_type, raw_id = user_id.split('-', 1)
+        raw_id = int(raw_id)
+    except (ValueError, AttributeError):
+        return None
+
+    if account_type == 'admin':
+        return Admin.query.get(raw_id)
+    elif account_type == 'customer':
+        return Customer.query.get(raw_id)
+    return None
+
+
+def admin_required(f):
+    """Giống @login_required nhưng BẮT BUỘC phải là tài khoản Admin.
+    Quan trọng: nếu không có kiểm tra này, 1 khách hàng đã đăng nhập (Customer) cũng có thể
+    truy cập được các route quản trị vì current_user.is_authenticated vẫn là True."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not current_user.is_authenticated:
+            return redirect(url_for('admin_login', next=request.path))
+        if not isinstance(current_user, Admin):
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated
 
 
 @app.context_processor
@@ -137,6 +163,97 @@ def products():
                             selected_category=category_id, search_query=q)
 
 
+# ============================================
+#   KHÁCH HÀNG - ĐĂNG KÝ / ĐĂNG NHẬP / ĐĂNG XUẤT
+#   (đăng nhập bằng số điện thoại + mật khẩu, tách biệt với tài khoản Admin)
+# ============================================
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        full_name = request.form.get('full_name', '').strip()
+        phone = normalize_phone(request.form.get('phone', ''))
+        password = request.form.get('password', '')
+        password2 = request.form.get('password2', '')
+
+        errors = []
+        if not full_name:
+            errors.append('Vui lòng nhập họ tên.')
+        if not PHONE_REGEX.match(phone):
+            errors.append('Số điện thoại không hợp lệ (VD: 0912345678).')
+        elif Customer.query.filter_by(phone=phone).first():
+            errors.append('Số điện thoại này đã được đăng ký.')
+        if len(password) < 6:
+            errors.append('Mật khẩu phải có ít nhất 6 ký tự.')
+        elif password != password2:
+            errors.append('Mật khẩu nhập lại không khớp.')
+
+        if errors:
+            for e in errors:
+                flash(e, 'error')
+            return render_template('register.html', full_name=full_name, phone=phone)
+
+        customer = Customer(phone=phone, full_name=full_name[:100])
+        customer.set_password(password)
+        db.session.add(customer)
+        db.session.commit()
+
+        login_user(customer)
+        flash(f'Chào mừng {customer.full_name} đã tham gia Lego Flower!', 'success')
+        return redirect(url_for('index'))
+
+    return render_template('register.html')
+
+
+@app.route('/review/<int:review_id>/delete', methods=['POST'])
+@login_required
+def delete_own_review(review_id):
+    """Cho phép khách hàng xóa review CỦA CHÍNH MÌNH (khác route admin xóa review bất kỳ)."""
+    review = Review.query.get_or_404(review_id)
+    if not isinstance(current_user, Customer) or review.customer_id != current_user.id:
+        abort(403)
+
+    product_id = review.product_id
+    db.session.delete(review)
+    db.session.commit()
+    flash('Đã xóa đánh giá của bạn.', 'success')
+    return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        return redirect(url_for('index'))
+
+    if request.method == 'POST':
+        phone = normalize_phone(request.form.get('phone', ''))
+        password = request.form.get('password', '')
+
+        customer = Customer.query.filter_by(phone=phone).first()
+        if customer and customer.check_password(password):
+            login_user(customer)
+            next_page = request.args.get('next')
+            # Chỉ redirect tới next nếu là đường dẫn nội bộ (tránh open-redirect)
+            if next_page and next_page.startswith('/'):
+                return redirect(next_page)
+            return redirect(url_for('index'))
+        else:
+            flash('Số điện thoại hoặc mật khẩu không đúng!', 'error')
+
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    if isinstance(current_user, Customer):
+        logout_user()
+    return redirect(url_for('index'))
+
+
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
     product = Product.query.get_or_404(product_id)
@@ -151,7 +268,67 @@ def product_detail(product_id):
         # Nếu danh mục này không còn sp khác, lấy 4 sp mới nhất khác
         related_products = Product.query.filter(Product.id != product.id).order_by(Product.id.desc()).limit(4).all()
 
-    return render_template('product_detail.html', product=product, related_products=related_products)
+    # Nếu khách hàng đã đăng nhập, kiểm tra xem họ đã đánh giá sản phẩm này chưa
+    # (để ẩn form và hiện thông báo thay vì cho đánh giá trùng)
+    my_review = None
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        my_review = Review.query.filter_by(customer_id=current_user.id, product_id=product.id).first()
+
+    return render_template('product_detail.html', product=product,
+                            related_products=related_products, my_review=my_review)
+
+
+@app.route('/product/<int:product_id>/review', methods=['POST'])
+def submit_review(product_id):
+    # Đảm bảo sản phẩm tồn tại, nếu không sẽ tự trả về 404
+    product = Product.query.get_or_404(product_id)
+
+    is_logged_in_customer = current_user.is_authenticated and isinstance(current_user, Customer)
+
+    # Nếu đã đăng nhập: lấy tên từ tài khoản, không tin vào tên tự nhập trên form
+    # Nếu là khách vãng lai: vẫn cho phép nhập tên (giữ tương thích ngược)
+    if is_logged_in_customer:
+        customer_name = current_user.full_name
+    else:
+        customer_name = request.form.get('customer_name', '').strip()
+
+    comment = request.form.get('comment', '').strip()
+    rating_raw = request.form.get('rating', '')
+
+    # Validate dữ liệu đầu vào - không tin tưởng dữ liệu người dùng gửi lên
+    rating = None
+    errors = []
+    if not customer_name:
+        errors.append('Vui lòng nhập tên của bạn.')
+    try:
+        rating = int(rating_raw)
+        if rating < 1 or rating > 5:
+            raise ValueError
+    except (TypeError, ValueError):
+        errors.append('Vui lòng chọn số sao từ 1 đến 5.')
+
+    # Mỗi tài khoản khách hàng chỉ được đánh giá 1 lần / sản phẩm
+    if is_logged_in_customer and Review.query.filter_by(
+        customer_id=current_user.id, product_id=product.id
+    ).first():
+        errors.append('Bạn đã đánh giá sản phẩm này rồi.')
+
+    if errors:
+        for e in errors:
+            flash(e, 'error')
+        return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
+
+    review = Review(
+        product_id=product.id,
+        customer_id=current_user.id if is_logged_in_customer else None,
+        customer_name=customer_name[:100],
+        rating=rating,
+        comment=comment or None
+    )
+    db.session.add(review)
+    db.session.commit()
+    flash('Cảm ơn bạn đã đánh giá sản phẩm!', 'success')
+    return redirect(url_for('product_detail', product_id=product_id) + '#reviews')
 
 
 # ============================================
@@ -175,7 +352,7 @@ def admin_login():
 
 
 @app.route('/admin/logout')
-@login_required
+@admin_required
 def admin_logout():
     logout_user()
     return redirect(url_for('admin_login'))
@@ -186,7 +363,7 @@ def admin_logout():
 # ============================================
 
 @app.route('/admin/dashboard')
-@login_required
+@admin_required
 def admin_dashboard():
     q = request.args.get('q', '').strip()
     category_id = request.args.get('category', type=int)
@@ -209,7 +386,7 @@ def admin_dashboard():
 
 
 @app.route('/admin/add', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def admin_add_product():
     categories = Category.query.all()
 
@@ -243,7 +420,7 @@ def admin_add_product():
 
 
 @app.route('/admin/edit/<int:product_id>', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def admin_edit_product(product_id):
     product = Product.query.get_or_404(product_id)
     categories = Category.query.all()
@@ -268,7 +445,7 @@ def admin_edit_product(product_id):
 
 
 @app.route('/admin/media/delete/<int:media_id>', methods=['POST'])
-@login_required
+@admin_required
 def admin_delete_media(media_id):
     media = ProductMedia.query.get_or_404(media_id)
     product_id = media.product_id
@@ -281,8 +458,20 @@ def admin_delete_media(media_id):
     return redirect(url_for('admin_edit_product', product_id=product_id))
 
 
+@app.route('/admin/review/delete/<int:review_id>', methods=['POST'])
+@admin_required
+def admin_delete_review(review_id):
+    # Cho phép admin xóa các đánh giá spam / không phù hợp
+    review = Review.query.get_or_404(review_id)
+    product_id = review.product_id
+    db.session.delete(review)
+    db.session.commit()
+    flash('Đã xóa đánh giá!', 'success')
+    return redirect(url_for('product_detail', product_id=product_id))
+
+
 @app.route('/admin/delete/<int:product_id>', methods=['POST'])
-@login_required
+@admin_required
 def admin_delete_product(product_id):
     product = Product.query.get_or_404(product_id)
 
@@ -311,7 +500,7 @@ def admin_delete_product(product_id):
 
 
 @app.route('/admin/delete_multiple', methods=['POST'])
-@login_required
+@admin_required
 def admin_delete_multiple():
     product_ids = request.form.getlist('product_ids')
     if not product_ids:
@@ -355,14 +544,14 @@ def admin_delete_multiple():
 # ============================================
 
 @app.route('/admin/categories')
-@login_required
+@admin_required
 def admin_categories():
     categories = Category.query.all()
     return render_template('admin/categories.html', categories=categories)
 
 
 @app.route('/admin/categories/add', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def admin_add_category():
     if request.method == 'POST':
         name = request.form.get('name', '').strip()
@@ -377,7 +566,7 @@ def admin_add_category():
 
 
 @app.route('/admin/categories/edit/<int:category_id>', methods=['GET', 'POST'])
-@login_required
+@admin_required
 def admin_edit_category(category_id):
     category = Category.query.get_or_404(category_id)
     if request.method == 'POST':
@@ -389,7 +578,7 @@ def admin_edit_category(category_id):
 
 
 @app.route('/admin/categories/delete/<int:category_id>', methods=['POST'])
-@login_required
+@admin_required
 def admin_delete_category(category_id):
     category = Category.query.get_or_404(category_id)
     # Sản phẩm thuộc danh mục này sẽ chuyển về "không có danh mục" thay vì bị xóa theo

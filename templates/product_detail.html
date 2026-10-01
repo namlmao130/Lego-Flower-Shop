@@ -46,6 +46,20 @@
             {% if product.category %}
             <span class="badge bg-info text-light mb-2">{{ product.category.name }}</span>
             {% endif %}
+
+            <!-- Điểm đánh giá trung bình -->
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="star-rating" aria-hidden="true">
+                    {% set full = product.average_rating | round(0, 'floor') | int %}
+                    {% for i in range(1, 6) %}{% if i <= full %}★{% else %}☆{% endif %}{% endfor %}
+                </span>
+                {% if product.review_count > 0 %}
+                <span class="text-muted small">{{ product.average_rating }}/5 · {{ product.review_count }} đánh giá</span>
+                {% else %}
+                <span class="text-muted small">Chưa có đánh giá</span>
+                {% endif %}
+            </div>
+
             <h3 class="text-danger">{{ "{:,.0f}".format(product.price) }} đ</h3>
             <p>
                 {% if product.stock > 0 %}
@@ -80,6 +94,104 @@
             </div>
         </div>
     </div>
+</div>
+
+<!-- ============================================ -->
+<!--   KHU VỰC ĐÁNH GIÁ SẢN PHẨM                  -->
+<!-- ============================================ -->
+<div id="reviews" class="reviews-section mt-5 pt-4 border-top" style="border-color: rgba(201, 162, 39, 0.3) !important;">
+    <h3 class="fw-bold mb-4" style="font-family:'Playfair Display',serif; color:#21243D;">
+        ⭐ Đánh giá từ khách hàng
+        {% if product.review_count > 0 %}
+        <small class="fs-6 text-muted fw-normal">({{ product.review_count }})</small>
+        {% endif %}
+    </h3>
+
+    <!-- Form viết đánh giá -->
+    {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' and my_review %}
+    <div class="review-form-box p-3 p-md-4 rounded-4 mb-4 text-center" style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
+        <p class="mb-0">Bạn đã đánh giá sản phẩm này. Cảm ơn bạn! Bạn có thể xóa đánh giá cũ bên dưới nếu muốn viết lại.</p>
+    </div>
+    {% else %}
+    <div class="review-form-box p-3 p-md-4 rounded-4 mb-4" style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
+        <h5 class="mb-3" style="color:#21243D;">Viết đánh giá của bạn</h5>
+        <form method="post" action="{{ url_for('submit_review', product_id=product.id) }}">
+            <div class="row g-3">
+                {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
+                <div class="col-md-6">
+                    <label class="form-label">Đánh giá với tên</label>
+                    <input type="text" class="form-control" value="{{ current_user.full_name }}" disabled>
+                </div>
+                {% else %}
+                <div class="col-md-6">
+                    <label class="form-label">Tên của bạn</label>
+                    <input type="text" name="customer_name" class="form-control" maxlength="100" required>
+                </div>
+                {% endif %}
+                <div class="col-md-6">
+                    <label class="form-label">Đánh giá</label>
+                    <select name="rating" class="form-select" required>
+                        <option value="">-- Chọn số sao --</option>
+                        <option value="5">★★★★★ (5 sao - Tuyệt vời)</option>
+                        <option value="4">★★★★☆ (4 sao - Tốt)</option>
+                        <option value="3">★★★☆☆ (3 sao - Bình thường)</option>
+                        <option value="2">★★☆☆☆ (2 sao - Không hài lòng)</option>
+                        <option value="1">★☆☆☆☆ (1 sao - Tệ)</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Nhận xét (không bắt buộc)</label>
+                    <textarea name="comment" class="form-control" rows="3" maxlength="1000"
+                              placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..."></textarea>
+                </div>
+            </div>
+            <button type="submit" class="btn mt-3 px-4" style="background: var(--lego-gold); color:#fff; border: none;">
+                Gửi đánh giá
+            </button>
+            {% if not current_user.is_authenticated %}
+            <p class="mt-2 mb-0 small text-muted">
+                <a href="{{ url_for('login', next=request.path) }}" style="color: var(--lego-gold);">Đăng nhập</a>
+                để đánh giá bằng tài khoản của bạn.
+            </p>
+            {% endif %}
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Danh sách đánh giá -->
+    {% if product.reviews %}
+    <div class="review-list d-flex flex-column gap-3">
+        {% for r in product.reviews %}
+        <div class="review-item p-3 rounded-4" style="background: rgba(255,255,255,0.6); border: 1px solid rgba(201,162,39,0.25);">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-1">
+                <strong style="color:#21243D;">{{ r.customer_name }}</strong>
+                <small class="text-muted">{{ r.created_at.strftime('%d/%m/%Y') }}</small>
+            </div>
+            <div class="star-rating my-1" aria-hidden="true">
+                {% for i in range(1, 6) %}{% if i <= r.rating %}★{% else %}☆{% endif %}{% endfor %}
+            </div>
+            {% if r.comment %}
+            <p class="mb-1">{{ r.comment }}</p>
+            {% endif %}
+            {% if current_user.is_authenticated %}
+                {% if current_user.__class__.__name__ == 'Admin' %}
+                <form method="post" action="{{ url_for('admin_delete_review', review_id=r.id) }}"
+                      onsubmit="return confirm('Xóa đánh giá này?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa (admin)</button>
+                </form>
+                {% elif current_user.__class__.__name__ == 'Customer' and r.customer_id == current_user.id %}
+                <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
+                      onsubmit="return confirm('Xóa đánh giá của bạn?');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa đánh giá của tôi</button>
+                </form>
+                {% endif %}
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-muted">Chưa có đánh giá nào. Hãy là người đầu tiên đánh giá sản phẩm này!</p>
+    {% endif %}
 </div>
 
 <!-- ============================================ -->

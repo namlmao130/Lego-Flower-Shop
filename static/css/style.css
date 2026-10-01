@@ -1123,3 +1123,24 @@ input::-webkit-search-results-decoration {
 
 
 
+
+/* ===== Đánh giá sản phẩm (star rating + review section) ===== */
+.star-rating {
+    color: var(--lego-gold);
+    letter-spacing: 1px;
+    font-size: 1rem;
+}
+.star-rating.small {
+    font-size: 0.85rem;
+}
+.review-form-box .form-control:focus,
+.review-form-box .form-select:focus {
+    border-color: var(--lego-gold);
+    box-shadow: 0 0 0 0.2rem rgba(201, 162, 39, 0.25);
+}
+.review-item {
+    transition: box-shadow 0.2s ease;
+}
+.review-item:hover {
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}

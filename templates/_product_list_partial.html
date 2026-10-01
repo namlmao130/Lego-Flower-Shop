@@ -33,6 +33,13 @@
                     <span class="badge product-cat-badge mb-1 align-self-start">{{ product.category.name }}</span>
                     {% endif %}
                     <h5 class="card-title">{{ product.name }}</h5>
+                    {% if product.review_count > 0 %}
+                    <div class="star-rating small mb-1" aria-hidden="true">
+                        {% set full = product.average_rating | round(0, 'floor') | int %}
+                        {% for i in range(1, 6) %}{% if i <= full %}★{% else %}☆{% endif %}{% endfor %}
+                        <span class="text-muted">({{ product.review_count }})</span>
+                    </div>
+                    {% endif %}
                     <div class="mt-auto pt-1">
                         <span class="product-price">{{ "{:,.0f}".format(product.price) }} đ</span>
                     </div>

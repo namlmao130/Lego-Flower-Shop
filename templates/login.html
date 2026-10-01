@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập - Lego Flower{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="p-4 p-md-5 rounded-4" style="background: rgba(255,255,255,0.75); border: 1.5px solid var(--lego-gold);">
+            <h3 class="text-center mb-4" style="font-family:'Playfair Display',serif; color:#21243D;">Đăng nhập</h3>
+
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Số điện thoại</label>
+                    <input type="tel" name="phone" class="form-control" placeholder="0912345678"
+                           inputmode="numeric" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Mật khẩu</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                <button type="submit" class="btn w-100" style="background: var(--lego-gold); color:#fff; border:none;">
+                    Đăng nhập
+                </button>
+            </form>
+
+            <p class="text-center mt-3 mb-0">
+                Chưa có tài khoản? <a href="{{ url_for('register') }}" style="color: var(--lego-gold);">Đăng ký ngay</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
