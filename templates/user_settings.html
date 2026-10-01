@@ -43,14 +43,14 @@
                             <input type="text" name="full_name" class="form-control" value="{{ current_user.full_name }}" maxlength="100" required>
                         </div>
                         <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại</label>
+                            <input type="tel" name="phone" id="userPhone" class="form-control" value="{{ current_user.phone }}" inputmode="numeric" autocomplete="tel" maxlength="15" placeholder="0912345678" required>
+                            <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập và liên hệ xác nhận đơn hàng.</div>
+                        </div>
+                        <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary mb-1">Địa chỉ Email</label>
                             <input type="email" name="email" class="form-control" value="{{ current_user.email or '' }}" placeholder="example@gmail.com" maxlength="120">
                             <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập và nhận liên kết khôi phục mật khẩu khi cần.</div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại</label>
-                            <input type="text" class="form-control bg-light" value="{{ current_user.phone }}" disabled>
-                            <div class="form-text small" style="color: #6c757d;">Số điện thoại dùng làm định danh đăng nhập và không thể thay đổi.</div>
                         </div>
                         <button type="submit" class="btn btn-auth px-4 py-2 fw-semibold">
                             Lưu thay đổi

@@ -321,10 +321,21 @@ def user_settings():
         action = request.form.get('action')
         if action == 'update_profile':
             full_name = request.form.get('full_name', '').strip()
+            phone_raw = request.form.get('phone', '').strip()
             email = request.form.get('email', '').strip().lower()
             errors = []
+
             if not full_name:
                 errors.append('Họ và tên không được để trống.')
+
+            phone = normalize_phone(phone_raw)
+            if not phone or not PHONE_REGEX.match(phone):
+                errors.append('Số điện thoại không đúng định dạng (VD: 0912345678).')
+            else:
+                existing_phone = Customer.query.filter(Customer.phone == phone, Customer.id != current_user.id).first()
+                if existing_phone:
+                    errors.append('Số điện thoại này đã được sử dụng bởi tài khoản khác.')
+
             if email:
                 if not EMAIL_REGEX.match(email):
                     errors.append('Địa chỉ email không đúng định dạng.')
@@ -338,6 +349,7 @@ def user_settings():
                     flash(e, 'error')
             else:
                 current_user.full_name = full_name[:100]
+                current_user.phone = phone
                 current_user.email = email or None
                 db.session.commit()
                 flash('Cập nhật thông tin thành công!', 'success')
