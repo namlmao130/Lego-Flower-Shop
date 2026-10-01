@@ -261,8 +261,8 @@ def register():
         errors = []
         if not full_name:
             errors.append('Vui lòng nhập họ tên.')
-        if not PHONE_REGEX.match(phone):
-            errors.append('Số điện thoại không hợp lệ (VD: 0912345678).')
+        if not phone or not PHONE_REGEX.match(phone):
+            errors.append('Số điện thoại không hợp lệ. Số di động Việt Nam gồm đúng 10 chữ số (VD: 0912345678).')
         elif Customer.query.filter_by(phone=phone).first():
             errors.append('Số điện thoại này đã được đăng ký.')
 
@@ -330,7 +330,7 @@ def user_settings():
 
             phone = normalize_phone(phone_raw)
             if not phone or not PHONE_REGEX.match(phone):
-                errors.append('Số điện thoại không đúng định dạng (VD: 0912345678).')
+                errors.append('Số điện thoại không hợp lệ. Số di động Việt Nam gồm đúng 10 chữ số (VD: 0912345678).')
             else:
                 existing_phone = Customer.query.filter(Customer.phone == phone, Customer.id != current_user.id).first()
                 if existing_phone:

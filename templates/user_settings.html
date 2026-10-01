@@ -44,8 +44,8 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại</label>
-                            <input type="tel" name="phone" id="userPhone" class="form-control" value="{{ current_user.phone }}" inputmode="numeric" autocomplete="tel" maxlength="15" placeholder="0912345678" required>
-                            <div class="form-text small" style="color: #6c757d;">Dùng để đăng nhập và liên hệ xác nhận đơn hàng.</div>
+                            <input type="tel" name="phone" id="userPhone" class="form-control" value="{{ current_user.phone }}" inputmode="numeric" autocomplete="tel" maxlength="10" pattern="0[35789][0-9]{8}" placeholder="0912345678" required>
+                            <div class="form-text small" style="color: #6c757d;">Số di động 10 chữ số để đăng nhập và liên hệ xác nhận đơn hàng.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label small fw-semibold text-secondary mb-1">Địa chỉ Email</label>
@@ -162,6 +162,19 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Tự động chuẩn hóa và giới hạn số điện thoại đúng 10 số
+    var phoneInput = document.getElementById('userPhone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function() {
+            var val = this.value;
+            if (val.startsWith('+84')) {
+                this.value = '+84' + val.slice(3).replace(/\D/g, '').slice(0, 9);
+            } else {
+                this.value = val.replace(/\D/g, '').slice(0, 10);
+            }
+        });
+    }
+
     // Nút ẩn/hiện mật khẩu (SVG)
     document.querySelectorAll('.toggle-password-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {

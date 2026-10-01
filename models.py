@@ -6,16 +6,21 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
-# Số điện thoại VN: bắt đầu bằng 0 hoặc +84, theo sau là 9-10 chữ số
-PHONE_REGEX = re.compile(r'^(0|\+84)\d{9,10}$')
+# Số điện thoại di động VN chuẩn: đúng 10 chữ số bắt đầu bằng 03, 05, 07, 08, 09 (hoặc +84 theo sau 9 số)
+PHONE_REGEX = re.compile(r'^(0|\+84)[35789]\d{8}$')
 EMAIL_REGEX = re.compile(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$')
 
 
 def normalize_phone(raw_phone):
-    """Chuẩn hóa số điện thoại: bỏ khoảng trắng/dấu gạch, dùng để so sánh & lưu thống nhất."""
+    """Chuẩn hóa số điện thoại: bỏ khoảng trắng/dấu gạch, chuyển +84 thành 0 để lưu thống nhất."""
     if not raw_phone:
         return ''
-    return re.sub(r'[\s\-.]', '', raw_phone.strip())
+    cleaned = re.sub(r'[\s\-.]', '', raw_phone.strip())
+    if cleaned.startswith('+84'):
+        cleaned = '0' + cleaned[3:]
+    elif cleaned.startswith('84') and len(cleaned) == 11 and cleaned[2] in '35789':
+        cleaned = '0' + cleaned[2:]
+    return cleaned
 
 
 class Category(db.Model):
