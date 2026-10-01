@@ -139,6 +139,26 @@ h1, h2, h3, .hero-title {
     color: var(--lego-gold) !important;
 }
 
+.user-greeting {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 4px;
+    cursor: default;
+    white-space: nowrap;
+}
+.user-greeting-prefix {
+    opacity: 0.85;
+}
+.user-display-name {
+    color: var(--lego-gold-light);
+    max-width: 100px;
+    display: inline-block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
 /* ===== Hàng ngôi sao lấp lánh ===== */
 .stud-row {
     display: flex;
@@ -1007,6 +1027,16 @@ input::-webkit-search-results-decoration {
     .shop-navbar .nav-link {
         font-size: 0.88rem !important;
         padding: 8px 6px !important;
+    }
+
+    .user-greeting {
+        font-size: 0.82rem !important;
+        gap: 3px !important;
+        padding: 6px 4px !important;
+    }
+
+    .user-display-name {
+        max-width: 65px !important;
     }
 
     .mobile-desktop-notice {

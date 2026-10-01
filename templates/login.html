@@ -11,11 +11,11 @@
                 <div class="mb-3">
                     <label class="form-label">Số điện thoại</label>
                     <input type="tel" name="phone" class="form-control" placeholder="0912345678"
-                           inputmode="numeric" required autofocus>
+                           inputmode="numeric" value="{{ phone or '' }}" required {% if not phone %}autofocus{% endif %}>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Mật khẩu</label>
-                    <input type="password" name="password" class="form-control" required>
+                    <input type="password" name="password" class="form-control" required {% if phone %}autofocus{% endif %}>
                 </div>
                 <button type="submit" class="btn w-100" style="background: var(--lego-gold); color:#fff; border:none;">
                     Đăng nhập

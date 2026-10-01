@@ -21,7 +21,10 @@
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
-                <span class="nav-link" style="color:#EDE6D6; opacity:0.85;">Xin chào, {{ current_user.full_name }}</span>
+                <span class="nav-link user-greeting" title="{{ current_user.full_name }}">
+                    <span class="user-greeting-prefix">Xin chào,</span>
+                    <strong class="user-display-name">{{ current_user.short_name }}</strong>
+                </span>
                 <a class="nav-link" href="{{ url_for('logout') }}">Đăng xuất</a>
                 {% else %}
                 <a class="nav-link" href="{{ url_for('login') }}">Đăng nhập</a>

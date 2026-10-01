@@ -229,7 +229,8 @@ def login():
         return redirect(url_for('index'))
 
     if request.method == 'POST':
-        phone = normalize_phone(request.form.get('phone', ''))
+        raw_phone = request.form.get('phone', '')
+        phone = normalize_phone(raw_phone)
         password = request.form.get('password', '')
 
         customer = Customer.query.filter_by(phone=phone).first()
@@ -242,6 +243,7 @@ def login():
             return redirect(url_for('index'))
         else:
             flash('Số điện thoại hoặc mật khẩu không đúng!', 'error')
+            return render_template('login.html', phone=raw_phone.strip())
 
     return render_template('login.html')
 

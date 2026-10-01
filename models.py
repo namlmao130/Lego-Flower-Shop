@@ -115,6 +115,14 @@ class Customer(UserMixin, db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    @property
+    def short_name(self):
+        """Lấy tên gọi ngắn gọn (từ cuối cùng của họ tên, VD: 'Nguyễn Văn Nam' -> 'Nam')"""
+        if not self.full_name:
+            return ''
+        parts = self.full_name.strip().split()
+        return parts[-1] if parts else self.full_name
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
