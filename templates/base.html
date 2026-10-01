@@ -21,12 +21,66 @@
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
-                <a class="nav-link user-greeting text-decoration-none" href="{{ url_for('user_settings') }}" title="Cài đặt tài khoản: {{ current_user.full_name }}">
-                    <span class="user-greeting-prefix">Xin chào,</span>
-                    <strong class="user-display-name">{{ current_user.short_name }}</strong>
-                </a>
-                <a class="nav-link" href="{{ url_for('user_settings') }}">Cài đặt</a>
-                <a class="nav-link" href="{{ url_for('logout') }}">Đăng xuất</a>
+                <div class="dropdown user-menu-dropdown">
+                    <button class="user-avatar-btn" type="button" id="userMenuBtn" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="{{ current_user.full_name }}">
+                        <span class="user-avatar-circle">
+                            {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                        </span>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end user-popover-menu" aria-labelledby="userMenuBtn">
+                        <div class="user-popover-header">
+                            <div class="user-popover-avatar">
+                                {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                            </div>
+                            <div class="user-popover-meta">
+                                <div class="user-popover-name">{{ current_user.full_name }}</div>
+                                <div class="user-popover-handle">
+                                    {% if current_user.email %}
+                                        @{{ current_user.email.split('@')[0] }}
+                                    {% else %}
+                                        @{{ current_user.phone }}
+                                    {% endif %}
+                                </div>
+                                <a href="{{ url_for('user_settings') }}" class="user-popover-link">Xem tài khoản của bạn</a>
+                            </div>
+                        </div>
+
+                        <div class="user-popover-divider"></div>
+
+                        <a class="user-popover-item" href="{{ url_for('user_settings') }}">
+                            <span class="user-popover-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                    <circle cx="12" cy="7" r="4"></circle>
+                                </svg>
+                            </span>
+                            <span class="flex-grow-1">Cài đặt tài khoản</span>
+                        </a>
+
+                        <a class="user-popover-item" href="{{ url_for('user_settings') }}#reviews">
+                            <span class="user-popover-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                </svg>
+                            </span>
+                            <span class="flex-grow-1">Đánh giá của tôi</span>
+                            <svg class="user-popover-chevron" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                            </svg>
+                        </a>
+
+                        <a class="user-popover-item text-danger-hover" href="{{ url_for('logout') }}">
+                            <span class="user-popover-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                                </svg>
+                            </span>
+                            <span class="flex-grow-1">Đăng xuất</span>
+                        </a>
+                    </div>
+                </div>
                 {% else %}
                 <a class="nav-link" href="{{ url_for('login') }}">Đăng nhập</a>
                 <a class="nav-link" href="{{ url_for('register') }}">Đăng ký</a>
@@ -55,6 +109,17 @@
                 {% endfor %}
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="border-top my-2 pt-2" style="border-color: rgba(225, 29, 72, 0.25) !important;">
+                    <div class="d-flex align-items-center gap-2 px-3 py-2 mb-2 rounded-3" style="background: rgba(0, 0, 0, 0.2);">
+                        <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.85rem; flex-shrink: 0;">
+                            {{ current_user.full_name[:1].upper() if current_user.full_name else 'U' }}
+                        </div>
+                        <div class="overflow-hidden">
+                            <div class="text-white fw-bold small text-truncate" style="max-width: 140px;">{{ current_user.full_name }}</div>
+                            <div class="text-white-50 text-truncate" style="font-size: 0.75rem; max-width: 140px;">
+                                {% if current_user.email %}@{{ current_user.email.split('@')[0] }}{% else %}@{{ current_user.phone }}{% endif %}
+                            </div>
+                        </div>
+                    </div>
                     <a href="{{ url_for('user_settings') }}" class="nav-item">Cài đặt tài khoản</a>
                     <a href="{{ url_for('logout') }}" class="nav-item" style="color: #fda4af;">Đăng xuất</a>
                 </div>
@@ -493,6 +558,23 @@
 
             backToTopBtn.addEventListener('click', () => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // Xử lý đóng mở menu avatar cá nhân an toàn (dự phòng khi offline CDN)
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userMenu = document.querySelector('.user-popover-menu');
+        if (userMenuBtn && userMenu) {
+            userMenuBtn.addEventListener('click', (e) => {
+                if (typeof bootstrap === 'undefined') {
+                    e.stopPropagation();
+                    userMenu.classList.toggle('show');
+                }
+            });
+            document.addEventListener('click', (e) => {
+                if (typeof bootstrap === 'undefined' && !userMenu.contains(e.target) && !userMenuBtn.contains(e.target)) {
+                    userMenu.classList.remove('show');
+                }
             });
         }
     </script>
