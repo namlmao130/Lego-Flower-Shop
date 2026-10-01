@@ -818,6 +818,7 @@
                     text: welcomeText,
                     time: timeStr
                 }]));
+                localStorage.removeItem(AUTOREPLY_KEY);
                 if (chatSuggestions) {
                     chatSuggestions.style.display = 'flex';
                     chatMessages.appendChild(chatSuggestions);
@@ -831,9 +832,27 @@
                     e.stopPropagation();
                     if (confirm('Bạn có muốn làm mới cuộc trò chuyện này không?')) {
                         localStorage.removeItem(STORAGE_KEY);
+                        localStorage.removeItem(AUTOREPLY_KEY);
                         resetToWelcome();
                     }
                 });
+            }
+
+            const AUTOREPLY_KEY = 'lego_flower_chat_replied';
+
+            function hasAlreadyAutoReplied() {
+                if (localStorage.getItem(AUTOREPLY_KEY) === '1') return true;
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) {
+                        const history = JSON.parse(raw);
+                        if (Array.isArray(history)) {
+                            const botMsgs = history.filter(m => m.sender === 'bot');
+                            if (botMsgs.length > 1) return true;
+                        }
+                    }
+                } catch (e) {}
+                return false;
             }
 
             const botKnowledge = [
@@ -874,7 +893,7 @@
                         return item.reply;
                     }
                 }
-                return 'Cảm ơn tin nhắn của bạn! Đội ngũ tư vấn Tiệm Hoa Lego đã nhận được yêu cầu. Để được tư vấn chi tiết và gửi ảnh thực tế nhanh nhất, bạn hãy bấm nút "Zalo: 0967.701.565" ở ngay thanh trên nhé! 🥀';
+                return 'Dạ Tiệm Hoa Lego đã nhận được tin nhắn của bạn! Đội ngũ tư vấn sẽ phản hồi trong giây lát. Để được hỗ trợ hỏa tốc hoặc xem ảnh mẫu thực tế ngay, bạn có thể bấm liên hệ Zalo: 0967.701.565 nhé! 💐';
             }
 
             function showTypingIndicator() {
@@ -892,7 +911,9 @@
                 if (typing) typing.remove();
             }
 
-            function handleSend(userText) {
+            let botReplyTimeout = null;
+
+            function handleSend(userText, isQuickChip = false) {
                 if (!userText || !userText.trim()) return;
                 const text = userText.trim();
                 const userTime = getCurrentTimeStr();
@@ -904,21 +925,51 @@
                 // Ẩn các nút gợi ý sau khi gửi tin
                 if (chatSuggestions) chatSuggestions.style.display = 'none';
 
-                const indicator = showTypingIndicator();
-                setTimeout(() => {
-                    removeTypingIndicator();
-                    const reply = getBotReply(text);
-                    const botTime = getCurrentTimeStr();
-                    renderMessageElement(reply, false, botTime);
-                    saveMessageToHistory(reply, false, botTime);
-                    scrollChatToBottom();
-                }, 550);
+                // Nếu là câu hỏi từ nút gợi ý (Quick chip): Trả lời ngay câu hỏi đó
+                if (isQuickChip) {
+                    const indicator = showTypingIndicator();
+                    setTimeout(() => {
+                        removeTypingIndicator();
+                        const reply = getBotReply(text);
+                        const botTime = getCurrentTimeStr();
+                        renderMessageElement(reply, false, botTime);
+                        saveMessageToHistory(reply, false, botTime);
+                        scrollChatToBottom();
+                    }, 500);
+                    return;
+                }
+
+                // Nếu là khách tự gõ chữ:
+                // Tuyệt đối KHÔNG spam tin nhắn tự động sau mỗi câu chat của khách.
+                // Chỉ phản hồi xác nhận tối đa 1 lần duy nhất trong toàn bộ cuộc trò chuyện.
+                // Các câu chat tiếp theo của khách sẽ được lưu và hiển thị tự nhiên, không bị bot nhảy ra quấy rầy.
+                if (hasAlreadyAutoReplied()) {
+                    return;
+                }
+
+                // Đánh dấu đã gửi phản hồi tự động
+                localStorage.setItem(AUTOREPLY_KEY, '1');
+
+                // Nếu khách nhắn liên tiếp nhiều câu nhanh, hủy timer cũ để gom lại, không nhảy liên tục
+                if (botReplyTimeout) clearTimeout(botReplyTimeout);
+
+                botReplyTimeout = setTimeout(() => {
+                    const indicator = showTypingIndicator();
+                    setTimeout(() => {
+                        removeTypingIndicator();
+                        const reply = getBotReply(text);
+                        const botTime = getCurrentTimeStr();
+                        renderMessageElement(reply, false, botTime);
+                        saveMessageToHistory(reply, false, botTime);
+                        scrollChatToBottom();
+                    }, 600);
+                }, 1000);
             }
 
             if (chatForm) {
                 chatForm.addEventListener('submit', function(e) {
                     e.preventDefault();
-                    if (chatInput) handleSend(chatInput.value);
+                    if (chatInput) handleSend(chatInput.value, false);
                 });
             }
 
@@ -927,7 +978,7 @@
                 chatSuggestions.querySelectorAll('.chat-chip').forEach(chip => {
                     chip.addEventListener('click', function() {
                         const msg = this.getAttribute('data-msg');
-                        if (msg) handleSend(msg);
+                        if (msg) handleSend(msg, true);
                     });
                 });
             }
