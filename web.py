@@ -842,12 +842,21 @@ def cart_add():
     if buy_now:
         return redirect(url_for('checkout'))
 
+    items, total_price, total_quantity = get_cart_details()
+
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        free_shipping_threshold = 500000
         return jsonify({
             'success': True,
-            'cart_count': cart_count,
+            'cart_count': total_quantity,
             'message': f'Đã thêm {quantity} x "{product.name}" vào giỏ hàng!',
-            'product_name': product.name
+            'product_name': product.name,
+            'product_price_str': f"{product.price:,.0f} đ",
+            'thumbnail': url_for('static', filename='uploads/' + product.thumbnail) if product.thumbnail else None,
+            'total_price': total_price,
+            'total_price_str': f"{total_price:,.0f} đ",
+            'free_shipping_needed': max(0, free_shipping_threshold - total_price),
+            'free_shipping_threshold': free_shipping_threshold
         })
 
     flash(f'Đã thêm "{product.name}" vào giỏ hàng!', 'success')
@@ -877,11 +886,13 @@ def cart_update():
     pid_str = str(product_id)
     product = Product.query.get(product_id)
 
+    max_reached = False
     if quantity is None or quantity <= 0:
         cart.pop(pid_str, None)
     else:
         if product and quantity > product.stock:
             quantity = product.stock
+            max_reached = True
         cart[pid_str] = quantity
 
     session['cart'] = cart
@@ -893,6 +904,9 @@ def cart_update():
         item_subtotal = 0
         if product and pid_str in cart:
             item_subtotal = product.price * cart[pid_str]
+        free_shipping_threshold = 500000
+        free_shipping_needed = max(0, free_shipping_threshold - total_price)
+        free_shipping_percent = min(100, int((total_price / free_shipping_threshold) * 100)) if free_shipping_threshold > 0 else 100
         return jsonify({
             'success': True,
             'cart_count': total_quantity,
@@ -901,7 +915,12 @@ def cart_update():
             'total_price': total_price,
             'total_price_str': f"{total_price:,.0f} đ",
             'total_quantity': total_quantity,
-            'quantity': cart.get(pid_str, 0)
+            'quantity': cart.get(pid_str, 0),
+            'max_reached': max_reached,
+            'available_stock': product.stock if product else 0,
+            'free_shipping_needed': free_shipping_needed,
+            'free_shipping_percent': free_shipping_percent,
+            'free_shipping_threshold': free_shipping_threshold
         })
 
     return redirect(url_for('view_cart'))
@@ -941,6 +960,7 @@ def checkout():
         customer_name = (request.form.get('customer_name') or '').strip()
         customer_phone = (request.form.get('customer_phone') or '').strip()
         shipping_address = (request.form.get('shipping_address') or '').strip()
+        delivery_time = (request.form.get('delivery_time') or 'Giao sớm nhất có thể').strip()
         customer_note = (request.form.get('customer_note') or '').strip()
 
         if not customer_name or not customer_phone or not shipping_address:
@@ -974,6 +994,7 @@ def checkout():
             customer_name=customer_name,
             customer_phone=customer_phone,
             shipping_address=shipping_address,
+            delivery_time=delivery_time,
             customer_note=customer_note,
             total_price=total_price,
             status='pending',
@@ -1026,6 +1047,123 @@ def order_success(order_code):
     """Trang thông báo đặt hàng thành công."""
     order = Order.query.filter_by(order_code=order_code).first_or_404()
     return render_template('order_success.html', order=order)
+
+
+@app.route('/orders', methods=['GET', 'POST'])
+def my_orders_view():
+    """Trang xem & tra cứu đơn hàng của bạn (dành cho cả khách đã đăng nhập và khách vãng lai)."""
+    search_query = ''
+    status_filter = request.args.get('status', '').strip()
+
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        # Khách đã đăng nhập: hiển thị toàn bộ đơn hàng của tài khoản
+        query = Order.query.filter_by(customer_id=current_user.id).options(selectinload(Order.items))
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        q = request.args.get('q', '').strip()
+        if q:
+            search_query = q
+            query = query.filter(Order.order_code.ilike(f'%{q}%'))
+        orders = query.order_by(Order.created_at.desc()).all()
+        lookup_mode = 'account'
+    else:
+        # Khách vãng lai / chưa đăng nhập: tra cứu qua SĐT hoặc mã đơn
+        lookup_mode = 'guest'
+        orders = []
+        identifier = ''
+        if request.method == 'POST':
+            identifier = request.form.get('identifier', '').strip()
+        else:
+            identifier = request.args.get('identifier', '').strip()
+
+        if identifier:
+            search_query = identifier
+            norm_phone = normalize_phone(identifier)
+
+            # Nếu nhập đúng mã đơn hàng, chuyển thẳng tới trang chi tiết theo dõi
+            if identifier.upper().startswith('LF'):
+                exact_order = Order.query.filter(func.upper(Order.order_code) == identifier.upper()).first()
+                if exact_order:
+                    return redirect(url_for('order_detail', order_code=exact_order.order_code))
+
+            query = Order.query.options(selectinload(Order.items))
+            if norm_phone and PHONE_REGEX.match(norm_phone):
+                query = query.filter(Order.customer_phone == norm_phone)
+            else:
+                query = query.filter((Order.order_code.ilike(f'%{identifier}%')) | (Order.customer_phone == identifier))
+
+            if status_filter:
+                query = query.filter_by(status=status_filter)
+            orders = query.order_by(Order.created_at.desc()).all()
+            if not orders:
+                flash(f'Không tìm thấy đơn hàng nào khớp với thông tin "{identifier}". Vui lòng kiểm tra lại Số điện thoại hoặc Mã đơn hàng!', 'warning')
+
+    return render_template(
+        'orders.html',
+        orders=orders,
+        status_filter=status_filter,
+        search_query=search_query,
+        lookup_mode=lookup_mode
+    )
+
+
+@app.route('/order/<order_code>')
+def order_detail(order_code):
+    """Trang chi tiết & theo dõi tiến trình đơn hàng."""
+    order = Order.query.options(selectinload(Order.items)).filter_by(order_code=order_code).first_or_404()
+    return render_template('order_detail.html', order=order)
+
+
+@app.route('/order/<order_code>/cancel', methods=['POST'])
+@limiter.limit("10 per minute")
+def order_cancel_customer(order_code):
+    """Khách hàng tự hủy đơn hàng khi đơn còn ở trạng thái Chờ xác nhận."""
+    order = Order.query.filter_by(order_code=order_code).first_or_404()
+    if not order.can_cancel:
+        flash('Đơn hàng đã được xác nhận hoặc đang giao nên không thể tự hủy trực tiếp. Vui lòng liên hệ shop qua Zalo/Hotline để được hỗ trợ!', 'warning')
+        return redirect(request.referrer or url_for('order_detail', order_code=order_code))
+
+    cancel_reason = (request.form.get('cancel_reason') or 'Khách hàng yêu cầu hủy đơn qua website').strip()
+    order.status = 'cancelled'
+    order.cancel_reason = cancel_reason
+
+    # Hoàn lại số lượng tồn kho
+    for item in order.items:
+        if item.product:
+            item.product.stock += item.quantity
+
+    db.session.commit()
+    flash(f'Đã hủy thành công đơn hàng #{order.order_code}. Số lượng hoa đã được hoàn trả lại kho.', 'success')
+    return redirect(request.referrer or url_for('order_detail', order_code=order_code))
+
+
+@app.route('/order/<order_code>/reorder', methods=['POST'])
+@limiter.limit("15 per minute")
+def order_reorder(order_code):
+    """Mua lại / Đặt lại toàn bộ sản phẩm của đơn hàng cũ vào giỏ."""
+    order = Order.query.options(selectinload(Order.items)).filter_by(order_code=order_code).first_or_404()
+    cart = session.get('cart', {})
+    if not isinstance(cart, dict):
+        cart = {}
+
+    added_count = 0
+    for item in order.items:
+        if item.product and item.product.stock > 0:
+            pid_str = str(item.product.id)
+            current_qty = cart.get(pid_str, 0)
+            new_qty = min(current_qty + item.quantity, item.product.stock)
+            cart[pid_str] = new_qty
+            added_count += 1
+
+    session['cart'] = cart
+    session.modified = True
+
+    if added_count > 0:
+        flash(f'Đã thêm các món từ đơn #{order.order_code} vào giỏ hàng của bạn!', 'success')
+    else:
+        flash('Rất tiếc, các mẫu hoa trong đơn này hiện đang tạm hết hàng.', 'warning')
+
+    return redirect(url_for('view_cart'))
 
 
 # ============================================

@@ -203,9 +203,11 @@ class Order(db.Model):
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
 
     customer_name = db.Column(db.String(100), nullable=False)
-    customer_phone = db.Column(db.String(20), nullable=False)
+    customer_phone = db.Column(db.String(20), nullable=False, index=True)
     shipping_address = db.Column(db.String(255), nullable=False)
+    delivery_time = db.Column(db.String(100), nullable=True)  # Hẹn giờ giao hoa (VD: Giao sớm nhất / Hẹn ngày 20/10)
     customer_note = db.Column(db.Text, nullable=True)  # Ghi chú hoặc lời chúc viết thiệp
+    cancel_reason = db.Column(db.String(255), nullable=True)  # Lý do hủy đơn nếu có
 
     total_price = db.Column(db.Float, nullable=False, default=0.0)
     status = db.Column(db.String(20), nullable=False, default='pending')  # pending, confirmed, shipping, completed, cancelled
@@ -237,6 +239,21 @@ class Order(db.Model):
             'cancelled': 'bg-danger text-white'
         }
         return classes.get(self.status, 'bg-secondary text-white')
+
+    @property
+    def step_number(self):
+        steps = {
+            'pending': 1,
+            'confirmed': 2,
+            'shipping': 3,
+            'completed': 4,
+            'cancelled': -1
+        }
+        return steps.get(self.status, 1)
+
+    @property
+    def can_cancel(self):
+        return self.status == 'pending'
 
     def __repr__(self):
         return f'<Order {self.order_code} - {self.total_price}đ>'

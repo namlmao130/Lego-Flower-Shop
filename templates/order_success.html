@@ -36,6 +36,12 @@
                     <span class="small text-muted">Địa chỉ nhận:</span>
                     <span class="fw-semibold text-dark text-end" style="max-width: 60%;">{{ order.shipping_address }}</span>
                 </div>
+                {% if order.delivery_time %}
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small text-muted">Thời gian nhận:</span>
+                    <span class="fw-semibold text-dark text-end" style="max-width: 60%;">{{ order.delivery_time }}</span>
+                </div>
+                {% endif %}
                 {% if order.customer_note %}
                 <div class="d-flex align-items-start justify-content-between mb-2 pt-2 border-top" style="border-color: rgba(201, 162, 39, 0.2) !important;">
                     <span class="small text-muted">Lời chúc / Ghi chú:</span>
@@ -81,14 +87,15 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <a href="{{ url_for('products') }}" class="btn btn-auth px-4 py-2 fw-semibold">
+                <a href="{{ url_for('order_detail', order_code=order.order_code) }}" class="btn btn-auth px-4 py-2 fw-semibold">
+                    🔍 Theo dõi tiến trình đơn hàng
+                </a>
+                <a href="{{ url_for('my_orders_view') }}" class="btn btn-outline-dark px-3 py-2 rounded-3">
+                    📦 Quản lý đơn hàng
+                </a>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-secondary px-3 py-2 rounded-3">
                     Tiếp tục mua sắm
                 </a>
-                {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
-                <a href="{{ url_for('user_settings') }}#orders" class="btn btn-outline-secondary px-3 py-2 rounded-3">
-                    Xem đơn hàng của tôi
-                </a>
-                {% endif %}
             </div>
 
         </div>

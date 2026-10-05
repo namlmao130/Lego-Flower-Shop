@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+{% block title %}Đơn hàng của bạn - Lego Flower{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-3 my-md-4">
+    <div class="col-12 col-xl-11">
+
+        <!-- Breadcrumb & Tiêu đề -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--lego-gold);">Trang chủ</a>
+                    </li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Đơn hàng của bạn</li>
+                </ol>
+            </nav>
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2">
+                <div>
+                    <h2 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">
+                        Đơn hàng của bạn
+                    </h2>
+                    <p class="text-muted small mb-0">Theo dõi tiến trình chuẩn bị hoa, hành trình vận chuyển và thông tin đơn đặt hàng.</p>
+                </div>
+                <a href="{{ url_for('products') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 small fw-semibold align-self-start align-self-md-auto">
+                    🌸 Mua thêm hoa mới
+                </a>
+            </div>
+        </div>
+
+        <!-- KHUNG TRA CỨU ĐƠN HÀNG (Đặc biệt hữu ích cho khách vãng lai) -->
+        <div class="auth-card p-3 p-md-4 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, rgba(253, 250, 242, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%); border: 1.5px solid rgba(201, 162, 39, 0.25);">
+            <form method="POST" action="{{ url_for('my_orders_view') }}" class="row g-2 align-items-center">
+                <div class="col-12 col-md-8 col-lg-9">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted" style="border-radius: 12px 0 0 12px;">
+                            🔍
+                        </span>
+                        <input type="text" name="identifier" class="form-control border-start-0 py-2" 
+                               value="{{ search_query }}" 
+                               placeholder="Nhập Số điện thoại đặt hàng hoặc Mã đơn hàng (VD: 0912345678 hoặc LF26...)" 
+                               style="border-radius: 0 12px 12px 0; font-size: 0.95rem;" required>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <button type="submit" class="btn btn-auth w-100 py-2 fw-semibold shadow-sm" style="border-radius: 12px;">
+                        Tra cứu đơn hàng
+                    </button>
+                </div>
+            </form>
+            {% if lookup_mode == 'guest' and not search_query %}
+            <div class="small text-muted mt-2 d-flex align-items-center gap-1">
+                <span>💡</span>
+                <span>Khách vãng lai có thể nhập số điện thoại hoặc mã đơn để kiểm tra tiến trình giao hoa bất cứ lúc nào.</span>
+            </div>
+            {% endif %}
+        </div>
+
+        {% if orders %}
+        <!-- BỘ LỌC TRẠNG THÁI -->
+        <div class="d-flex align-items-center gap-2 overflow-x-auto pb-2 mb-4 text-nowrap" style="scrollbar-width: thin;">
+            <a href="{{ url_for('my_orders_view', q=search_query or None, identifier=search_query or None) }}" 
+               class="filter-pill {{ 'active' if not status_filter else '' }}">
+                Tất cả ({{ orders|length }})
+            </a>
+            <a href="{{ url_for('my_orders_view', status='pending', q=search_query or None, identifier=search_query or None) }}" 
+               class="filter-pill {{ 'active' if status_filter == 'pending' else '' }}">
+                ⏳ Chờ xác nhận
+            </a>
+            <a href="{{ url_for('my_orders_view', status='confirmed', q=search_query or None, identifier=search_query or None) }}" 
+               class="filter-pill {{ 'active' if status_filter == 'confirmed' else '' }}">
+                📞 Đã xác nhận
+            </a>
+            <a href="{{ url_for('my_orders_view', status='shipping', q=search_query or None, identifier=search_query or None) }}" 
+               class="filter-pill {{ 'active' if status_filter == 'shipping' else '' }}">
+                🚚 Đang giao
+            </a>
+            <a href="{{ url_for('my_orders_view', status='completed', q=search_query or None, identifier=search_query or None) }}" 
+               class="filter-pill {{ 'active' if status_filter == 'completed' else '' }}">
+                ✅ Đã hoàn thành
+            </a>
+            <a href="{{ url_for('my_orders_view', status='cancelled', q=search_query or None, identifier=search_query or None) }}" 
+               class="filter-pill {{ 'active' if status_filter == 'cancelled' else '' }}">
+                ❌ Đã hủy
+            </a>
+        </div>
+
+        <!-- DANH SÁCH THẺ ĐƠN HÀNG -->
+        <div class="d-flex flex-column gap-4">
+            {% for ord in orders %}
+            <div class="card border-0 rounded-4 shadow-sm overflow-hidden" style="background: #ffffff; border: 1px solid rgba(33, 36, 61, 0.08) !important;">
+                
+                <!-- Header thẻ đơn -->
+                <div class="card-header py-3 px-3 px-md-4 d-flex flex-wrap justify-content-between align-items-center gap-2" 
+                     style="background: rgba(253, 250, 242, 0.5); border-bottom: 1px solid rgba(33, 36, 61, 0.06);">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="fw-bold text-dark font-monospace fs-6" style="letter-spacing: 0.5px;">#{{ ord.order_code }}</span>
+                        <span class="text-muted small">| Ngày đặt: {{ ord.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                    </div>
+                    <div>
+                        <span class="badge {{ ord.status_badge_class }} px-3 py-2 rounded-pill fw-semibold">
+                            {{ ord.status_label }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Thân đơn hàng -->
+                <div class="card-body p-3 p-md-4">
+                    
+                    <!-- Stepper thu nhỏ tiến trình đơn -->
+                    {% if ord.status != 'cancelled' %}
+                    <div class="order-progress-stepper mb-4 px-2 px-md-4 py-3 rounded-3" style="background: #fafaf9;">
+                        <div class="d-flex justify-content-between position-relative">
+                            <!-- Đường kẻ nối -->
+                            <div class="stepper-line position-absolute top-50 start-0 translate-middle-y w-100" 
+                                 style="height: 3px; background: #e5e7eb; z-index: 1;"></div>
+                            <div class="stepper-line-active position-absolute top-50 start-0 translate-middle-y" 
+                                 style="height: 3px; background: var(--lego-gold, #C9A227); z-index: 2; transition: width 0.3s ease;
+                                        width: {% if ord.step_number == 1 %}15%{% elif ord.step_number == 2 %}50%{% elif ord.step_number == 3 %}85%{% else %}100%{% endif %};"></div>
+
+                            <!-- Bước 1: Tiếp nhận -->
+                            <div class="stepper-step text-center position-relative" style="z-index: 3;">
+                                <div class="stepper-circle mx-auto d-flex align-items-center justify-content-center rounded-circle fw-bold {{ 'bg-warning text-dark' if ord.step_number >= 1 else 'bg-white border text-muted' }}" 
+                                     style="width: 32px; height: 32px; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                                    ✓
+                                </div>
+                                <div class="stepper-label small mt-1 fw-semibold {{ 'text-dark' if ord.step_number >= 1 else 'text-muted' }}" style="font-size: 0.78rem;">
+                                    Đã đặt
+                                </div>
+                            </div>
+
+                            <!-- Bước 2: Xác nhận -->
+                            <div class="stepper-step text-center position-relative" style="z-index: 3;">
+                                <div class="stepper-circle mx-auto d-flex align-items-center justify-content-center rounded-circle fw-bold {{ 'bg-primary text-white' if ord.step_number >= 2 else 'bg-white border text-muted' }}" 
+                                     style="width: 32px; height: 32px; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                                    {% if ord.step_number >= 2 %}✓{% else %}2{% endif %}
+                                </div>
+                                <div class="stepper-label small mt-1 fw-semibold {{ 'text-dark' if ord.step_number >= 2 else 'text-muted' }}" style="font-size: 0.78rem;">
+                                    Xác nhận
+                                </div>
+                            </div>
+
+                            <!-- Bước 3: Đang giao -->
+                            <div class="stepper-step text-center position-relative" style="z-index: 3;">
+                                <div class="stepper-circle mx-auto d-flex align-items-center justify-content-center rounded-circle fw-bold {{ 'bg-info text-dark' if ord.step_number >= 3 else 'bg-white border text-muted' }}" 
+                                     style="width: 32px; height: 32px; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                                    {% if ord.step_number >= 3 %}✓{% else %}3{% endif %}
+                                </div>
+                                <div class="stepper-label small mt-1 fw-semibold {{ 'text-dark' if ord.step_number >= 3 else 'text-muted' }}" style="font-size: 0.78rem;">
+                                    Đang giao
+                                </div>
+                            </div>
+
+                            <!-- Bước 4: Hoàn thành -->
+                            <div class="stepper-step text-center position-relative" style="z-index: 3;">
+                                <div class="stepper-circle mx-auto d-flex align-items-center justify-content-center rounded-circle fw-bold {{ 'bg-success text-white' if ord.step_number >= 4 else 'bg-white border text-muted' }}" 
+                                     style="width: 32px; height: 32px; font-size: 0.85rem; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
+                                    {% if ord.step_number >= 4 %}✓{% else %}4{% endif %}
+                                </div>
+                                <div class="stepper-label small mt-1 fw-semibold {{ 'text-dark' if ord.step_number >= 4 else 'text-muted' }}" style="font-size: 0.78rem;">
+                                    Hoàn thành
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Đơn đã hủy -->
+                    <div class="p-3 rounded-3 mb-3 bg-danger bg-opacity-10 border border-danger border-opacity-25 text-danger small">
+                        <strong>❌ Đơn hàng đã bị hủy.</strong> 
+                        {% if ord.cancel_reason %}Lý do: "{{ ord.cancel_reason }}"{% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Danh sách hoa trong đơn -->
+                    <div class="list-group list-group-flush mb-3">
+                        {% for item in ord.items %}
+                        <div class="list-group-item px-0 py-2 d-flex align-items-center justify-content-between gap-3 border-bottom" style="border-color: rgba(33, 36, 61, 0.05) !important;">
+                            <div class="d-flex align-items-center gap-3">
+                                {% if item.product_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + item.product_image) }}" alt="{{ item.product_name }}"
+                                     style="width: 56px; height: 56px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
+                                {% else %}
+                                <div class="d-flex align-items-center justify-content-center bg-light text-muted"
+                                     style="width: 56px; height: 56px; border-radius: 10px; font-size: 1.5rem;">🌸</div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold text-dark mb-1" style="font-size: 0.95rem;">
+                                        {{ item.product_name }}
+                                    </div>
+                                    <div class="text-muted small">
+                                        {{ "{:,.0f}".format(item.product_price) }} đ × {{ item.quantity }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="fw-bold text-dark font-monospace">
+                                {{ "{:,.0f}".format(item.subtotal) }} đ
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Thông tin nhận hàng & hẹn giờ -->
+                    <div class="p-3 rounded-3 mb-3" style="background: rgba(253, 250, 242, 0.6); border: 1px dashed rgba(201, 162, 39, 0.35);">
+                        <div class="row g-2">
+                            <div class="col-12 col-md-6 small">
+                                <strong>Người nhận:</strong> {{ ord.customer_name }} — <span class="font-monospace fw-semibold">{{ ord.customer_phone }}</span>
+                            </div>
+                            <div class="col-12 col-md-6 small">
+                                <strong>Thời gian hẹn giao:</strong> {{ ord.delivery_time or 'Giao sớm nhất có thể' }}
+                            </div>
+                            <div class="col-12 small">
+                                <strong>Địa chỉ giao:</strong> {{ ord.shipping_address }}
+                            </div>
+                            {% if ord.customer_note %}
+                            <div class="col-12 small pt-2 border-top border-warning border-opacity-25" style="color: #854d0e;">
+                                <strong>💌 Lời chúc thiệp / Ghi chú:</strong> "{{ ord.customer_note }}"
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Footer thanh toán & Nút hành động -->
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 pt-2">
+                        <div>
+                            <span class="text-muted small">Tổng thanh toán:</span>
+                            <span class="fw-bold fs-5 text-danger font-monospace ms-2">{{ "{:,.0f}".format(ord.total_price) }} đ</span>
+                            <span class="badge bg-light text-secondary border ms-2 small">Liên hệ sau</span>
+                        </div>
+
+                        <!-- Các nút thao tác -->
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <!-- Nút Xem chi tiết -->
+                            <a href="{{ url_for('order_detail', order_code=ord.order_code) }}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1 fw-semibold">
+                                🔍 Xem chi tiết
+                            </a>
+
+                            <!-- Nút Mua lại / Đặt lại -->
+                            <form method="POST" action="{{ url_for('order_reorder', order_code=ord.order_code) }}" class="m-0">
+                                <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold">
+                                    🔄 Mua lại đơn này
+                                </button>
+                            </form>
+
+                            <!-- Nút Hủy đơn (Nếu pending) -->
+                            {% if ord.can_cancel %}
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-semibold" 
+                                    data-bs-toggle="modal" data-bs-target="#cancelModal-{{ ord.order_code }}">
+                                ✕ Hủy đơn
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- MODAL HỦY ĐƠN HÀNG -->
+            {% if ord.can_cancel %}
+            <div class="modal fade" id="cancelModal-{{ ord.order_code }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                        <div class="modal-header border-bottom-0 pb-0">
+                            <h5 class="modal-title fw-bold" style="font-family:'Playfair Display',serif; color:#21243D;">
+                                Xác nhận hủy đơn hàng #{{ ord.order_code }}
+                            </h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form method="POST" action="{{ url_for('order_cancel_customer', order_code=ord.order_code) }}">
+                            <div class="modal-body py-3">
+                                <p class="text-secondary small mb-3">
+                                    Bạn có chắc chắn muốn hủy đơn hàng này không? Sau khi hủy, các sản phẩm sẽ được tự động hoàn lại kho cho tiệm.
+                                </p>
+                                <label class="form-label small fw-semibold text-secondary">Lý do hủy đơn (tùy chọn):</label>
+                                <select name="cancel_reason" class="form-select form-select-sm mb-2 rounded-3">
+                                    <option value="Tôi muốn thay đổi mẫu hoa khác">Tôi muốn thay đổi mẫu hoa khác</option>
+                                    <option value="Tôi muốn đổi địa chỉ / thời gian nhận hoa">Tôi muốn đổi địa chỉ / thời gian nhận hoa</option>
+                                    <option value="Tôi đặt nhầm số lượng">Tôi đặt nhầm số lượng</option>
+                                    <option value="Tôi không còn nhu cầu mua nữa">Tôi không còn nhu cầu mua nữa</option>
+                                    <option value="Lý do khác">Lý do khác</option>
+                                </select>
+                            </div>
+                            <div class="modal-footer border-top-0 pt-0">
+                                <button type="button" class="btn btn-sm btn-light rounded-pill px-3" data-bs-dismiss="modal">Đóng</button>
+                                <button type="submit" class="btn btn-sm btn-danger rounded-pill px-3 fw-bold">Xác nhận hủy đơn</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% endfor %}
+        </div>
+
+        {% else %}
+        <!-- KHÔNG CÓ ĐƠN HÀNG -->
+        <div class="auth-card p-5 rounded-4 shadow-sm text-center my-4">
+            <div class="mb-3" style="font-size: 4rem;">📦</div>
+            <h4 class="fw-bold mb-2" style="font-family:'Playfair Display',serif; color: #21243D;">
+                {% if search_query %}
+                Không tìm thấy đơn hàng nào
+                {% else %}
+                Bạn chưa có đơn đặt hàng nào
+                {% endif %}
+            </h4>
+            <p class="text-muted small mb-4 mx-auto" style="max-width: 440px;">
+                {% if search_query %}
+                Không tìm thấy đơn hàng khớp với thông tin "<strong>{{ search_query }}</strong>". Vui lòng kiểm tra lại Số điện thoại hoặc Mã đơn hàng dạng LF...
+                {% else %}
+                Hãy chọn những mẫu hoa Lego xinh xắn, hoa bó, hoa để bàn tuyệt đẹp từ tiệm để gửi tặng người thương nhé!
+                {% endif %}
+            </p>
+            <a href="{{ url_for('products') }}" class="btn btn-auth px-4 py-2 fw-semibold shadow-sm">
+                🌸 Khám phá các mẫu hoa ngay
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

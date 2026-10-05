@@ -56,15 +56,100 @@
                         </div>
 
                         <h5 class="fw-bold mb-3 pt-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
+                            🕒 Thời gian muốn nhận hoa
+                        </h5>
+
+                        <div class="mb-4">
+                            <div class="row g-2 mb-2">
+                                <div class="col-12 col-sm-6">
+                                    <label class="delivery-time-card d-flex align-items-center gap-2 p-3 rounded-3 border h-100" id="cardDeliveryNow" style="cursor: pointer; background: rgba(253, 250, 242, 0.7); border: 1.5px solid var(--lego-gold, #C9A227) !important;">
+                                        <input class="form-check-input mt-0" type="radio" name="delivery_type" id="deliveryNow" value="now" checked>
+                                        <div>
+                                            <div class="fw-bold text-dark small">⚡ Giao sớm nhất có thể</div>
+                                            <div class="text-muted" style="font-size: 0.76rem;">Tiệm điều phối giao sớm trong 1-2h hoặc theo thỏa thuận</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                    <label class="delivery-time-card d-flex align-items-center gap-2 p-3 rounded-3 border h-100" id="cardDeliveryScheduled" style="cursor: pointer; background: #ffffff; border: 1.5px solid rgba(33, 36, 61, 0.12) !important;">
+                                        <input class="form-check-input mt-0" type="radio" name="delivery_type" id="deliveryScheduled" value="scheduled">
+                                        <div>
+                                            <div class="fw-bold text-dark small">📅 Hẹn ngày & giờ cụ thể</div>
+                                            <div class="text-muted" style="font-size: 0.76rem;">Chủ động hẹn giờ tặng hoa bất ngờ</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Khung chọn ngày & giờ khi chọn Hẹn ngày giờ cụ thể -->
+                            <div id="scheduledTimeBox" class="p-3 rounded-3 border mt-2 d-none" style="background: rgba(253, 250, 242, 0.6); border-color: rgba(201, 162, 39, 0.3) !important;">
+                                <div class="row g-2">
+                                    <div class="col-12 col-sm-6">
+                                        <label class="form-label small fw-semibold text-secondary mb-1">Ngày nhận hoa</label>
+                                        <input type="date" id="scheduledDate" class="form-control form-control-sm" style="border-radius: 8px;">
+                                    </div>
+                                    <div class="col-12 col-sm-6">
+                                        <label class="form-label small fw-semibold text-secondary mb-1">Khung giờ nhận</label>
+                                        <select id="scheduledSlot" class="form-select form-select-sm" style="border-radius: 8px;">
+                                            <option value="Sáng (08:00 - 11:30)">🌅 Sáng (08:00 - 11:30)</option>
+                                            <option value="Chiều (13:30 - 17:30)" selected>🌤️ Chiều (13:30 - 17:30)</option>
+                                            <option value="Tối (18:00 - 21:00)">🌙 Tối (18:00 - 21:00)</option>
+                                            <option value="Giờ hành chính">🏢 Trong giờ hành chính</option>
+                                            <option value="Đúng giờ hẹn">🎯 Đúng giờ (shop sẽ gọi xác nhận)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="small text-muted mt-2" style="font-size: 0.78rem;">
+                                    🌸 Tiệm sẽ liên hệ với bạn trước khi giao để hoa đến đúng lúc và hoàn hảo nhất.
+                                </div>
+                            </div>
+
+                            <!-- Input ẩn thực tế được gửi lên backend -->
+                            <input type="hidden" name="delivery_time" id="deliveryTimeFinal" value="Giao sớm nhất có thể">
+                        </div>
+
+                        <h5 class="fw-bold mb-3 pt-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
                             💌 Thiệp chúc mừng & Ghi chú
                         </h5>
 
                         <div class="mb-4">
-                            <label class="form-label small fw-semibold text-secondary mb-1">
-                                Lời chúc viết thiệp (hoặc lưu ý giao hàng)
-                            </label>
-                            <textarea name="customer_note" class="form-control" rows="3" placeholder="Ví dụ: Viết thiệp giúp mình: 'Chúc em sinh nhật vui vẻ và luôn rạng rỡ như những đóa hoa!' hoặc 'Giao trong giờ hành chính giúp mình nhé!'"></textarea>
-                            <div class="form-text small text-muted">🎁 Miễn phí viết thiệp chúc mừng thiết kế riêng theo yêu cầu của bạn.</div>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label class="form-label small fw-semibold text-secondary mb-0">
+                                    Lời chúc viết thiệp (hoặc lưu ý giao hàng)
+                                </label>
+                                <span class="small text-muted" id="noteCharCount" style="font-size: 0.78rem;">0/300 ký tự</span>
+                            </div>
+                            <textarea id="customerNoteInput" name="customer_note" class="form-control" rows="3" maxlength="300" placeholder="Ví dụ: Viết thiệp giúp mình: 'Chúc em sinh nhật vui vẻ và luôn rạng rỡ như những đóa hoa!' hoặc 'Giao trong giờ hành chính giúp mình nhé!'"></textarea>
+                            
+                            <!-- Gợi ý lời chúc nhanh (Quick greeting chips) -->
+                            <div class="d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="small text-muted me-1 align-self-center" style="font-size: 0.78rem;">Gợi ý mẫu:</span>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2 quick-greeting-chip" data-text="Chúc bạn sinh nhật ngập tràn niềm vui, luôn rạng rỡ, xinh đẹp và hạnh phúc như những đóa hoa Lego rực rỡ này! 🎂💐" style="font-size: 0.76rem;">🎂 Sinh nhật</button>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2 quick-greeting-chip" data-text="Cảm ơn vì đã luôn ở bên cạnh anh/em. Mong rằng tình cảm của chúng mình sẽ luôn bền đẹp vĩnh cửu như những đóa hoa này! 💖" style="font-size: 0.76rem;">💖 Tình yêu</button>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2 quick-greeting-chip" data-text="Chúc mừng tân cử nhân! Chúc bạn vững bước trên con đường tương lai và luôn gặt hái thật nhiều thành công rực rỡ! 🎓✨" style="font-size: 0.76rem;">🎓 Tốt nghiệp</button>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2 quick-greeting-chip" data-text="Kính chúc quý công ty / anh / chị khai trương hồng phát, tài lộc dồi dào, buôn may bán đắt và vạn sự như ý! 🏢🎉" style="font-size: 0.76rem;">🏢 Khai trương</button>
+                                <button type="button" class="btn btn-sm btn-light border rounded-pill py-0 px-2 quick-greeting-chip" data-text="Giao hoa cẩn thận và gọi trước cho người nhận 15 phút giúp mình nhé. Cảm ơn shop nhiều ạ! 🌸" style="font-size: 0.76rem;">📦 Lưu ý ship</button>
+                            </div>
+
+                            <!-- MÔ PHỎNG TẤM THIỆP THỰC TẾ (LIVE CARD PREVIEW) -->
+                            <div class="gift-card-preview-container p-3 p-md-4 rounded-4 shadow-sm position-relative overflow-hidden" 
+                                 style="background: #FFFDF9; border: 1.5px dashed #D4AF37;">
+                                <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom" style="border-color: rgba(212, 175, 55, 0.25) !important;">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <span style="font-size: 1.1rem;">💌</span>
+                                        <span class="fw-bold" style="font-family: 'Playfair Display', serif; color: #8A6D1C; font-size: 0.95rem; letter-spacing: 0.5px;">Thiệp hoa Lego viết tay (Miễn phí)</span>
+                                    </div>
+                                    <span class="badge bg-warning text-dark rounded-pill px-2 py-1" style="font-size: 0.7rem; background-color: #F8E7B4 !important;">Kèm theo hoa</span>
+                                </div>
+                                <div class="gift-card-preview-body py-2 px-1 text-center" style="min-height: 60px;">
+                                    <p id="cardPreviewText" class="mb-0 text-secondary fst-italic" style="font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; line-height: 1.5; color: #4A4A4A !important;">
+                                        (Lời chúc ngọt ngào của bạn sẽ được thợ cắm hoa nắn nót viết tay vào tấm thiệp hoa gửi tới người nhận...)
+                                    </p>
+                                </div>
+                                <div class="text-end pt-1" style="font-size: 0.75rem; color: #A08020; font-family: 'Playfair Display', serif;">
+                                    — Tiệm Hoa Lego Với Yêu Thương —
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Phương thức thanh toán: Liên hệ sau -->
@@ -144,4 +229,111 @@
 
     </div>
 </div>
+
+<script>
+(function() {
+    // 1. Xử lý Lựa chọn Thời gian nhận hoa
+    const deliveryNowRadio = document.getElementById('deliveryNow');
+    const deliveryScheduledRadio = document.getElementById('deliveryScheduled');
+    const cardDeliveryNow = document.getElementById('cardDeliveryNow');
+    const cardDeliveryScheduled = document.getElementById('cardDeliveryScheduled');
+    const scheduledTimeBox = document.getElementById('scheduledTimeBox');
+    const scheduledDateInput = document.getElementById('scheduledDate');
+    const scheduledSlotSelect = document.getElementById('scheduledSlot');
+    const deliveryTimeFinal = document.getElementById('deliveryTimeFinal');
+
+    // Mặc định ngày tối thiểu là hôm nay
+    const today = new Date().toISOString().split('T')[0];
+    if (scheduledDateInput) {
+        scheduledDateInput.min = today;
+        scheduledDateInput.value = today;
+    }
+
+    function updateDeliveryTime() {
+        if (deliveryNowRadio && deliveryNowRadio.checked) {
+            deliveryTimeFinal.value = 'Giao sớm nhất có thể';
+            if (scheduledTimeBox) scheduledTimeBox.classList.add('d-none');
+            if (cardDeliveryNow) {
+                cardDeliveryNow.style.borderColor = 'var(--lego-gold, #C9A227)';
+                cardDeliveryNow.style.background = 'rgba(253, 250, 242, 0.7)';
+            }
+            if (cardDeliveryScheduled) {
+                cardDeliveryScheduled.style.borderColor = 'rgba(33, 36, 61, 0.12)';
+                cardDeliveryScheduled.style.background = '#ffffff';
+            }
+        } else if (deliveryScheduledRadio && deliveryScheduledRadio.checked) {
+            if (scheduledTimeBox) scheduledTimeBox.classList.remove('d-none');
+            if (cardDeliveryScheduled) {
+                cardDeliveryScheduled.style.borderColor = 'var(--lego-gold, #C9A227)';
+                cardDeliveryScheduled.style.background = 'rgba(253, 250, 242, 0.7)';
+            }
+            if (cardDeliveryNow) {
+                cardDeliveryNow.style.borderColor = 'rgba(33, 36, 61, 0.12)';
+                cardDeliveryNow.style.background = '#ffffff';
+            }
+            const dateVal = scheduledDateInput ? scheduledDateInput.value : '';
+            const slotVal = scheduledSlotSelect ? scheduledSlotSelect.value : '';
+            if (dateVal) {
+                const parts = dateVal.split('-');
+                const formattedDate = (parts.length === 3) ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateVal;
+                deliveryTimeFinal.value = `Hẹn ngày ${formattedDate} (${slotVal})`;
+            } else {
+                deliveryTimeFinal.value = `Hẹn giờ (${slotVal})`;
+            }
+        }
+    }
+
+    if (deliveryNowRadio) deliveryNowRadio.addEventListener('change', updateDeliveryTime);
+    if (deliveryScheduledRadio) deliveryScheduledRadio.addEventListener('change', updateDeliveryTime);
+    if (scheduledDateInput) scheduledDateInput.addEventListener('change', updateDeliveryTime);
+    if (scheduledSlotSelect) scheduledSlotSelect.addEventListener('change', updateDeliveryTime);
+
+    // 2. Xử lý Thiệp chúc mừng & Live Preview
+    const noteInput = document.getElementById('customerNoteInput');
+    const cardPreview = document.getElementById('cardPreviewText');
+    const noteCharCount = document.getElementById('noteCharCount');
+    const defaultPlaceholder = '(Lời chúc ngọt ngào của bạn sẽ được thợ cắm hoa nắn nót viết tay vào tấm thiệp hoa gửi tới người nhận...)';
+
+    function updateCardPreview() {
+        if (!noteInput || !cardPreview) return;
+        const val = noteInput.value.trim();
+        if (noteCharCount) {
+            noteCharCount.textContent = `${noteInput.value.length}/300 ký tự`;
+        }
+        if (val) {
+            cardPreview.textContent = `“${val}”`;
+            cardPreview.classList.remove('text-secondary');
+            cardPreview.classList.add('text-dark');
+        } else {
+            cardPreview.textContent = defaultPlaceholder;
+            cardPreview.classList.remove('text-dark');
+            cardPreview.classList.add('text-secondary');
+        }
+    }
+
+    if (noteInput) {
+        noteInput.addEventListener('input', updateCardPreview);
+    }
+
+    // Gợi ý nhanh (Quick Greeting Chips)
+    document.querySelectorAll('.quick-greeting-chip').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const txt = this.getAttribute('data-text');
+            if (noteInput && txt) {
+                noteInput.value = txt;
+                noteInput.focus();
+                updateCardPreview();
+            }
+        });
+    });
+
+    // Form submit verification
+    const checkoutForm = document.getElementById('checkoutForm');
+    if (checkoutForm) {
+        checkoutForm.addEventListener('submit', function() {
+            updateDeliveryTime();
+        });
+    }
+})();
+</script>
 {% endblock %}

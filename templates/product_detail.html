@@ -349,6 +349,10 @@
                         navBadge.classList.remove('d-none');
                     }
 
+                    if (window.showCartToast) {
+                        window.showCartToast(data);
+                    }
+
                     const origText = addBtn.innerHTML;
                     addBtn.innerHTML = '<span>✓ Đã thêm vào giỏ!</span>';
                     addBtn.classList.replace('btn-outline-dark', 'btn-success');
