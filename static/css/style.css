@@ -2499,3 +2499,24 @@ input::-webkit-search-results-decoration {
     }
 }
 
+
+/* ===== Phân trang danh sách sản phẩm (/products) ===== */
+.pagination .page-link {
+    color: #21243D;
+    border-radius: 10px !important;
+    margin: 0 3px;
+    border: 1.5px solid rgba(201, 162, 39, 0.35);
+    font-weight: 600;
+}
+.pagination .page-item.active .page-link {
+    background: var(--lego-gold, #C9A227);
+    border-color: var(--lego-gold, #C9A227);
+    color: #fff;
+}
+.pagination .page-item.disabled .page-link {
+    color: #b7b7b7;
+    border-color: #eee;
+}
+.pagination .page-link:hover:not(.disabled) {
+    background: rgba(201, 162, 39, 0.12);
+}

@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}Giỏ hàng của bạn - Lego Flower{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-3 my-md-4">
+    <div class="col-12 col-xl-11">
+
+        <!-- Breadcrumb & Tiêu đề -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--lego-gold);">Trang chủ</a>
+                    </li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Giỏ hàng</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">
+                Giỏ hàng của bạn
+            </h2>
+            <p class="text-muted small mb-0">Kiểm tra các mẫu hoa đã chọn và tiến hành đặt đơn để tiệm chuẩn bị chu đáo nhất.</p>
+        </div>
+
+        {% if not items %}
+        <!-- GIỎ HÀNG TRỐNG -->
+        <div class="auth-card p-5 rounded-4 shadow-sm text-center my-4">
+            <div class="mb-3" style="font-size: 4rem;">🧺</div>
+            <h4 class="fw-bold mb-2" style="font-family:'Playfair Display',serif; color: #21243D;">Giỏ hàng hiện đang trống</h4>
+            <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">
+                Bạn chưa thêm đóa hoa nào vào giỏ hàng. Hãy dạo quanh các bộ sưu tập hoa Lego tuyệt đẹp của tiệm nhé!
+            </p>
+            <a href="{{ url_for('products') }}" class="btn btn-auth px-4 py-2 fw-semibold shadow-sm">
+                🌸 Khám phá các mẫu hoa ngay
+            </a>
+        </div>
+        {% else %}
+        <!-- DANH SÁCH SẢN PHẨM TRONG GIỎ HÀNG -->
+        <div class="row g-4">
+            <!-- Cột trái: Bảng sản phẩm -->
+            <div class="col-12 col-lg-8">
+                <div class="auth-card p-3 p-md-4 rounded-4 shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                        <h5 class="fw-bold mb-0" style="color: #21243D; font-size: 1.1rem;">
+                            Danh sách sản phẩm ({{ total_quantity }})
+                        </h5>
+                        <form method="POST" action="{{ url_for('cart_clear') }}" onsubmit="return confirm('Bạn có chắc muốn xóa toàn bộ sản phẩm khỏi giỏ hàng?');">
+                            <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-0" style="font-size: 0.85rem;">
+                                🗑️ Xóa tất cả
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="cart-items-list">
+                        {% for item in items %}
+                        {% set p = item.product %}
+                        <div class="cart-item-row d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 py-3 border-bottom" id="cartRow-{{ p.id }}" style="border-color: rgba(33, 36, 61, 0.06) !important;">
+                            <!-- Ảnh và Tên -->
+                            <div class="d-flex align-items-center gap-3">
+                                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-decoration-none flex-shrink-0">
+                                    <div class="cart-item-img-box rounded-3 overflow-hidden border" style="width: 76px; height: 76px; background: #fafafa;">
+                                        {% if p.thumbnail %}
+                                        <img src="{{ url_for('static', filename='uploads/' + p.thumbnail) }}" alt="{{ p.name }}" class="w-100 h-100 object-fit-cover">
+                                        {% else %}
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="font-size: 1.5rem;">🌸</div>
+                                        {% endif %}
+                                    </div>
+                                </a>
+                                <div>
+                                    <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-decoration-none fw-semibold text-dark d-block mb-1" style="font-size: 0.98rem;">
+                                        {{ p.name }}
+                                    </a>
+                                    <div class="text-danger fw-bold" style="font-size: 0.95rem;">
+                                        {{ "{:,.0f}".format(p.price) }} đ
+                                    </div>
+                                    {% if p.stock < 5 and p.stock > 0 %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border" style="font-size: 0.72rem;">Chỉ còn {{ p.stock }} bó</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Bộ tăng giảm số lượng & Thành tiền -->
+                            <div class="d-flex align-items-center justify-content-between justify-content-sm-end gap-4 ms-sm-auto">
+                                <div class="cart-qty-control d-inline-flex align-items-center border rounded-3 p-1 bg-light">
+                                    <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold btn-cart-minus" data-id="{{ p.id }}">−</button>
+                                    <input type="number" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold cart-qty-input" 
+                                           data-id="{{ p.id }}" data-max="{{ p.stock }}" value="{{ item.quantity }}" min="1" max="{{ p.stock }}" style="width: 45px; box-shadow: none;">
+                                    <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold btn-cart-plus" data-id="{{ p.id }}">+</button>
+                                </div>
+
+                                <div class="text-end" style="min-width: 95px;">
+                                    <div class="fw-bold text-dark item-subtotal-val" id="subtotal-{{ p.id }}" style="font-size: 1.05rem;">
+                                        {{ "{:,.0f}".format(item.subtotal) }} đ
+                                    </div>
+                                    <form method="POST" action="{{ url_for('cart_remove', product_id=p.id) }}" class="m-0">
+                                        <button type="submit" class="btn btn-sm text-muted p-0 text-decoration-none" style="font-size: 0.78rem;" title="Xóa khỏi giỏ">
+                                            ✕ Xóa
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="pt-3">
+                        <a href="{{ url_for('products') }}" class="btn btn-sm btn-outline-secondary rounded-3 px-3 py-2 text-decoration-none">
+                            ← Tiếp tục chọn thêm hoa
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột phải: Bảng tóm tắt đơn hàng -->
+            <div class="col-12 col-lg-4">
+                <div class="auth-card p-4 rounded-4 shadow-sm position-sticky" style="top: 90px;">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
+                        Tóm tắt đơn hàng
+                    </h5>
+
+                    <div class="d-flex justify-content-between mb-2 small text-secondary">
+                        <span>Số lượng sản phẩm:</span>
+                        <strong class="text-dark" id="cartTotalQty">{{ total_quantity }} bó</strong>
+                    </div>
+
+                    <div class="d-flex justify-content-between mb-3 small text-secondary">
+                        <span>Phí vận chuyển:</span>
+                        <span class="text-success fw-semibold">Shop sẽ liên hệ báo chi tiết</span>
+                    </div>
+
+                    <div class="p-3 rounded-3 mb-3" style="background: rgba(253, 250, 242, 0.7); border: 1px dashed rgba(201, 162, 39, 0.4);">
+                        <div class="small text-muted mb-1">🎁 <strong>Ưu đãi đi kèm:</strong></div>
+                        <div class="small text-secondary">• Tặng kèm thiệp chúc mừng thiết kế riêng</div>
+                        <div class="small text-secondary">• Hộp quà thắt nơ sang trọng bảo vệ hoa</div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-2 mb-4 border-top" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                        <span class="fw-bold text-dark" style="font-size: 1.05rem;">Tổng tạm tính:</span>
+                        <span class="fw-bold fs-4 text-danger" id="cartTotalPrice">
+                            {{ "{:,.0f}".format(total_price) }} đ
+                        </span>
+                    </div>
+
+                    <a href="{{ url_for('checkout') }}" class="btn btn-auth w-100 py-3 fw-bold text-center rounded-3 shadow-sm" style="font-size: 1.05rem;">
+                        Tiến hành đặt đơn →
+                    </a>
+
+                    <div class="text-center mt-3 small text-muted" style="font-size: 0.78rem;">
+                        🔒 Đặt đơn an toàn • Tiệm sẽ liên hệ xác nhận và tư vấn thanh toán chu đáo
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Xử lý tăng giảm số lượng giỏ hàng bằng AJAX
+    async function updateCartQty(productId, qty) {
+        try {
+            const res = await fetch('/cart/update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ product_id: productId, quantity: qty })
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (data.success) {
+                // Cập nhật giá sản phẩm
+                const subtotalEl = document.getElementById('subtotal-' + productId);
+                if (subtotalEl) subtotalEl.textContent = data.item_subtotal_str;
+
+                // Cập nhật tổng tiền
+                const totalEl = document.getElementById('cartTotalPrice');
+                if (totalEl) totalEl.textContent = data.total_price_str;
+
+                // Cập nhật số lượng
+                const totalQtyEl = document.getElementById('cartTotalQty');
+                if (totalQtyEl) totalQtyEl.textContent = data.total_quantity + ' bó';
+
+                // Cập nhật badge trên header
+                const navBadge = document.getElementById('navCartBadge');
+                if (navBadge) {
+                    navBadge.textContent = data.cart_count;
+                    if (data.cart_count > 0) navBadge.classList.remove('d-none');
+                    else navBadge.classList.add('d-none');
+                }
+
+                if (data.quantity === 0) {
+                    const row = document.getElementById('cartRow-' + productId);
+                    if (row) row.remove();
+                    if (data.cart_count === 0) window.location.reload();
+                }
+            }
+        } catch (e) {
+            console.error('Lỗi cập nhật giỏ hàng:', e);
+        }
+    }
+
+    document.querySelectorAll('.btn-cart-minus').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const input = document.querySelector(`.cart-qty-input[data-id="${id}"]`);
+            if (input) {
+                let val = parseInt(input.value) || 1;
+                if (val > 1) {
+                    val--;
+                    input.value = val;
+                    updateCartQty(id, val);
+                } else if (confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng không?')) {
+                    updateCartQty(id, 0);
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.btn-cart-plus').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const id = this.getAttribute('data-id');
+            const input = document.querySelector(`.cart-qty-input[data-id="${id}"]`);
+            if (input) {
+                let val = parseInt(input.value) || 1;
+                const max = parseInt(input.getAttribute('data-max')) || 999;
+                if (val < max) {
+                    val++;
+                    input.value = val;
+                    updateCartQty(id, val);
+                } else {
+                    alert(`Sản phẩm này chỉ còn ${max} bó trong kho.`);
+                }
+            }
+        });
+    });
+
+    document.querySelectorAll('.cart-qty-input').forEach(input => {
+        input.addEventListener('change', function () {
+            const id = this.getAttribute('data-id');
+            let val = parseInt(this.value) || 1;
+            const max = parseInt(this.getAttribute('data-max')) || 999;
+            if (val > max) val = max;
+            if (val < 1) val = 1;
+            this.value = val;
+            updateCartQty(id, val);
+        });
+    });
+});
+</script>
+{% endblock %}

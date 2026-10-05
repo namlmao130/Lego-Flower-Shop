@@ -1,0 +1,60 @@
+# ============================================================
+# Systemd service — chạy Gunicorn làm 1 dịch vụ nền trên VPS
+# (Chỉ cần file này nếu bạn tự quản lý VPS/server riêng.
+#  Deploy lên Render/Railway/Heroku thì KHÔNG cần — các nền tảng đó
+#  tự đọc Procfile và tự quản lý process, không dùng systemd/nginx.)
+#
+# CÀI ĐẶT:
+#   1. Sửa User, WorkingDirectory, Environment bên dưới cho đúng server của bạn
+#   2. sudo cp deploy/legoflower.service /etc/systemd/system/legoflower.service
+#   3. sudo systemctl daemon-reload
+#   4. sudo systemctl enable --now legoflower
+#   5. Kiểm tra: sudo systemctl status legoflower
+#   6. Xem log:  sudo journalctl -u legoflower -f
+#
+# Mỗi lần deploy code mới: sudo systemctl restart legoflower
+# ============================================================
+
+[Unit]
+Description=Lego Flower Shop (Gunicorn)
+After=network.target redis-server.service
+Wants=redis-server.service
+
+[Service]
+# Đổi thành user thực tế trên server (KHÔNG nên chạy bằng root)
+User=www-data
+Group=www-data
+
+WorkingDirectory=/var/www/lego-flower-shop
+Environment="PATH=/var/www/lego-flower-shop/venv/bin"
+
+# --- Các biến môi trường quan trọng — SỬA LẠI cho đúng trước khi chạy thật ---
+Environment="SECRET_KEY=doi-thanh-chuoi-ngau-nhien-dai-va-bi-mat"
+Environment="REDIS_URL=redis://localhost:6379/0"
+# BẮT BUỘC = true vì có Nginx đứng trước (xem giải thích trong web.py) —
+# thiếu dòng này thì rate-limit sẽ chặn nhầm TOÀN BỘ khách như chung 1 IP.
+Environment="TRUST_PROXY=true"
+Environment="MAIL_USERNAME=your-email@gmail.com"
+Environment="MAIL_PASSWORD=app-password-cua-gmail"
+# Nếu dùng PostgreSQL thay vì SQLite, thêm dòng dưới (bỏ comment):
+# Environment="DATABASE_URL=postgresql://user:password@localhost/legoflower"
+
+# Chạy qua Unix socket (nhanh hơn TCP khi Nginx và app cùng 1 máy)
+ExecStart=/var/www/lego-flower-shop/venv/bin/gunicorn \
+    --workers 4 \
+    --threads 2 \
+    --worker-class gthread \
+    --timeout 30 \
+    --max-requests 1000 \
+    --max-requests-jitter 50 \
+    --bind unix:/run/legoflower/legoflower.sock \
+    web:app
+
+RuntimeDirectory=legoflower
+RuntimeDirectoryMode=0775
+
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

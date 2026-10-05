@@ -79,14 +79,47 @@
             <h5>Mô tả sản phẩm</h5>
             <p>{{ product.description or "Chưa có mô tả." }}</p>
 
+            {% if product.stock > 0 %}
+            <!-- KHUNG ĐẶT MUA & THÊM VÀO GIỎ HÀNG -->
+            <div class="product-purchase-box my-4 p-3 p-md-4 rounded-4 shadow-sm" style="background: rgba(255, 255, 255, 0.85); border: 1.5px solid rgba(201, 162, 39, 0.35);">
+                <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
+                    <span class="fw-semibold text-secondary small">Số lượng:</span>
+                    <div class="cart-qty-control d-inline-flex align-items-center border rounded-3 p-1 bg-white">
+                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold" id="btnDetailMinus">−</button>
+                        <input type="number" id="detailQtyInput" class="form-control form-control-sm text-center border-0 bg-transparent fw-bold" 
+                               value="1" min="1" max="{{ product.stock }}" style="width: 50px; box-shadow: none;">
+                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold" id="btnDetailPlus">+</button>
+                    </div>
+                    <span class="small text-muted">(Còn <strong>{{ product.stock }}</strong> bó có sẵn)</span>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-dark d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 rounded-3 fw-semibold flex-grow-1" id="btnAddToCart">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="9" cy="21" r="1"></circle>
+                            <circle cx="20" cy="21" r="1"></circle>
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
+                        </svg>
+                        <span>Thêm vào giỏ</span>
+                    </button>
+                    <button type="button" class="btn btn-auth d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 rounded-3 fw-bold flex-grow-1 shadow-sm" id="btnBuyNow">
+                        <span>Mua ngay</span>
+                    </button>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-warning my-4 rounded-3 small">
+                ⚠️ Sản phẩm này hiện đang tạm hết hàng. Bạn có thể liên hệ Zalo bên dưới để đặt trước nhé!
+            </div>
+            {% endif %}
+
             <!-- Liên hệ đặt mua & tư vấn -->
             <div class="contact-box mt-4 p-3 rounded-4"
                 style="background: rgba(255, 255, 255, 0.7); border: 1.5px solid var(--lego-gold); backdrop-filter: blur(10px);">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <span style="font-size: 1.4rem;">💐</span>
                     <div>
-                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa Lego chính
-                            hãng</strong>
+                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa Lego chính hãng</strong>
                         <small class="text-muted">Hỗ trợ tư vấn mẫu hoa và giao hàng toàn quốc</small>
                     </div>
                 </div>
@@ -265,4 +298,80 @@
         </div>
     </div>
     {% endif %}
-    {% endblock %}
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const qtyInput = document.getElementById('detailQtyInput');
+        const minusBtn = document.getElementById('btnDetailMinus');
+        const plusBtn = document.getElementById('btnDetailPlus');
+        const addBtn = document.getElementById('btnAddToCart');
+        const buyBtn = document.getElementById('btnBuyNow');
+        const maxStock = parseInt("{{ product.stock }}") || 999;
+        const productId = parseInt("{{ product.id }}");
+
+        if (minusBtn && qtyInput) {
+            minusBtn.addEventListener('click', () => {
+                let val = parseInt(qtyInput.value) || 1;
+                if (val > 1) qtyInput.value = val - 1;
+            });
+        }
+
+        if (plusBtn && qtyInput) {
+            plusBtn.addEventListener('click', () => {
+                let val = parseInt(qtyInput.value) || 1;
+                if (val < maxStock) qtyInput.value = val + 1;
+                else alert(`Tiệm chỉ còn ${maxStock} bó có sẵn.`);
+            });
+        }
+
+        async function handleAddCart(buyNow = false) {
+            const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+            try {
+                if (addBtn) addBtn.disabled = true;
+                if (buyBtn) buyBtn.disabled = true;
+
+                const res = await fetch('/cart/add', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: productId, quantity: qty, buy_now: buyNow })
+                });
+
+                if (buyNow) {
+                    window.location.href = "{{ url_for('checkout') }}";
+                    return;
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    const navBadge = document.getElementById('navCartBadge');
+                    if (navBadge) {
+                        navBadge.textContent = data.cart_count;
+                        navBadge.classList.remove('d-none');
+                    }
+
+                    const origText = addBtn.innerHTML;
+                    addBtn.innerHTML = '<span>✓ Đã thêm vào giỏ!</span>';
+                    addBtn.classList.replace('btn-outline-dark', 'btn-success');
+                    setTimeout(() => {
+                        addBtn.innerHTML = origText;
+                        addBtn.classList.replace('btn-success', 'btn-outline-dark');
+                        addBtn.disabled = false;
+                        if (buyBtn) buyBtn.disabled = false;
+                    }, 1400);
+                } else {
+                    alert(data.error || 'Có lỗi xảy ra.');
+                    if (addBtn) addBtn.disabled = false;
+                    if (buyBtn) buyBtn.disabled = false;
+                }
+            } catch (e) {
+                console.error('Lỗi thêm giỏ hàng:', e);
+                if (addBtn) addBtn.disabled = false;
+                if (buyBtn) buyBtn.disabled = false;
+            }
+        }
+
+        if (addBtn) addBtn.addEventListener('click', () => handleAddCart(false));
+        if (buyBtn) buyBtn.addEventListener('click', () => handleAddCart(true));
+    });
+    </script>
+{% endblock %}

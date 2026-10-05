@@ -25,6 +25,13 @@
             <div class="navbar-nav ms-auto align-items-lg-center">
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
+                <a class="nav-link position-relative d-inline-flex align-items-center me-lg-2" href="{{ url_for('view_cart') }}" title="Giỏ hàng">
+                    <span class="me-1">🛒</span>
+                    <span>Giỏ hàng</span>
+                    <span id="navCartBadge" class="badge rounded-pill bg-danger ms-1 {{ 'd-none' if cart_count == 0 else '' }}" style="font-size: 0.72rem;">
+                        {{ cart_count }}
+                    </span>
+                </a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="dropdown user-menu-dropdown">
                     <button class="user-avatar-btn" type="button" id="userMenuBtn" data-bs-toggle="dropdown"
@@ -70,7 +77,18 @@
                                     <circle cx="12" cy="7" r="4"></circle>
                                 </svg>
                             </span>
-                            <span class="flex-grow-1">Cài đặt tài khoản</span>
+                            <span class="flex-grow-1">Tài khoản của tôi</span>
+                        </a>
+
+                        <a class="user-popover-item" href="{{ url_for('user_settings') }}#orders">
+                            <span class="user-popover-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                                </svg>
+                            </span>
+                            <span class="flex-grow-1">Đơn mua của tôi</span>
                         </a>
 
                         <a class="user-popover-item text-danger-hover" href="{{ url_for('logout') }}">
@@ -110,6 +128,10 @@
                 {% for cat in nav_categories %}
                 <a href="{{ url_for('products', category=cat.id) }}" class="nav-item"> {{ cat.name }}</a>
                 {% endfor %}
+                <a href="{{ url_for('view_cart') }}" class="nav-item d-flex align-items-center justify-content-between">
+                    <span>🛒 Giỏ hàng</span>
+                    <span class="badge bg-danger rounded-pill {{ 'd-none' if cart_count == 0 else '' }}" style="font-size: 0.75rem;">{{ cart_count }}</span>
+                </a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="border-top my-2 pt-2" style="border-color: rgba(255, 255, 255, 0.15) !important;">
                     <div class="d-flex align-items-center gap-2 px-3 py-2 mb-2 rounded-3"
@@ -132,7 +154,8 @@
                             </div>
                         </div>
                     </div>
-                    <a href="{{ url_for('user_settings') }}" class="nav-item">Cài đặt tài khoản</a>
+                    <a href="{{ url_for('user_settings') }}" class="nav-item">⚙️ Cài đặt tài khoản</a>
+                    <a href="{{ url_for('user_settings') }}#orders" class="nav-item">📦 Đơn mua của tôi</a>
                     <a href="{{ url_for('logout') }}" class="nav-item" style="color: #fda4af;">Đăng xuất</a>
                 </div>
                 {% endif %}

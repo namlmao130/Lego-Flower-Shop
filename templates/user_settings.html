@@ -62,6 +62,11 @@
                     style="border-color: rgba(33, 36, 61, 0.08) !important;">
                     <div class="px-3 py-2 rounded-3 text-center border"
                         style="background: rgba(253, 250, 242, 0.7); border-color: rgba(201, 162, 39, 0.25) !important;">
+                        <div class="small text-muted" style="font-size: 0.75rem;">Đơn mua</div>
+                        <div class="fw-bold fs-5" style="color: #21243D;">{{ my_orders|length }}</div>
+                    </div>
+                    <div class="px-3 py-2 rounded-3 text-center border"
+                        style="background: rgba(253, 250, 242, 0.7); border-color: rgba(201, 162, 39, 0.25) !important;">
                         <div class="small text-muted" style="font-size: 0.75rem;">Đánh giá đã viết</div>
                         <div class="fw-bold fs-5" style="color: #21243D;">{{ my_reviews|length }}</div>
                     </div>
@@ -85,6 +90,19 @@
                     <circle cx="12" cy="7" r="4"></circle>
                 </svg>
                 <span>Hồ sơ cá nhân</span>
+            </button>
+
+            <button class="settings-tab-pill" id="tab-btn-orders" data-bs-toggle="pill"
+                data-bs-target="#panel-orders" type="button" role="tab" aria-controls="panel-orders"
+                aria-selected="false">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <path d="M16 10a4 4 0 0 1-8 0"></path>
+                </svg>
+                <span>Đơn mua của tôi</span>
+                <span class="badge">{{ my_orders|length }}</span>
             </button>
 
             <button class="settings-tab-pill" id="tab-btn-security" data-bs-toggle="pill"
@@ -460,6 +478,121 @@
 
             </div>
 
+            <!-- TAB 4: ĐƠN MUA CỦA TÔI -->
+            <div class="tab-pane fade" id="panel-orders" role="tabpanel" aria-labelledby="tab-btn-orders">
+                <div id="orders" class="auth-card p-4 p-md-5 rounded-4 shadow-sm">
+                    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom"
+                        style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                        <div>
+                            <h4 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D;">
+                                Lịch sử & Đơn mua của bạn
+                            </h4>
+                            <div class="text-muted small">Theo dõi trạng thái đơn hàng của bạn theo thời gian thực</div>
+                        </div>
+                        <span class="badge bg-light text-secondary border small px-3 py-2 rounded-pill">
+                            {{ my_orders|length }} đơn hàng
+                        </span>
+                    </div>
+
+                    {% if my_orders %}
+                    <div class="d-flex flex-column gap-4">
+                        {% for ord in my_orders %}
+                        <div class="card border rounded-4 shadow-sm overflow-hidden" style="background: #ffffff;">
+                            <!-- Header đơn hàng -->
+                            <div class="card-header bg-light bg-opacity-50 py-3 px-4 d-flex flex-wrap justify-content-between align-items-center gap-2 border-bottom">
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="fw-bold text-dark font-monospace" style="letter-spacing: 0.5px;">#{{ ord.order_code }}</span>
+                                    <span class="text-muted small">| {{ ord.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                                </div>
+                                <div>
+                                    {% if ord.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark px-3 py-2 rounded-pill"><span class="me-1">⏳</span>Chờ xác nhận</span>
+                                    {% elif ord.status == 'confirmed' %}
+                                    <span class="badge bg-primary text-white px-3 py-2 rounded-pill"><span class="me-1">📞</span>Đã xác nhận</span>
+                                    {% elif ord.status == 'shipping' %}
+                                    <span class="badge bg-info text-dark px-3 py-2 rounded-pill"><span class="me-1">🚚</span>Đang giao hàng</span>
+                                    {% elif ord.status == 'completed' %}
+                                    <span class="badge bg-success text-white px-3 py-2 rounded-pill"><span class="me-1">✅</span>Đã hoàn thành</span>
+                                    {% elif ord.status == 'cancelled' %}
+                                    <span class="badge bg-danger text-white px-3 py-2 rounded-pill"><span class="me-1">❌</span>Đã hủy</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <!-- Danh sách sản phẩm trong đơn -->
+                            <div class="card-body px-4 py-3">
+                                <div class="list-group list-group-flush mb-3">
+                                    {% for item in ord.items %}
+                                    <div class="list-group-item px-0 py-3 d-flex align-items-center justify-content-between gap-3 border-bottom">
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if item.product and item.product.thumbnail %}
+                                            <img src="{{ url_for('static', filename='uploads/' + item.product.thumbnail) }}" alt="{{ item.product_name }}"
+                                                style="width: 52px; height: 52px; object-fit: cover; border-radius: 10px; border: 1px solid rgba(0,0,0,0.06);">
+                                            {% else %}
+                                            <div class="d-flex align-items-center justify-content-center bg-light text-muted"
+                                                style="width: 52px; height: 52px; border-radius: 10px; font-size: 1.5rem;">🌹</div>
+                                            {% endif %}
+                                            <div>
+                                                {% if item.product %}
+                                                <a href="{{ url_for('product_detail', product_id=item.product.id) }}" class="fw-bold text-dark text-decoration-none hover-gold">
+                                                    {{ item.product_name }}
+                                                </a>
+                                                {% else %}
+                                                <span class="fw-bold text-dark">{{ item.product_name }}</span>
+                                                {% endif %}
+                                                <div class="text-muted small mt-1">
+                                                    {{ "{:,.0f}".format(item.price) }}đ × {{ item.quantity }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="fw-bold text-dark font-monospace">
+                                            {{ "{:,.0f}".format(item.subtotal) }}đ
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Thông tin nhận hàng & ghi chú -->
+                                <div class="p-3 rounded-3 mb-3" style="background: rgba(253, 250, 242, 0.6); border: 1px dashed rgba(201, 162, 39, 0.4);">
+                                    <div class="small mb-1">
+                                        <strong class="text-dark">Người nhận:</strong> {{ ord.customer_name }} — <span class="font-monospace">{{ ord.customer_phone }}</span>
+                                    </div>
+                                    <div class="small mb-1">
+                                        <strong class="text-dark">Địa chỉ giao:</strong> {{ ord.shipping_address }}
+                                    </div>
+                                    {% if ord.customer_note %}
+                                    <div class="small mt-2 pt-2 border-top border-warning border-opacity-25" style="color: #854d0e;">
+                                        <strong>💌 Thiệp chúc mừng / Lời dặn:</strong> "{{ ord.customer_note }}"
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex flex-wrap justify-content-between align-items-center pt-2">
+                                    <div class="small text-muted">
+                                        <span class="badge bg-light text-secondary border">Thanh toán: Shop sẽ liên hệ xác nhận sau</span>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="text-muted small me-2">Tổng thanh toán:</span>
+                                        <span class="fw-bold fs-5 text-danger font-monospace">{{ "{:,.0f}".format(ord.total_price) }}đ</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <div style="font-size: 3.5rem; opacity: 0.75;" class="mb-2">📦</div>
+                        <h5 class="fw-bold mb-1 text-dark">Bạn chưa có đơn đặt hàng nào</h5>
+                        <p class="text-muted small mb-3">Hãy chọn những mẫu hoa Lego xinh xắn và đặt ngay hôm nay nhé!</p>
+                        <a href="{{ url_for('products') }}" class="btn btn-outline-dark rounded-pill px-4 py-2 small fw-semibold">
+                            Khám phá bộ sưu tập hoa
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -541,6 +674,13 @@
                     } else if (btnRev) {
                         btnRev.click();
                     }
+                } else if (hash === '#orders') {
+                    var btnOrd = document.getElementById('tab-btn-orders');
+                    if (btnOrd && window.bootstrap && bootstrap.Tab) {
+                        new bootstrap.Tab(btnOrd).show();
+                    } else if (btnOrd) {
+                        btnOrd.click();
+                    }
                 }
             }
             activateTabByHash();
@@ -553,6 +693,8 @@
                         history.replaceState(null, '', '#password');
                     } else if (target === '#panel-reviews') {
                         history.replaceState(null, '', '#reviews');
+                    } else if (target === '#panel-orders') {
+                        history.replaceState(null, '', '#orders');
                     } else {
                         history.replaceState(null, '', window.location.pathname);
                     }

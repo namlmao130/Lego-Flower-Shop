@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Quản lý đơn hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+        .order-status-select {
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .filter-pill {
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #64748b;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            transition: all 0.18s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .filter-pill:hover, .filter-pill.active {
+            background: #1e293b;
+            color: #ffffff;
+            border-color: #1e293b;
+        }
+        .filter-pill .badge {
+            font-size: 0.72rem;
+        }
+        .table tbody tr {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand fw-bold">🛠️ Admin - Quản lý đơn hàng</span>
+            <div class="d-flex align-items-center gap-2">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm" target="_blank">🌐 Xem trang web</a>
+                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm fw-bold">📦 Đơn hàng</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">Sản phẩm</a>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm">📂 Danh mục</a>
+                <a href="{{ url_for('admin_chat') }}" class="btn btn-outline-light btn-sm">💬 Tin nhắn</a>
+                <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Đăng xuất</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-4 my-4">
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category=='error' else category }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- THANH BỘ LỌC TRẠNG THÁI & TÌM KIẾM -->
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+                    <!-- Các nút lọc trạng thái -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <a href="{{ url_for('admin_orders', q=q if q else None) }}" class="filter-pill {{ 'active' if not status_filter else '' }}">
+                            Tất cả <span class="badge bg-secondary rounded-pill">{{ counts.all }}</span>
+                        </a>
+                        <a href="{{ url_for('admin_orders', status='pending', q=q if q else None) }}" class="filter-pill {{ 'active' if status_filter=='pending' else '' }}">
+                            Chờ xác nhận <span class="badge bg-warning text-dark rounded-pill">{{ counts.pending }}</span>
+                        </a>
+                        <a href="{{ url_for('admin_orders', status='confirmed', q=q if q else None) }}" class="filter-pill {{ 'active' if status_filter=='confirmed' else '' }}">
+                            Đã xác nhận <span class="badge bg-info text-dark rounded-pill">{{ counts.confirmed }}</span>
+                        </a>
+                        <a href="{{ url_for('admin_orders', status='shipping', q=q if q else None) }}" class="filter-pill {{ 'active' if status_filter=='shipping' else '' }}">
+                            Đang giao hàng <span class="badge bg-primary rounded-pill">{{ counts.shipping }}</span>
+                        </a>
+                        <a href="{{ url_for('admin_orders', status='completed', q=q if q else None) }}" class="filter-pill {{ 'active' if status_filter=='completed' else '' }}">
+                            Hoàn thành <span class="badge bg-success rounded-pill">{{ counts.completed }}</span>
+                        </a>
+                        <a href="{{ url_for('admin_orders', status='cancelled', q=q if q else None) }}" class="filter-pill {{ 'active' if status_filter=='cancelled' else '' }}">
+                            Đã hủy <span class="badge bg-danger rounded-pill">{{ counts.cancelled }}</span>
+                        </a>
+                    </div>
+
+                    <!-- Ô tìm kiếm đơn -->
+                    <form method="GET" action="{{ url_for('admin_orders') }}" class="d-flex gap-2">
+                        {% if status_filter %}
+                        <input type="hidden" name="status" value="{{ status_filter }}">
+                        {% endif %}
+                        <input type="text" name="q" value="{{ q or '' }}" class="form-control form-control-sm" placeholder="Tìm theo mã đơn, tên, SĐT..." style="min-width: 240px;">
+                        <button type="submit" class="btn btn-sm btn-dark px-3">Tìm</button>
+                        {% if q %}
+                        <a href="{{ url_for('admin_orders', status=status_filter if status_filter else None) }}" class="btn btn-sm btn-outline-secondary">Xóa</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- BẢNG DANH SÁCH ĐƠN HÀNG -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0 bg-white">
+                    <thead class="table-light border-bottom">
+                        <tr>
+                            <th class="ps-4">Mã đơn</th>
+                            <th>Ngày đặt</th>
+                            <th>Khách hàng</th>
+                            <th>Sản phẩm đặt mua</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái đơn</th>
+                            <th class="text-end pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not orders %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                📦 Không tìm thấy đơn hàng nào phù hợp.
+                            </td>
+                        </tr>
+                        {% else %}
+                        {% for o in orders %}
+                        <tr>
+                            <td class="ps-4">
+                                <strong class="text-danger">#{{ o.order_code }}</strong>
+                                {% if o.customer %}
+                                <div class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.65rem;">Thành viên</div>
+                                {% else %}
+                                <div class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" style="font-size: 0.65rem;">Khách vãng lai</div>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">
+                                {{ o.created_at.strftime('%H:%M') }}<br>
+                                {{ o.created_at.strftime('%d/%m/%Y') }}
+                            </td>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ o.customer_name }}</div>
+                                <div class="small text-primary">📞 {{ o.customer_phone }}</div>
+                                <div class="small text-muted text-truncate" style="max-width: 220px;" title="{{ o.shipping_address }}">
+                                    📍 {{ o.shipping_address }}
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex flex-column gap-1">
+                                    {% for item in o.items %}
+                                    <div class="small text-dark">
+                                        • <strong>{{ item.product_name }}</strong> <span class="text-muted">(x{{ item.quantity }})</span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                {% if o.customer_note %}
+                                <div class="small text-secondary fst-italic mt-1" style="max-width: 250px;">
+                                    💌 Thiệp/ghi chú: "{{ o.customer_note }}"
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong class="text-danger fs-6">{{ "{:,.0f}".format(o.total_price) }} đ</strong>
+                                <div class="small text-muted">Thanh toán: Liên hệ sau</div>
+                            </td>
+                            <td>
+                                <form method="POST" action="{{ url_for('admin_order_update_status', order_id=o.id) }}" class="m-0">
+                                    <select name="status" class="form-select form-select-sm order-status-select border-{{ 'warning' if o.status=='pending' else ('info' if o.status=='confirmed' else ('primary' if o.status=='shipping' else ('success' if o.status=='completed' else 'danger'))) }}" onchange="this.form.submit()">
+                                        <option value="pending" {{ 'selected' if o.status=='pending' else '' }}>⏳ Chờ xác nhận</option>
+                                        <option value="confirmed" {{ 'selected' if o.status=='confirmed' else '' }}>📋 Đã xác nhận</option>
+                                        <option value="shipping" {{ 'selected' if o.status=='shipping' else '' }}>🚚 Đang giao hàng</option>
+                                        <option value="completed" {{ 'selected' if o.status=='completed' else '' }}>✅ Hoàn thành</option>
+                                        <option value="cancelled" {{ 'selected' if o.status=='cancelled' else '' }}>❌ Đã hủy</option>
+                                    </select>
+                                </form>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="d-inline-flex gap-1">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#orderModal-{{ o.id }}" title="Xem chi tiết đơn">
+                                        👁️ Xem
+                                    </button>
+                                    <form method="POST" action="{{ url_for('admin_order_delete', order_id=o.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng #{{ o.order_code }} không?');" class="d-inline">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa đơn">
+                                            🗑️
+                                        </button>
+                                    </form>
+                                </div>
+
+                                <!-- MODAL CHI TIẾT ĐƠN HÀNG -->
+                                <div class="modal fade" id="orderModal-{{ o.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content text-start rounded-4">
+                                            <div class="modal-header border-bottom">
+                                                <h5 class="modal-title fw-bold">Chi tiết đơn #{{ o.order_code }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body p-4">
+                                                <div class="mb-3">
+                                                    <span class="small text-muted d-block">Trạng thái hiện tại:</span>
+                                                    <span class="badge {{ o.status_badge_class }} fs-6">{{ o.status_label }}</span>
+                                                </div>
+                                                <div class="mb-3 pb-3 border-bottom">
+                                                    <strong class="d-block mb-1">Thông tin người nhận:</strong>
+                                                    <div>👤 <strong>Họ tên:</strong> {{ o.customer_name }}</div>
+                                                    <div>📞 <strong>Điện thoại:</strong> <a href="tel:{{ o.customer_phone }}">{{ o.customer_phone }}</a></div>
+                                                    <div>📍 <strong>Địa chỉ giao:</strong> {{ o.shipping_address }}</div>
+                                                    {% if o.customer_note %}
+                                                    <div class="mt-2 p-2 rounded bg-light border small">
+                                                        💌 <strong>Lời chúc viết thiệp / Lưu ý:</strong><br>
+                                                        <span class="fst-italic text-secondary">"{{ o.customer_note }}"</span>
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="mb-3">
+                                                    <strong class="d-block mb-2">Sản phẩm đặt mua:</strong>
+                                                    {% for item in o.items %}
+                                                    <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
+                                                        <div class="d-flex align-items-center gap-2">
+                                                            <div class="rounded overflow-hidden border flex-shrink-0" style="width: 44px; height: 44px;">
+                                                                {% if item.product_image %}
+                                                                <img src="{{ url_for('static', filename='uploads/' + item.product_image) }}" alt="{{ item.product_name }}" class="w-100 h-100 object-fit-cover">
+                                                                {% else %}
+                                                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">🌸</div>
+                                                                {% endif %}
+                                                            </div>
+                                                            <div>
+                                                                <div class="fw-semibold small">{{ item.product_name }}</div>
+                                                                <div class="text-muted small">x{{ item.quantity }} • {{ "{:,.0f}".format(item.product_price) }} đ</div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="fw-bold text-danger">
+                                                            {{ "{:,.0f}".format(item.subtotal) }} đ
+                                                        </div>
+                                                    </div>
+                                                    {% endfor %}
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center pt-2">
+                                                    <span class="fw-bold">Tổng thanh toán:</span>
+                                                    <span class="fw-bold fs-5 text-danger">{{ "{:,.0f}".format(o.total_price) }} đ</span>
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-0">
+                                                <a href="https://zalo.me/{{ o.customer_phone }}" target="_blank" class="btn btn-primary btn-sm me-auto">
+                                                    💬 Nhắn Zalo khách
+                                                </a>
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

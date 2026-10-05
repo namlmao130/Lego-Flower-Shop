@@ -1,21 +1,47 @@
 import os
 import time
+import uuid
 import smtplib
+from datetime import datetime
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify
+from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
-from sqlalchemy import func
+from werkzeug.middleware.proxy_fix import ProxyFix
+from sqlalchemy import func, event
+from sqlalchemy.orm import selectinload
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from flask_compress import Compress
+from flask_caching import Cache
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from PIL import Image, ImageOps
 
 from config import Config
-from models import db, Product, Category, Admin, ProductMedia, Review, Customer, ChatMessage, PHONE_REGEX, EMAIL_REGEX, normalize_phone
+from models import db, Product, Category, Admin, ProductMedia, Review, Customer, ChatMessage, Order, OrderItem, PHONE_REGEX, EMAIL_REGEX, normalize_phone
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# QUAN TRỌNG khi chạy sau Nginx (hoặc reverse proxy trên Render/Railway):
+if os.environ.get('TRUST_PROXY', 'false').lower() == 'true':
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
+
+# Nén response (HTML/CSS/JS/JSON) bằng gzip
+Compress(app)
+
+# Cache RAM / Redis cho dữ liệu ít thay đổi
+cache = Cache(app)
+
+# Rate limiting chống spam, brute-force
+limiter = Limiter(
+    get_remote_address,
+    app=app,
+    default_limits=["200 per minute", "3000 per hour"],
+    storage_uri=app.config.get('RATELIMIT_STORAGE_URI', 'memory://'),
+)
 
 # Tự động tạo thư mục uploads nếu chưa tồn tại (tránh lỗi FileNotFoundError khi upload ảnh)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -23,6 +49,18 @@ os.makedirs(app.config.get('AVATAR_UPLOAD_FOLDER', os.path.join(app.config['UPLO
 
 # Khởi tạo database
 db.init_app(app)
+
+# Bật WAL mode cho SQLite: cho phép đọc và ghi diễn ra ĐỒNG THỜI thay vì khóa
+# toàn bộ file database mỗi lần ghi -> giảm hẳn lỗi "database is locked" khi
+# nhiều khách cùng xem sản phẩm trong lúc có người đang gửi review/chat/đặt hàng.
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
+    with app.app_context():
+        @event.listens_for(db.engine, 'connect')
+        def _set_sqlite_pragma(dbapi_connection, connection_record):
+            cursor = dbapi_connection.cursor()
+            cursor.execute('PRAGMA journal_mode=WAL')
+            cursor.execute('PRAGMA synchronous=NORMAL')
+            cursor.close()
 
 # Khởi tạo Flask-Login — dùng chung cho cả Admin (quản trị) và Customer (khách hàng).
 # Hai loại tài khoản được phân biệt bằng tiền tố trong get_id(): "admin-<id>" / "customer-<id>"
@@ -72,10 +110,80 @@ def customer_required(f):
     return decorated
 
 
+def get_cached_categories():
+    """Danh mục gần như không đổi -> cache 5 phút thay vì query DB ở MỌI request.
+    Giúp giảm tải DB đáng kể khi có nhiều khách truy cập cùng lúc, vì trước đây
+    hàm này (qua context_processor) chạy 1 query cho MỌI trang, MỌI request."""
+    categories = cache.get('all_categories')
+    if categories is None:
+        categories = Category.query.order_by(Category.name).all()
+        cache.set('all_categories', categories, timeout=300)
+    return categories
+
+
+def invalidate_categories_cache():
+    """Gọi hàm này mỗi khi thêm/sửa/xóa category để cache không bị cũ."""
+    cache.delete('all_categories')
+
+
 @app.context_processor
 def inject_nav_categories():
     # Giúp mọi trang (kể cả sidebar trong base.html) đều lấy được danh sách danh mục
-    return dict(nav_categories=Category.query.all())
+    return dict(nav_categories=get_cached_categories())
+
+
+@app.context_processor
+def inject_cart_count():
+    cart = session.get('cart', {})
+    total_qty = sum(cart.values()) if isinstance(cart, dict) else 0
+    return dict(cart_count=total_qty)
+
+
+def generate_order_code():
+    """Tạo mã đơn hàng dạng LF + NămThángNgày + 4 ký tự ngẫu nhiên (VD: LF261002A1B2)"""
+    now_str = datetime.now().strftime('%y%m%d')
+    rand_str = uuid.uuid4().hex[:4].upper()
+    return f"LF{now_str}{rand_str}"
+
+
+def get_cart_details():
+    """Lấy danh sách sản phẩm, tổng tiền và tổng số lượng từ session cart."""
+    cart = session.get('cart', {})
+    items = []
+    total_price = 0
+    total_quantity = 0
+
+    if not isinstance(cart, dict):
+        cart = {}
+
+    to_remove = []
+    for pid_str, qty in list(cart.items()):
+        try:
+            pid = int(pid_str)
+            product = Product.query.get(pid)
+            if not product:
+                to_remove.append(pid_str)
+                continue
+            subtotal = product.price * qty
+            total_price += subtotal
+            total_quantity += qty
+            items.append({
+                'product': product,
+                'quantity': qty,
+                'subtotal': subtotal,
+                'in_stock': product.stock >= qty,
+                'available_stock': product.stock
+            })
+        except (ValueError, TypeError):
+            to_remove.append(pid_str)
+
+    if to_remove:
+        for r in to_remove:
+            cart.pop(r, None)
+        session['cart'] = cart
+        session.modified = True
+
+    return items, total_price, total_quantity
 
 
 @app.after_request
@@ -85,6 +193,11 @@ def add_header(response):
         response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         response.headers['Pragma'] = 'no-cache'
         response.headers['Expires'] = '0'
+    # Ảnh/video/CSS/JS trong static/ gần như không đổi nội dung sau khi upload -> cho
+    # trình duyệt lưu cache lâu (1 ngày). Giúp khách quay lại xem nhiều sản phẩm không
+    # phải tải lại cùng 1 ảnh nhiều lần -> giảm tải băng thông + số request vào server.
+    elif request.path.startswith('/static/'):
+        response.headers['Cache-Control'] = 'public, max-age=86400'
     return response
 
 
@@ -124,16 +237,23 @@ def index():
     category_id = request.args.get('category', type=int)
 
     # Carousel phía trên: cố định các sản phẩm nổi bật mới nhất, hoàn toàn không bị ảnh hưởng bởi tìm kiếm
-    carousel_products = Product.query.order_by(Product.id.desc()).limit(6).all()
+    # selectinload(reviews): tải kèm review bằng 1 câu query duy nhất thay vì mỗi sản phẩm
+    # lại chạy riêng 1 câu SELECT reviews khi template gọi product.average_rating/review_count
+    # (vấn đề N+1 query) -> trang chủ load nhanh hơn đáng kể khi nhiều khách cùng truy cập.
+    carousel_products = Product.query.options(selectinload(Product.reviews)) \
+        .order_by(Product.id.desc()).limit(6).all()
 
-    query = Product.query
+    query = Product.query.options(selectinload(Product.reviews))
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
         query = query.filter(Product.name.ilike(f'%{q}%'))
 
     if q or category_id:
-        products = query.order_by(Product.id.desc()).all()
+        # Giới hạn an toàn: trang chủ chỉ để xem nhanh, không có phân trang.
+        # Nếu khớp nhiều hơn 60 sản phẩm, khách nên bấm "Xem tất cả" để sang
+        # trang /products (đã có phân trang đầy đủ) thay vì tải hết về đây.
+        products = query.order_by(Product.id.desc()).limit(60).all()
     else:
         products = query.order_by(Product.id.desc()).limit(8).all()
 
@@ -146,7 +266,7 @@ def index():
             selected_category=category_id
         )
 
-    categories = Category.query.all()
+    categories = get_cached_categories()
     return render_template(
         'index.html',
         products=products,
@@ -157,30 +277,43 @@ def index():
     )
 
 
+PRODUCTS_PER_PAGE = 24
+
+
 @app.route('/products')
 def products():
     # Danh sách toàn bộ sản phẩm, có thể lọc theo category và từ khóa tìm kiếm
     q = request.args.get('q', '').strip()
     category_id = request.args.get('category', type=int)
-    query = Product.query
+    page = request.args.get('page', 1, type=int)
+
+    query = Product.query.options(selectinload(Product.reviews))
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
         query = query.filter(Product.name.ilike(f'%{q}%'))
-    products = query.order_by(Product.id.desc()).all()
-    categories = Category.query.all()
+    query = query.order_by(Product.id.desc())
+
+    # QUAN TRỌNG: trước đây dùng .all() tải HẾT 300+ sản phẩm (kèm reviews của từng
+    # sản phẩm) trong 1 lần -> rất nặng khi nhiều khách cùng mở trang này.
+    # paginate() chỉ tải đúng 1 trang (24 sản phẩm), nhẹ hơn rất nhiều và phản hồi nhanh
+    # hơn hẳn dù có bao nhiêu sản phẩm trong catalog.
+    pagination = query.paginate(page=page, per_page=PRODUCTS_PER_PAGE, error_out=False)
+    products = pagination.items
+    categories = get_cached_categories()
 
     # Hỗ trợ AJAX load nhanh không reload cả trang
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
         return render_template(
             '_product_list_partial.html',
             products=products,
+            pagination=pagination,
             search_query=q,
             selected_category=category_id
         )
 
-    return render_template('products.html', products=products, categories=categories,
-                            selected_category=category_id, search_query=q)
+    return render_template('products.html', products=products, pagination=pagination,
+                            categories=categories, selected_category=category_id, search_query=q)
 
 
 # ============================================
@@ -250,6 +383,7 @@ def send_password_reset_email(to_email, reset_url):
 
 
 @app.route('/register', methods=['GET', 'POST'])
+@limiter.limit("8 per minute")  # chặn spam tạo tài khoản hàng loạt
 def register():
     if current_user.is_authenticated and isinstance(current_user, Customer):
         return redirect(url_for('index'))
@@ -465,10 +599,12 @@ def user_settings():
             return redirect(url_for('user_settings') + '#password')
 
     my_reviews = Review.query.filter_by(customer_id=current_user.id).order_by(Review.created_at.desc()).all()
-    return render_template('user_settings.html', my_reviews=my_reviews)
+    my_orders = Order.query.filter_by(customer_id=current_user.id).order_by(Order.created_at.desc()).all()
+    return render_template('user_settings.html', my_reviews=my_reviews, my_orders=my_orders)
 
 
 @app.route('/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")  # chống brute-force đoán mật khẩu
 def login():
     if current_user.is_authenticated and isinstance(current_user, Customer):
         return redirect(url_for('index'))
@@ -499,6 +635,7 @@ def login():
 
 
 @app.route('/forgot-password', methods=['GET', 'POST'])
+@limiter.limit("3 per minute, 10 per hour")  # gửi email thật qua SMTP -> giới hạn chặt để tránh bị spam/khóa tài khoản mail
 def forgot_password():
     if current_user.is_authenticated and isinstance(current_user, Customer):
         return redirect(url_for('index'))
@@ -523,6 +660,7 @@ def forgot_password():
 
 
 @app.route('/reset-password/<token>', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")
 def reset_password(token):
     if current_user.is_authenticated and isinstance(current_user, Customer):
         return redirect(url_for('index'))
@@ -594,6 +732,7 @@ def product_detail(product_id):
 
 
 @app.route('/product/<int:product_id>/review', methods=['POST'])
+@limiter.limit("6 per minute")  # chống spam review hàng loạt
 def submit_review(product_id):
     # Đảm bảo sản phẩm tồn tại, nếu không sẽ tự trả về 404
     product = Product.query.get_or_404(product_id)
@@ -647,10 +786,263 @@ def submit_review(product_id):
 
 
 # ============================================
+#   GIỎ HÀNG (SHOPPING CART) & ĐẶT HÀNG (CHECKOUT)
+# ============================================
+
+@app.route('/cart')
+def view_cart():
+    """Xem trang giỏ hàng."""
+    items, total_price, total_quantity = get_cart_details()
+    return render_template('cart.html', items=items, total_price=total_price, total_quantity=total_quantity)
+
+
+@app.route('/cart/add', methods=['POST'])
+def cart_add():
+    """Thêm sản phẩm vào giỏ hàng."""
+    data = request.get_json(silent=True) or request.form
+    try:
+        product_id = int(data.get('product_id')) if data.get('product_id') is not None else None
+    except (ValueError, TypeError):
+        product_id = None
+    try:
+        quantity = int(data.get('quantity', 1)) if data.get('quantity') is not None else 1
+    except (ValueError, TypeError):
+        quantity = 1
+    buy_now = data.get('buy_now')
+
+    if not product_id or quantity <= 0:
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Dữ liệu không hợp lệ'}), 400
+        flash('Dữ liệu không hợp lệ', 'error')
+        return redirect(request.referrer or url_for('products'))
+
+    product = Product.query.get_or_404(product_id)
+    if product.stock <= 0:
+        if request.is_json:
+            return jsonify({'success': False, 'error': 'Sản phẩm này tạm thời hết hàng'}), 400
+        flash(f'Sản phẩm "{product.name}" tạm thời hết hàng.', 'warning')
+        return redirect(request.referrer or url_for('products'))
+
+    cart = session.get('cart', {})
+    if not isinstance(cart, dict):
+        cart = {}
+
+    pid_str = str(product_id)
+    current_qty = cart.get(pid_str, 0)
+    new_qty = current_qty + quantity
+    if new_qty > product.stock:
+        new_qty = product.stock
+
+    cart[pid_str] = new_qty
+    session['cart'] = cart
+    session.modified = True
+
+    cart_count = sum(cart.values())
+
+    if buy_now:
+        return redirect(url_for('checkout'))
+
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': True,
+            'cart_count': cart_count,
+            'message': f'Đã thêm {quantity} x "{product.name}" vào giỏ hàng!',
+            'product_name': product.name
+        })
+
+    flash(f'Đã thêm "{product.name}" vào giỏ hàng!', 'success')
+    return redirect(request.referrer or url_for('view_cart'))
+
+
+@app.route('/cart/update', methods=['POST'])
+def cart_update():
+    """Cập nhật số lượng sản phẩm trong giỏ hàng."""
+    data = request.get_json(silent=True) or request.form
+    try:
+        product_id = int(data.get('product_id')) if data.get('product_id') is not None else None
+    except (ValueError, TypeError):
+        product_id = None
+    try:
+        quantity = int(data.get('quantity')) if data.get('quantity') is not None else 0
+    except (ValueError, TypeError):
+        quantity = 0
+
+    if not product_id:
+        return jsonify({'success': False, 'error': 'Thiếu ID sản phẩm'}), 400
+
+    cart = session.get('cart', {})
+    if not isinstance(cart, dict):
+        cart = {}
+
+    pid_str = str(product_id)
+    product = Product.query.get(product_id)
+
+    if quantity is None or quantity <= 0:
+        cart.pop(pid_str, None)
+    else:
+        if product and quantity > product.stock:
+            quantity = product.stock
+        cart[pid_str] = quantity
+
+    session['cart'] = cart
+    session.modified = True
+
+    items, total_price, total_quantity = get_cart_details()
+
+    if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        item_subtotal = 0
+        if product and pid_str in cart:
+            item_subtotal = product.price * cart[pid_str]
+        return jsonify({
+            'success': True,
+            'cart_count': total_quantity,
+            'item_subtotal': item_subtotal,
+            'item_subtotal_str': f"{item_subtotal:,.0f} đ",
+            'total_price': total_price,
+            'total_price_str': f"{total_price:,.0f} đ",
+            'total_quantity': total_quantity,
+            'quantity': cart.get(pid_str, 0)
+        })
+
+    return redirect(url_for('view_cart'))
+
+
+@app.route('/cart/remove/<int:product_id>', methods=['POST'])
+def cart_remove(product_id):
+    """Xóa sản phẩm khỏi giỏ hàng."""
+    cart = session.get('cart', {})
+    if isinstance(cart, dict):
+        cart.pop(str(product_id), None)
+        session['cart'] = cart
+        session.modified = True
+    flash('Đã xóa sản phẩm khỏi giỏ hàng.', 'info')
+    return redirect(url_for('view_cart'))
+
+
+@app.route('/cart/clear', methods=['POST'])
+def cart_clear():
+    """Xóa toàn bộ giỏ hàng."""
+    session.pop('cart', None)
+    session.modified = True
+    flash('Đã xóa toàn bộ giỏ hàng.', 'info')
+    return redirect(url_for('view_cart'))
+
+
+@app.route('/checkout', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")  # Chống flood tạo đơn hàng ảo liên tục
+def checkout():
+    """Trang thanh toán / xác nhận đặt hàng."""
+    items, total_price, total_quantity = get_cart_details()
+    if not items or total_quantity == 0:
+        flash('Giỏ hàng của bạn đang trống. Vui lòng chọn sản phẩm trước khi đặt hàng!', 'warning')
+        return redirect(url_for('products'))
+
+    if request.method == 'POST':
+        customer_name = (request.form.get('customer_name') or '').strip()
+        customer_phone = (request.form.get('customer_phone') or '').strip()
+        shipping_address = (request.form.get('shipping_address') or '').strip()
+        customer_note = (request.form.get('customer_note') or '').strip()
+
+        if not customer_name or not customer_phone or not shipping_address:
+            flash('Vui lòng điền đầy đủ Họ tên, Số điện thoại và Địa chỉ nhận hàng!', 'error')
+            return render_template('checkout.html', items=items, total_price=total_price, total_quantity=total_quantity)
+
+        customer_phone = normalize_phone(customer_phone)
+        if not PHONE_REGEX.match(customer_phone):
+            flash('Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại 10 chữ số (VD: 0912345678).', 'error')
+            return render_template('checkout.html', items=items, total_price=total_price, total_quantity=total_quantity)
+
+        # Kiểm tra tồn kho lần cuối
+        for item in items:
+            p = item['product']
+            qty = item['quantity']
+            if p.stock < qty:
+                flash(f'Sản phẩm "{p.name}" chỉ còn {p.stock} bó trong kho. Vui lòng giảm số lượng!', 'error')
+                return redirect(url_for('view_cart'))
+
+        order_code = generate_order_code()
+        while Order.query.filter_by(order_code=order_code).first():
+            order_code = generate_order_code()
+
+        customer_id = None
+        if current_user.is_authenticated and isinstance(current_user, Customer):
+            customer_id = current_user.id
+
+        order = Order(
+            order_code=order_code,
+            customer_id=customer_id,
+            customer_name=customer_name,
+            customer_phone=customer_phone,
+            shipping_address=shipping_address,
+            customer_note=customer_note,
+            total_price=total_price,
+            status='pending',
+            payment_status='contact_later'
+        )
+        db.session.add(order)
+        db.session.flush()
+
+        for item in items:
+            p = item['product']
+            qty = item['quantity']
+            p.stock -= qty
+
+            order_item = OrderItem(
+                order_id=order.id,
+                product_id=p.id,
+                product_name=p.name,
+                product_price=p.price,
+                quantity=qty,
+                subtotal=item['subtotal'],
+                product_image=p.thumbnail
+            )
+            db.session.add(order_item)
+
+        db.session.commit()
+
+        session.pop('cart', None)
+        session.modified = True
+
+        return redirect(url_for('order_success', order_code=order_code))
+
+    default_name = ''
+    default_phone = ''
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        default_name = current_user.full_name or ''
+        default_phone = current_user.phone or ''
+
+    return render_template(
+        'checkout.html',
+        items=items,
+        total_price=total_price,
+        total_quantity=total_quantity,
+        default_name=default_name,
+        default_phone=default_phone
+    )
+
+
+@app.route('/order-success/<order_code>')
+def order_success(order_code):
+    """Trang thông báo đặt hàng thành công."""
+    order = Order.query.filter_by(order_code=order_code).first_or_404()
+    return render_template('order_success.html', order=order)
+
+
+# ============================================
 #   ADMIN - LOGIN / LOGOUT
 # ============================================
 
+@app.route('/admin')
+@app.route('/admin/')
+def admin_root():
+    """Tự động chuyển hướng /admin sang dashboard hoặc trang đăng nhập."""
+    if current_user.is_authenticated and isinstance(current_user, Admin):
+        return redirect(url_for('admin_dashboard'))
+    return redirect(url_for('admin_login'))
+
+
 @app.route('/admin/login', methods=['GET', 'POST'])
+@limiter.limit("10 per minute")  # chống brute-force đoán mật khẩu admin
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -683,14 +1075,14 @@ def admin_dashboard():
     q = request.args.get('q', '').strip()
     category_id = request.args.get('category', type=int)
 
-    query = Product.query
+    query = Product.query.options(selectinload(Product.reviews))
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
         query = query.filter(Product.name.ilike(f'%{q}%'))
 
     products = query.order_by(Product.id.desc()).all()
-    categories = Category.query.all()
+    categories = get_cached_categories()
     return render_template(
         'admin/dashboard.html',
         products=products,
@@ -703,7 +1095,7 @@ def admin_dashboard():
 @app.route('/admin/add', methods=['GET', 'POST'])
 @admin_required
 def admin_add_product():
-    categories = Category.query.all()
+    categories = get_cached_categories()
 
     if request.method == 'POST':
         name = request.form.get('name')
@@ -738,7 +1130,7 @@ def admin_add_product():
 @admin_required
 def admin_edit_product(product_id):
     product = Product.query.get_or_404(product_id)
-    categories = Category.query.all()
+    categories = get_cached_categories()
 
     if request.method == 'POST':
         product.name = request.form.get('name')
@@ -861,7 +1253,7 @@ def admin_delete_multiple():
 @app.route('/admin/categories')
 @admin_required
 def admin_categories():
-    categories = Category.query.all()
+    categories = get_cached_categories()
     return render_template('admin/categories.html', categories=categories)
 
 
@@ -873,6 +1265,7 @@ def admin_add_category():
         if name:
             db.session.add(Category(name=name))
             db.session.commit()
+            invalidate_categories_cache()
             flash('Đã thêm danh mục!', 'success')
         else:
             flash('Tên danh mục không được để trống!', 'error')
@@ -887,6 +1280,7 @@ def admin_edit_category(category_id):
     if request.method == 'POST':
         category.name = request.form.get('name', '').strip()
         db.session.commit()
+        invalidate_categories_cache()
         flash('Đã cập nhật danh mục!', 'success')
         return redirect(url_for('admin_categories'))
     return render_template('admin/edit_category.html', category=category)
@@ -901,8 +1295,88 @@ def admin_delete_category(category_id):
         product.category_id = None
     db.session.delete(category)
     db.session.commit()
+    invalidate_categories_cache()
     flash('Đã xóa danh mục!', 'success')
     return redirect(url_for('admin_categories'))
+
+
+# ============================================
+#   ADMIN - QUẢN LÝ ĐƠN HÀNG (ORDERS)
+# ============================================
+
+@app.route('/admin/orders')
+@admin_required
+def admin_orders():
+    """Trang quản lý đơn hàng của Admin."""
+    status_filter = request.args.get('status', '').strip()
+    q = request.args.get('q', '').strip()
+
+    query = Order.query
+    if status_filter:
+        query = query.filter(Order.status == status_filter)
+    if q:
+        search_pat = f"%{q}%"
+        query = query.filter(
+            (Order.order_code.ilike(search_pat)) |
+            (Order.customer_name.ilike(search_pat)) |
+            (Order.customer_phone.ilike(search_pat))
+        )
+
+    orders = query.order_by(Order.created_at.desc()).all()
+
+    counts = {
+        'all': Order.query.count(),
+        'pending': Order.query.filter_by(status='pending').count(),
+        'confirmed': Order.query.filter_by(status='confirmed').count(),
+        'shipping': Order.query.filter_by(status='shipping').count(),
+        'completed': Order.query.filter_by(status='completed').count(),
+        'cancelled': Order.query.filter_by(status='cancelled').count()
+    }
+
+    return render_template('admin/orders.html', orders=orders, status_filter=status_filter, q=q, counts=counts)
+
+
+@app.route('/admin/orders/<int:order_id>/status', methods=['POST'])
+@admin_required
+def admin_order_update_status(order_id):
+    """Admin cập nhật trạng thái đơn hàng."""
+    order = Order.query.get_or_404(order_id)
+    new_status = request.form.get('status')
+    valid_statuses = ['pending', 'confirmed', 'shipping', 'completed', 'cancelled']
+    if new_status in valid_statuses:
+        old_status = order.status
+        order.status = new_status
+
+        # Nếu hủy đơn -> hoàn lại tồn kho
+        if new_status == 'cancelled' and old_status != 'cancelled':
+            for item in order.items:
+                if item.product:
+                    item.product.stock += item.quantity
+        # Nếu mở lại đơn từ hủy -> trừ lại tồn kho
+        elif old_status == 'cancelled' and new_status != 'cancelled':
+            for item in order.items:
+                if item.product:
+                    item.product.stock = max(0, item.product.stock - item.quantity)
+
+        db.session.commit()
+        flash(f'Đã cập nhật trạng thái đơn #{order.order_code} thành "{order.status_label}"!', 'success')
+    return redirect(request.referrer or url_for('admin_orders'))
+
+
+@app.route('/admin/orders/<int:order_id>/delete', methods=['POST'])
+@admin_required
+def admin_order_delete(order_id):
+    """Admin xóa đơn hàng."""
+    order = Order.query.get_or_404(order_id)
+    # Nếu đơn chưa hoàn thành và chưa hủy, hoàn lại tồn kho
+    if order.status not in ('completed', 'cancelled'):
+        for item in order.items:
+            if item.product:
+                item.product.stock += item.quantity
+    db.session.delete(order)
+    db.session.commit()
+    flash(f'Đã xóa đơn hàng #{order.order_code} thành công!', 'success')
+    return redirect(url_for('admin_orders'))
 
 
 # ============================================
@@ -910,6 +1384,7 @@ def admin_delete_category(category_id):
 # ============================================
 
 @app.route('/api/chat/send', methods=['POST'])
+@limiter.limit("20 per minute")  # chống flood tin nhắn chat
 def api_chat_send():
     """Khách hàng gửi tin nhắn lên server."""
     data = request.get_json(silent=True) or request.form
@@ -950,6 +1425,7 @@ def api_chat_send():
 
 
 @app.route('/api/chat/messages', methods=['GET'])
+@limiter.limit("60 per minute")  # dư sức cho polling bình thường, chặn script spam
 def api_chat_messages():
     """Khách hàng lấy danh sách tin nhắn của phiên chat hiện tại."""
     session_id = (request.args.get('session_id') or '').strip()

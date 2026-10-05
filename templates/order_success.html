@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Đặt hàng thành công #{{ order.order_code }} - Lego Flower{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-4 my-md-5">
+    <div class="col-12 col-md-10 col-lg-8 col-xl-7">
+        <div class="auth-card p-4 p-md-5 rounded-4 shadow-sm text-center">
+
+            <!-- Icon thành công -->
+            <div class="mb-3 d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 80px; height: 80px; background: rgba(34, 197, 94, 0.12); color: #16a34a; font-size: 2.5rem; border: 2px solid rgba(34, 197, 94, 0.3);">
+                ✓
+            </div>
+
+            <h3 class="fw-bold mb-2" style="font-family:'Playfair Display',serif; color: #21243D;">
+                Đặt hàng thành công!
+            </h3>
+            <p class="text-muted small mb-4">
+                Cảm ơn bạn đã tin tưởng lựa chọn Tiệm Hoa Lego. Đơn hàng của bạn đã được ghi nhận trên hệ thống.
+            </p>
+
+            <!-- Khung thông tin mã đơn hàng -->
+            <div class="p-3 rounded-3 mb-4 text-start" style="background: rgba(253, 250, 242, 0.85); border: 1.5px solid var(--lego-gold);">
+                <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom" style="border-color: rgba(201, 162, 39, 0.3) !important;">
+                    <span class="small text-muted">Mã đơn hàng:</span>
+                    <strong class="text-danger fw-bold fs-5">#{{ order.order_code }}</strong>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small text-muted">Người nhận hoa:</span>
+                    <span class="fw-semibold text-dark">{{ order.customer_name }}</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small text-muted">Số điện thoại:</span>
+                    <span class="fw-semibold text-dark">{{ order.customer_phone }}</span>
+                </div>
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="small text-muted">Địa chỉ nhận:</span>
+                    <span class="fw-semibold text-dark text-end" style="max-width: 60%;">{{ order.shipping_address }}</span>
+                </div>
+                {% if order.customer_note %}
+                <div class="d-flex align-items-start justify-content-between mb-2 pt-2 border-top" style="border-color: rgba(201, 162, 39, 0.2) !important;">
+                    <span class="small text-muted">Lời chúc / Ghi chú:</span>
+                    <span class="small text-secondary text-end fst-italic" style="max-width: 65%;">"{{ order.customer_note }}"</span>
+                </div>
+                {% endif %}
+                <div class="d-flex align-items-center justify-content-between pt-2 border-top" style="border-color: rgba(201, 162, 39, 0.3) !important;">
+                    <span class="fw-bold text-dark">Tổng tiền:</span>
+                    <span class="fw-bold fs-5 text-danger">{{ "{:,.0f}".format(order.total_price) }} đ</span>
+                </div>
+            </div>
+
+            <!-- Danh sách sản phẩm trong đơn -->
+            <div class="text-start mb-4">
+                <h6 class="fw-bold text-dark mb-2">Chi tiết sản phẩm đã đặt:</h6>
+                <div class="border rounded-3 p-3 bg-light">
+                    {% for item in order.items %}
+                    <div class="d-flex align-items-center justify-content-between py-2 {% if not loop.last %}border-bottom{% endif %}" style="border-color: rgba(0,0,0,0.06) !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-2 overflow-hidden border flex-shrink-0" style="width: 44px; height: 44px; background: #fff;">
+                                {% if item.product_image %}
+                                <img src="{{ url_for('static', filename='uploads/' + item.product_image) }}" alt="{{ item.product_name }}" class="w-100 h-100 object-fit-cover">
+                                {% else %}
+                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">🌸</div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="fw-semibold text-dark small">{{ item.product_name }}</div>
+                                <div class="text-muted" style="font-size: 0.75rem;">Số lượng: x{{ item.quantity }}</div>
+                            </div>
+                        </div>
+                        <div class="fw-bold text-danger small">
+                            {{ "{:,.0f}".format(item.subtotal) }} đ
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Lưu ý liên hệ sau -->
+            <div class="alert alert-info text-start small mb-4 rounded-3 border-0" style="background: rgba(224, 242, 254, 0.85); color: #0369a1;">
+                ℹ️ <strong>Tiệm sẽ liên hệ sớm:</strong> Nhân viên của shop sẽ sớm liên hệ qua số điện thoại <strong>{{ order.customer_phone }}</strong> (hoặc Zalo) để xác nhận địa chỉ và hướng dẫn phương thức thanh toán thuận tiện nhất cho bạn nhé!
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+                <a href="{{ url_for('products') }}" class="btn btn-auth px-4 py-2 fw-semibold">
+                    Tiếp tục mua sắm
+                </a>
+                {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
+                <a href="{{ url_for('user_settings') }}#orders" class="btn btn-outline-secondary px-3 py-2 rounded-3">
+                    Xem đơn hàng của tôi
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

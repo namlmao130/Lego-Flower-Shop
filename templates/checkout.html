@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Xác nhận đặt đơn - Lego Flower{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center my-3 my-md-4">
+    <div class="col-12 col-xl-11">
+
+        <!-- Breadcrumb & Tiêu đề -->
+        <div class="mb-4">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb small mb-1">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--lego-gold);">Trang chủ</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('view_cart') }}" class="text-decoration-none" style="color: var(--lego-gold);">Giỏ hàng</a>
+                    </li>
+                    <li class="breadcrumb-item active text-dark" aria-current="page">Xác nhận đặt đơn</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">
+                Thông tin đặt hàng
+            </h2>
+            <p class="text-muted small mb-0">Vui lòng cung cấp thông tin người nhận để Tiệm Hoa Lego giao hàng chu đáo đến tận tay bạn.</p>
+        </div>
+
+        <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+            <div class="row g-4">
+                <!-- Cột trái: Form điền thông tin giao hàng -->
+                <div class="col-12 col-lg-7">
+                    <div class="auth-card p-4 p-md-5 rounded-4 shadow-sm mb-4">
+                        <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
+                            📍 Địa chỉ nhận hoa
+                        </h5>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">
+                                Họ và tên người nhận <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" name="customer_name" class="form-control" value="{{ default_name }}" placeholder="Ví dụ: Nguyễn Văn A" maxlength="100" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-secondary mb-1">
+                                Số điện thoại nhận hàng <span class="text-danger">*</span>
+                            </label>
+                            <input type="tel" name="customer_phone" class="form-control" value="{{ default_phone }}" placeholder="Ví dụ: 0912345678" maxlength="10" pattern="0[35789][0-9]{8}" required>
+                            <div class="form-text small text-muted">Shop sẽ liên hệ qua số điện thoại này để xác nhận đơn và hẹn giờ giao hoa.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-1">
+                                Địa chỉ giao hàng chi tiết <span class="text-danger">*</span>
+                            </label>
+                            <textarea name="shipping_address" class="form-control" rows="2" placeholder="Số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố..." maxlength="255" required></textarea>
+                        </div>
+
+                        <h5 class="fw-bold mb-3 pt-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
+                            💌 Thiệp chúc mừng & Ghi chú
+                        </h5>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-semibold text-secondary mb-1">
+                                Lời chúc viết thiệp (hoặc lưu ý giao hàng)
+                            </label>
+                            <textarea name="customer_note" class="form-control" rows="3" placeholder="Ví dụ: Viết thiệp giúp mình: 'Chúc em sinh nhật vui vẻ và luôn rạng rỡ như những đóa hoa!' hoặc 'Giao trong giờ hành chính giúp mình nhé!'"></textarea>
+                            <div class="form-text small text-muted">🎁 Miễn phí viết thiệp chúc mừng thiết kế riêng theo yêu cầu của bạn.</div>
+                        </div>
+
+                        <!-- Phương thức thanh toán: Liên hệ sau -->
+                        <div class="p-3 rounded-3" style="background: rgba(253, 250, 242, 0.9); border: 1.5px solid rgba(201, 162, 39, 0.35);">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span style="font-size: 1.2rem;">📞</span>
+                                <strong style="color: #21243D; font-size: 0.95rem;">Hình thức thanh toán: Liên hệ xác nhận sau</strong>
+                            </div>
+                            <p class="small text-muted mb-0" style="line-height: 1.5;">
+                                Bạn chưa cần thanh toán ngay lúc này. Sau khi bạn gửi đơn, Tiệm Hoa Lego sẽ chủ động liên hệ qua SĐT/Zalo để xác nhận mẫu hoa, phí ship và hướng dẫn thanh toán thuận tiện nhất (COD tiền mặt hoặc chuyển khoản) cho bạn.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cột phải: Tóm tắt đơn hàng -->
+                <div class="col-12 col-lg-5">
+                    <div class="auth-card p-4 rounded-4 shadow-sm position-sticky" style="top: 90px;">
+                        <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
+                            Đơn hàng của bạn ({{ total_quantity }} món)
+                        </h5>
+
+                        <div class="checkout-items-list mb-3" style="max-height: 320px; overflow-y: auto;">
+                            {% for item in items %}
+                            {% set p = item.product %}
+                            <div class="d-flex align-items-center justify-content-between py-2 border-bottom" style="border-color: rgba(33, 36, 61, 0.05) !important;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-2 overflow-hidden border flex-shrink-0" style="width: 50px; height: 50px; background: #fafafa;">
+                                        {% if p.thumbnail %}
+                                        <img src="{{ url_for('static', filename='uploads/' + p.thumbnail) }}" alt="{{ p.name }}" class="w-100 h-100 object-fit-cover">
+                                        {% else %}
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">🌸</div>
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div class="fw-semibold text-dark small text-truncate" style="max-width: 180px;">{{ p.name }}</div>
+                                        <div class="text-muted" style="font-size: 0.78rem;">Số lượng: x{{ item.quantity }}</div>
+                                    </div>
+                                </div>
+                                <div class="fw-bold text-danger small">
+                                    {{ "{:,.0f}".format(item.subtotal) }} đ
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-2 small text-secondary">
+                            <span>Tổng tiền hoa:</span>
+                            <span class="text-dark fw-semibold">{{ "{:,.0f}".format(total_price) }} đ</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between mb-3 small text-secondary">
+                            <span>Phí vận chuyển:</span>
+                            <span class="text-success fw-semibold">Liên hệ báo sau</span>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-2 mb-4 border-top" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                            <span class="fw-bold text-dark" style="font-size: 1.05rem;">Tổng cộng:</span>
+                            <span class="fw-bold fs-4 text-danger">
+                                {{ "{:,.0f}".format(total_price) }} đ
+                            </span>
+                        </div>
+
+                        <button type="submit" class="btn btn-auth w-100 py-3 fw-bold rounded-3 shadow-sm" style="font-size: 1.05rem;">
+                            💐 Xác nhận đặt đơn hàng
+                        </button>
+
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('view_cart') }}" class="text-decoration-none small text-muted">
+                                ← Quay lại chỉnh sửa giỏ hàng
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endblock %}

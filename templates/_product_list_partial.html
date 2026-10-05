@@ -4,7 +4,7 @@
         {% if search_query or selected_category %}
             Kết quả tìm kiếm
             <small class="fs-6 text-muted ms-2">
-                ({{ products|length }} sản phẩm{% if search_query %} cho "{{ search_query }}"{% endif %})
+                ({{ pagination.total if pagination else products|length }} sản phẩm{% if search_query %} cho "{{ search_query }}"{% endif %})
             </small>
         {% else %}
             Sản phẩm mới nhất
@@ -54,3 +54,29 @@
     </div>
     {% endfor %}
 </div>
+
+<!-- PHÂN TRANG (chỉ xuất hiện ở /products — trang chủ dùng giới hạn 60 kết quả, không phân trang) -->
+{% if pagination and pagination.pages > 1 %}
+<nav class="mt-4" aria-label="Phân trang sản phẩm">
+    <ul class="pagination justify-content-center flex-wrap" id="productsPagination">
+        <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+            <a class="page-link page-link-ajax" href="{{ url_for('products', page=pagination.prev_num, q=search_query or None, category=selected_category or None) }}"
+               data-page="{{ pagination.prev_num or 1 }}">‹ Trước</a>
+        </li>
+        {% for num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if num %}
+                <li class="page-item {% if num == pagination.page %}active{% endif %}">
+                    <a class="page-link page-link-ajax" href="{{ url_for('products', page=num, q=search_query or None, category=selected_category or None) }}"
+                       data-page="{{ num }}">{{ num }}</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+            {% endif %}
+        {% endfor %}
+        <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+            <a class="page-link page-link-ajax" href="{{ url_for('products', page=pagination.next_num, q=search_query or None, category=selected_category or None) }}"
+               data-page="{{ pagination.next_num or pagination.pages }}">Sau ›</a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
