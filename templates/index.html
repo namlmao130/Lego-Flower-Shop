@@ -7,8 +7,11 @@
 
         <!-- Cột trái: Text hero -->
         <div class="col-12 col-lg-5 d-flex flex-column justify-content-center" style="position:relative; z-index:2;">
-            <p class="mb-2 text-uppercase" style="letter-spacing:3px; font-size:0.85rem; font-weight:800; background:linear-gradient(90deg, #d41414 0%, #e87500 16%, #c9a600 32%, #168a2f 48%, #1264b3 64%, #3f27a8 80%, #8c168f 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;">Lego Flower Bouquet</p>
-            <p class="fs-5 mb-4" style="color:#12100d;">Bộ sưu tập hoa Lego cao cấp — món quà tinh tế cho mọi dịp đặc biệt</p>
+            <p class="mb-2 text-uppercase"
+                style="letter-spacing:3px; font-size:0.85rem; font-weight:800; background:linear-gradient(90deg, #d41414 0%, #e87500 16%, #c9a600 32%, #168a2f 48%, #1264b3 64%, #3f27a8 80%, #8c168f 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;">
+                Lego Flower Bouquet</p>
+            <p class="fs-5 mb-4" style="color:#12100d;">Bộ sưu tập hoa Lego cao cấp <br> Món quà tinh tế cho mọi dịp đặc
+                biệt</p>
             <div>
                 <a href="{{ url_for('products') }}" class="btn btn-primary btn-lg">Khám phá bộ sưu tập</a>
             </div>
@@ -25,16 +28,19 @@
                     <div style="position:absolute;top:-6px;left:-6px;width:6px;height:6px;background:#fff128;"></div>
                     <div style="position:absolute;top:-6px;right:-6px;width:6px;height:6px;background:#fff128;"></div>
                     <div style="position:absolute;bottom:-6px;left:-6px;width:6px;height:6px;background:#fff128;"></div>
-                    <div style="position:absolute;bottom:-6px;right:-6px;width:6px;height:6px;background:#fff128;"></div>
+                    <div style="position:absolute;bottom:-6px;right:-6px;width:6px;height:6px;background:#fff128;">
+                    </div>
                 </div>
 
                 <!-- Cards track -->
-                <div id="heroCardsTrack" style="position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
+                <div id="heroCardsTrack"
+                    style="position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center;">
                     {% for product in carousel_products %}
                     <a class="hero-card" data-hidx="{{ loop.index0 }}"
-                       href="{{ url_for('product_detail', product_id=product.id) }}">
+                        href="{{ url_for('product_detail', product_id=product.id) }}">
                         {% if product.thumbnail %}
-                        <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}" alt="{{ product.name }}">
+                        <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}"
+                            alt="{{ product.name }}">
                         {% else %}
                         <span class="hero-card-placeholder">Chưa có ảnh</span>
                         {% endif %}
@@ -48,11 +54,14 @@
             <!-- Controls -->
             <div class="d-flex flex-column align-items-center justify-content-center mt-3 w-100">
                 <div class="d-flex align-items-center justify-content-center gap-3">
-                    <button id="heroPrevBtn" class="hero-carousel-btn" type="button" aria-label="Previous">&larr; PREV</button>
-                    <button id="heroNextBtn" class="hero-carousel-btn" type="button" aria-label="Next">NEXT &rarr;</button>
+                    <button id="heroPrevBtn" class="hero-carousel-btn" type="button"
+                        aria-label="Previous">&larr;</button>
+                    <button id="heroNextBtn" class="hero-carousel-btn" type="button" aria-label="Next">&rarr;</button>
                 </div>
                 <div class="mt-2">
-                    <button id="heroAutoBtn" style="font-size:10px;font-family:monospace;color:#a89e8c;background:transparent;border:none;cursor:pointer;letter-spacing:1px;color:#0c1116">⏸ AUTO</button>
+                    <button id="heroAutoBtn"
+                        style="font-size:10px;font-family:monospace;color:#a89e8c;background:transparent;border:none;cursor:pointer;letter-spacing:1px;color:#0c1116">⏸
+                        AUTO</button>
                 </div>
             </div>
         </div>
@@ -60,7 +69,17 @@
 </div>
 
 <style>
-    @keyframes heroPulse { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+    @keyframes heroPulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: .3;
+        }
+    }
 
     .hero-carousel-stage {
         position: relative;
@@ -100,16 +119,15 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        padding: 6px 22px;
-        border-radius: 9999px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
         border: 1.5px solid #1a1a1a;
         background-color: rgba(250, 248, 245, 0.85);
         color: #1a1a1a;
         font-family: 'Nunito', -apple-system, sans-serif;
-        font-size: 0.85rem;
+        font-size: 1.25rem;
         font-weight: 700;
-        letter-spacing: 0.5px;
         cursor: pointer;
         transition: all 0.2s ease;
         user-select: none;
@@ -281,104 +299,104 @@
 </style>
 
 <script>
-(function () {
-    const hCards = Array.from(document.querySelectorAll('.hero-card'));
-    const hTotal = hCards.length;
-    const hSpacing = 235;
-    let hIdx = 1;
-    let hAuto = true;
-    let hTimer = null;
+    (function () {
+        const hCards = Array.from(document.querySelectorAll('.hero-card'));
+        const hTotal = hCards.length;
+        const hSpacing = 235;
+        let hIdx = 1;
+        let hAuto = true;
+        let hTimer = null;
 
-    if (!hTotal) return;
+        if (!hTotal) return;
 
-    function hUpdate(animate) {
-        const isMobile = window.innerWidth < 768;
+        function hUpdate(animate) {
+            const isMobile = window.innerWidth < 768;
+            hCards.forEach((card, i) => {
+                let offset = (i - hIdx) % hTotal;
+                if (offset < -Math.floor(hTotal / 2)) offset += hTotal;
+                if (offset > Math.floor((hTotal - 1) / 2)) offset -= hTotal;
+                const abs = Math.abs(offset);
+                const scale = offset === 0 ? 1.06 : Math.max(0.78, 1 - abs * 0.12);
+
+                // Trên mobile: chỉ hiển thị thẻ chính giữa (offset === 0), ẩn hoàn toàn các thẻ bên cạnh để không vướng khung
+                let opacity;
+                if (isMobile) {
+                    opacity = (abs === 0) ? 1 : 0;
+                } else {
+                    opacity = abs > 2 ? 0 : (offset === 0 ? 1 : Math.max(0.3, 1 - abs * 0.3));
+                }
+
+                const spacing = isMobile ? 320 : hSpacing;
+
+                card.style.transition = animate ? 'transform .5s cubic-bezier(.25,1,.5,1), opacity .4s ease, filter .4s ease' : 'none';
+                card.style.transform = `translateX(${offset * spacing}px) scale(${scale})`;
+                card.style.zIndex = 20 - abs;
+                card.style.opacity = opacity;
+                card.style.filter = offset === 0 ? 'none' : `blur(${abs * 0.5}px)`;
+                card.style.pointerEvents = offset === 0 ? 'auto' : 'none';
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            hUpdate(false);
+        });
+
+        function hNext() { hIdx = (hIdx + 1) % hTotal; hUpdate(true); }
+        function hPrev() { hIdx = (hIdx - 1 + hTotal) % hTotal; hUpdate(true); }
+        function hStartAuto() { hTimer = setInterval(hNext, 2800); }
+        function hStopAuto() { clearInterval(hTimer); hTimer = null; }
+        function hReset() { if (hAuto) { hStopAuto(); hStartAuto(); } }
+
+        const prevBtn = document.getElementById('heroPrevBtn');
+        const nextBtn = document.getElementById('heroNextBtn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                hPrev();
+                hReset();
+            });
+        }
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                hNext();
+                hReset();
+            });
+        }
+
+        document.getElementById('heroAutoBtn').addEventListener('click', () => {
+            hAuto = !hAuto;
+            document.getElementById('heroAutoBtn').textContent = hAuto ? '⏸ AUTO' : '▶ AUTO';
+            hAuto ? hStartAuto() : hStopAuto();
+        });
+
         hCards.forEach((card, i) => {
-            let offset = (i - hIdx) % hTotal;
-            if (offset < -Math.floor(hTotal / 2)) offset += hTotal;
-            if (offset > Math.floor((hTotal - 1) / 2)) offset -= hTotal;
-            const abs = Math.abs(offset);
-            const scale = offset === 0 ? 1.06 : Math.max(0.78, 1 - abs * 0.12);
-            
-            // Trên mobile: chỉ hiển thị thẻ chính giữa (offset === 0), ẩn hoàn toàn các thẻ bên cạnh để không vướng khung
-            let opacity;
-            if (isMobile) {
-                opacity = (abs === 0) ? 1 : 0;
-            } else {
-                opacity = abs > 2 ? 0 : (offset === 0 ? 1 : Math.max(0.3, 1 - abs * 0.3));
-            }
-            
-            const spacing = isMobile ? 320 : hSpacing;
-
-            card.style.transition = animate ? 'transform .5s cubic-bezier(.25,1,.5,1), opacity .4s ease, filter .4s ease' : 'none';
-            card.style.transform = `translateX(${offset * spacing}px) scale(${scale})`;
-            card.style.zIndex = 20 - abs;
-            card.style.opacity = opacity;
-            card.style.filter = offset === 0 ? 'none' : `blur(${abs * 0.5}px)`;
-            card.style.pointerEvents = offset === 0 ? 'auto' : 'none';
+            card.addEventListener('click', () => { hIdx = i; hUpdate(true); hReset(); });
         });
-    }
 
-    window.addEventListener('resize', () => {
+        // Swipe mượt mà trên toàn bộ khung carousel (phân biệt vuốt ngang và vuốt dọc)
+        let hTouchX = 0;
+        let hTouchY = 0;
+        const stage = document.querySelector('.hero-carousel-stage');
+        if (stage) {
+            stage.addEventListener('touchstart', e => {
+                hTouchX = e.touches[0].clientX;
+                hTouchY = e.touches[0].clientY;
+            }, { passive: true });
+
+            stage.addEventListener('touchend', e => {
+                const dx = e.changedTouches[0].clientX - hTouchX;
+                const dy = e.changedTouches[0].clientY - hTouchY;
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 35) {
+                    if (dx > 0) { hPrev(); hReset(); }
+                    else { hNext(); hReset(); }
+                }
+            }, { passive: true });
+        }
+
         hUpdate(false);
-    });
-
-    function hNext() { hIdx = (hIdx + 1) % hTotal; hUpdate(true); }
-    function hPrev() { hIdx = (hIdx - 1 + hTotal) % hTotal; hUpdate(true); }
-    function hStartAuto() { hTimer = setInterval(hNext, 2800); }
-    function hStopAuto() { clearInterval(hTimer); hTimer = null; }
-    function hReset() { if (hAuto) { hStopAuto(); hStartAuto(); } }
-
-    const prevBtn = document.getElementById('heroPrevBtn');
-    const nextBtn = document.getElementById('heroNextBtn');
-    if (prevBtn) {
-        prevBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            hPrev();
-            hReset();
-        });
-    }
-    if (nextBtn) {
-        nextBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            hNext();
-            hReset();
-        });
-    }
-
-    document.getElementById('heroAutoBtn').addEventListener('click', () => {
-        hAuto = !hAuto;
-        document.getElementById('heroAutoBtn').textContent = hAuto ? '⏸ AUTO' : '▶ AUTO';
-        hAuto ? hStartAuto() : hStopAuto();
-    });
-
-    hCards.forEach((card, i) => {
-        card.addEventListener('click', () => { hIdx = i; hUpdate(true); hReset(); });
-    });
-
-    // Swipe mượt mà trên toàn bộ khung carousel (phân biệt vuốt ngang và vuốt dọc)
-    let hTouchX = 0;
-    let hTouchY = 0;
-    const stage = document.querySelector('.hero-carousel-stage');
-    if (stage) {
-        stage.addEventListener('touchstart', e => {
-            hTouchX = e.touches[0].clientX;
-            hTouchY = e.touches[0].clientY;
-        }, { passive: true });
-
-        stage.addEventListener('touchend', e => {
-            const dx = e.changedTouches[0].clientX - hTouchX;
-            const dy = e.changedTouches[0].clientY - hTouchY;
-            if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 35) {
-                if (dx > 0) { hPrev(); hReset(); }
-                else { hNext(); hReset(); }
-            }
-        }, { passive: true });
-    }
-
-    hUpdate(false);
-    hStartAuto();
-})();
+        hStartAuto();
+    })();
 </script>
 
 <!-- ============================================ -->
@@ -389,28 +407,26 @@
         <!-- Ô tìm kiếm từ khóa -->
         <div class="search-bar-wrapper">
             <span class="search-icon">🔍</span>
-            <input type="text" enterkeyhint="search" name="q" id="productSearchInput" class="search-input" 
-                   placeholder="Tìm kiếm sản phẩm hoa Lego..." 
-                   value="{{ search_query or '' }}" autocomplete="off">
-            <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Xóa từ khóa" 
-                    style="background:none;border:none;cursor:pointer;display:{% if search_query %}flex{% else %}none{% endif %};">&times;</button>
+            <input type="text" enterkeyhint="search" name="q" id="productSearchInput" class="search-input"
+                placeholder="Tìm kiếm sản phẩm hoa Lego..." value="{{ search_query or '' }}" autocomplete="off">
+            <button type="button" id="clearSearchBtn" class="clear-search-btn" title="Xóa từ khóa"
+                style="background:none;border:none;cursor:pointer;display:{% if search_query %}flex{% else %}none{% endif %};">&times;</button>
             <button type="submit" class="search-btn">Tìm kiếm</button>
         </div>
 
         <!-- Thanh lọc theo danh mục -->
         <div class="category-filter-area">
-            <span class="category-filter-label">🏷️ Danh mục:</span>
+            <span class="category-filter-label">Danh mục:</span>
             <div class="category-pills-list">
-                <a href="{{ url_for('index', q=search_query if search_query else None) }}" 
-                   class="category-pill-btn {% if not selected_category %}active{% endif %}"
-                   data-category="">
-                   Tất cả
+                <a href="{{ url_for('index', q=search_query if search_query else None) }}"
+                    class="category-pill-btn {% if not selected_category %}active{% endif %}" data-category="">
+                    Tất cả
                 </a>
                 {% for cat in categories %}
-                <a href="{{ url_for('index', category=cat.id, q=search_query if search_query else None) }}" 
-                   class="category-pill-btn {% if selected_category == cat.id %}active{% endif %}"
-                   data-category="{{ cat.id }}">
-                   {{ cat.name }}
+                <a href="{{ url_for('index', category=cat.id, q=search_query if search_query else None) }}"
+                    class="category-pill-btn {% if selected_category == cat.id %}active{% endif %}"
+                    data-category="{{ cat.id }}">
+                    {{ cat.name }}
                 </a>
                 {% endfor %}
             </div>
@@ -426,126 +442,126 @@
 </div>
 
 <script>
-(function () {
-    const searchForm = document.getElementById('searchFilterForm');
-    const searchInput = document.getElementById('productSearchInput');
-    const categoryHidden = document.getElementById('categoryHiddenInput');
-    const categoryPills = document.querySelectorAll('.category-pill-btn');
-    const productsContainer = document.getElementById('productsSectionContainer');
-    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    (function () {
+        const searchForm = document.getElementById('searchFilterForm');
+        const searchInput = document.getElementById('productSearchInput');
+        const categoryHidden = document.getElementById('categoryHiddenInput');
+        const categoryPills = document.querySelectorAll('.category-pill-btn');
+        const productsContainer = document.getElementById('productsSectionContainer');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
 
-    let currentCategory = '{{ selected_category or "" }}';
-    let debounceTimer = null;
+        let currentCategory = '{{ selected_category or "" }}';
+        let debounceTimer = null;
 
-    function fetchFilteredProducts(q, categoryId) {
-        if (!productsContainer) return;
-        productsContainer.style.transition = 'opacity 0.2s ease';
-        productsContainer.style.opacity = '0.4';
+        function fetchFilteredProducts(q, categoryId) {
+            if (!productsContainer) return;
+            productsContainer.style.transition = 'opacity 0.2s ease';
+            productsContainer.style.opacity = '0.4';
 
-        const params = new URLSearchParams();
-        if (q && q.trim()) params.set('q', q.trim());
-        if (categoryId) params.set('category', categoryId);
-        params.set('ajax', '1');
+            const params = new URLSearchParams();
+            if (q && q.trim()) params.set('q', q.trim());
+            if (categoryId) params.set('category', categoryId);
+            params.set('ajax', '1');
 
-        fetch(`/?${params.toString()}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(res => {
-            if (!res.ok) throw new Error('Network error');
-            return res.text();
-        })
-        .then(html => {
-            productsContainer.innerHTML = html;
-            productsContainer.style.opacity = '1';
+            fetch(`/?${params.toString()}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+                .then(res => {
+                    if (!res.ok) throw new Error('Network error');
+                    return res.text();
+                })
+                .then(html => {
+                    productsContainer.innerHTML = html;
+                    productsContainer.style.opacity = '1';
 
-            // Cập nhật URL trình duyệt (không reload trang và không ảnh hưởng carousel ở trên)
-            params.delete('ajax');
-            const newUrl = params.toString() ? `/?${params.toString()}` : '/';
-            window.history.replaceState({}, '', newUrl);
+                    // Cập nhật URL trình duyệt (không reload trang và không ảnh hưởng carousel ở trên)
+                    params.delete('ajax');
+                    const newUrl = params.toString() ? `/?${params.toString()}` : '/';
+                    window.history.replaceState({}, '', newUrl);
 
-            // Ẩn/hiện nút xóa từ khóa
-            if (clearSearchBtn) {
-                clearSearchBtn.style.display = (q && q.trim()) ? 'flex' : 'none';
-            }
-        })
-        .catch(err => {
-            console.error('Lỗi khi tải danh sách sản phẩm:', err);
-            productsContainer.style.opacity = '1';
-        });
-    }
-
-    // Submit form tìm kiếm
-    if (searchForm) {
-        searchForm.addEventListener('submit', function (e) {
-            e.preventDefault();
-            clearTimeout(debounceTimer);
-            fetchFilteredProducts(searchInput.value, currentCategory);
-        });
-    }
-
-    // Khi gõ chữ: CHỈ hiện/ẩn nút xóa (x), KHÔNG gửi request ngầm làm đơ bàn phím điện thoại
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            if (clearSearchBtn) {
-                clearSearchBtn.style.display = this.value.trim() ? 'flex' : 'none';
-            }
-        });
-
-        // Nhấn phím Enter/Tìm trên bàn phím ảo điện thoại để tìm kiếm
-        searchInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                fetchFilteredProducts(this.value, currentCategory);
-                this.blur(); // Thu gọn bàn phím ảo để người dùng xem kết quả
-            }
-        });
-    }
-
-    // Nút xóa từ khóa (x) trong ô tìm kiếm
-    if (clearSearchBtn) {
-        clearSearchBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            searchInput.value = '';
-            clearSearchBtn.style.display = 'none';
-            fetchFilteredProducts('', currentCategory);
-            searchInput.focus();
-        });
-    }
-
-    // Lọc theo danh mục khi click pill
-    categoryPills.forEach(pill => {
-        pill.addEventListener('click', function (e) {
-            e.preventDefault();
-            const catId = this.dataset.category || '';
-            currentCategory = catId;
-            if (categoryHidden) categoryHidden.value = catId;
-
-            categoryPills.forEach(p => p.classList.remove('active'));
-            this.classList.add('active');
-
-            fetchFilteredProducts(searchInput ? searchInput.value : '', currentCategory);
-        });
-    });
-
-    // Bắt sự kiện click nút "Xóa bộ lọc" bên trong container sản phẩm
-    if (productsContainer) {
-        productsContainer.addEventListener('click', function (e) {
-            if (e.target.closest('.btn-clear-filters')) {
-                e.preventDefault();
-                if (searchInput) searchInput.value = '';
-                currentCategory = '';
-                if (categoryHidden) categoryHidden.value = '';
-                if (clearSearchBtn) clearSearchBtn.style.display = 'none';
-
-                categoryPills.forEach(p => {
-                    if (!p.dataset.category) p.classList.add('active');
-                    else p.classList.remove('active');
+                    // Ẩn/hiện nút xóa từ khóa
+                    if (clearSearchBtn) {
+                        clearSearchBtn.style.display = (q && q.trim()) ? 'flex' : 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error('Lỗi khi tải danh sách sản phẩm:', err);
+                    productsContainer.style.opacity = '1';
                 });
+        }
 
-                fetchFilteredProducts('', '');
-            }
+        // Submit form tìm kiếm
+        if (searchForm) {
+            searchForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                clearTimeout(debounceTimer);
+                fetchFilteredProducts(searchInput.value, currentCategory);
+            });
+        }
+
+        // Khi gõ chữ: CHỈ hiện/ẩn nút xóa (x), KHÔNG gửi request ngầm làm đơ bàn phím điện thoại
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                if (clearSearchBtn) {
+                    clearSearchBtn.style.display = this.value.trim() ? 'flex' : 'none';
+                }
+            });
+
+            // Nhấn phím Enter/Tìm trên bàn phím ảo điện thoại để tìm kiếm
+            searchInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    fetchFilteredProducts(this.value, currentCategory);
+                    this.blur(); // Thu gọn bàn phím ảo để người dùng xem kết quả
+                }
+            });
+        }
+
+        // Nút xóa từ khóa (x) trong ô tìm kiếm
+        if (clearSearchBtn) {
+            clearSearchBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                searchInput.value = '';
+                clearSearchBtn.style.display = 'none';
+                fetchFilteredProducts('', currentCategory);
+                searchInput.focus();
+            });
+        }
+
+        // Lọc theo danh mục khi click pill
+        categoryPills.forEach(pill => {
+            pill.addEventListener('click', function (e) {
+                e.preventDefault();
+                const catId = this.dataset.category || '';
+                currentCategory = catId;
+                if (categoryHidden) categoryHidden.value = catId;
+
+                categoryPills.forEach(p => p.classList.remove('active'));
+                this.classList.add('active');
+
+                fetchFilteredProducts(searchInput ? searchInput.value : '', currentCategory);
+            });
         });
-    }
-})();
+
+        // Bắt sự kiện click nút "Xóa bộ lọc" bên trong container sản phẩm
+        if (productsContainer) {
+            productsContainer.addEventListener('click', function (e) {
+                if (e.target.closest('.btn-clear-filters')) {
+                    e.preventDefault();
+                    if (searchInput) searchInput.value = '';
+                    currentCategory = '';
+                    if (categoryHidden) categoryHidden.value = '';
+                    if (clearSearchBtn) clearSearchBtn.style.display = 'none';
+
+                    categoryPills.forEach(p => {
+                        if (!p.dataset.category) p.classList.add('active');
+                        else p.classList.remove('active');
+                    });
+
+                    fetchFilteredProducts('', '');
+                }
+            });
+        }
+    })();
 </script>
 {% endblock %}

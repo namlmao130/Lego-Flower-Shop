@@ -14,7 +14,10 @@ from sqlalchemy import func, event
 from sqlalchemy.orm import selectinload
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_compress import Compress
+try:
+    from flask_compress import Compress
+except ImportError:
+    Compress = None
 from flask_caching import Cache
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 from PIL import Image, ImageOps
@@ -29,8 +32,12 @@ app.config.from_object(Config)
 if os.environ.get('TRUST_PROXY', 'false').lower() == 'true':
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-# Nén response (HTML/CSS/JS/JSON) bằng gzip
-Compress(app)
+# Nén response (HTML/CSS/JS/JSON) nếu môi trường có sẵn thư viện
+if Compress:
+    try:
+        Compress(app)
+    except Exception:
+        pass
 
 # Cache RAM / Redis cho dữ liệu ít thay đổi
 cache = Cache(app)
@@ -845,7 +852,6 @@ def cart_add():
     items, total_price, total_quantity = get_cart_details()
 
     if request.is_json or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        free_shipping_threshold = 500000
         return jsonify({
             'success': True,
             'cart_count': total_quantity,
@@ -854,9 +860,7 @@ def cart_add():
             'product_price_str': f"{product.price:,.0f} đ",
             'thumbnail': url_for('static', filename='uploads/' + product.thumbnail) if product.thumbnail else None,
             'total_price': total_price,
-            'total_price_str': f"{total_price:,.0f} đ",
-            'free_shipping_needed': max(0, free_shipping_threshold - total_price),
-            'free_shipping_threshold': free_shipping_threshold
+            'total_price_str': f"{total_price:,.0f} đ"
         })
 
     flash(f'Đã thêm "{product.name}" vào giỏ hàng!', 'success')
@@ -904,9 +908,6 @@ def cart_update():
         item_subtotal = 0
         if product and pid_str in cart:
             item_subtotal = product.price * cart[pid_str]
-        free_shipping_threshold = 500000
-        free_shipping_needed = max(0, free_shipping_threshold - total_price)
-        free_shipping_percent = min(100, int((total_price / free_shipping_threshold) * 100)) if free_shipping_threshold > 0 else 100
         return jsonify({
             'success': True,
             'cart_count': total_quantity,
@@ -917,10 +918,7 @@ def cart_update():
             'total_quantity': total_quantity,
             'quantity': cart.get(pid_str, 0),
             'max_reached': max_reached,
-            'available_stock': product.stock if product else 0,
-            'free_shipping_needed': free_shipping_needed,
-            'free_shipping_percent': free_shipping_percent,
-            'free_shipping_threshold': free_shipping_threshold
+            'available_stock': product.stock if product else 0
         })
 
     return redirect(url_for('view_cart'))

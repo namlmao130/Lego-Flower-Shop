@@ -10,20 +10,23 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb small mb-1">
                     <li class="breadcrumb-item">
-                        <a href="{{ url_for('index') }}" class="text-decoration-none" style="color: var(--lego-gold);">Trang chủ</a>
+                        <a href="{{ url_for('index') }}" class="text-decoration-none"
+                            style="color: var(--lego-gold);">Trang chủ</a>
                     </li>
                     <li class="breadcrumb-item active text-dark" aria-current="page">Giỏ hàng</li>
                 </ol>
             </nav>
             <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2">
                 <div>
-                    <h2 class="fw-bold mb-1" style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">
+                    <h2 class="fw-bold mb-1"
+                        style="font-family:'Playfair Display',serif; color:#21243D; letter-spacing: -0.3px;">
                         Giỏ hàng của bạn
                     </h2>
-                    <p class="text-muted small mb-0">Kiểm tra các mẫu hoa đã chọn và tiến hành đặt đơn để tiệm chuẩn bị chu đáo nhất.</p>
+
                 </div>
-                <a href="{{ url_for('my_orders_view') }}" class="btn btn-outline-dark rounded-pill px-3 py-1 small fw-semibold align-self-start align-self-sm-auto">
-                    📦 Xem các đơn đã đặt
+                <a href="{{ url_for('my_orders_view') }}"
+                    class="btn btn-outline-dark rounded-pill px-3 py-1 small fw-semibold align-self-start align-self-sm-auto">
+                    Xem các đơn đã đặt
                 </a>
             </div>
         </div>
@@ -31,61 +34,38 @@
         {% if not items %}
         <!-- GIỎ HÀNG TRỐNG -->
         <div class="auth-card p-5 rounded-4 shadow-sm text-center my-4">
-            <div class="mb-3" style="font-size: 4rem;">🧺</div>
-            <h4 class="fw-bold mb-2" style="font-family:'Playfair Display',serif; color: #21243D;">Giỏ hàng hiện đang trống</h4>
+
+            <h4 class="fw-bold mb-2" style="font-family:'Playfair Display',serif; color: #21243D;">Giỏ hàng hiện đang
+                trống</h4>
             <p class="text-muted small mb-4 mx-auto" style="max-width: 420px;">
                 Bạn chưa thêm đóa hoa nào vào giỏ hàng. Hãy dạo quanh các bộ sưu tập hoa Lego tuyệt đẹp của tiệm nhé!
             </p>
             <div class="d-flex justify-content-center gap-2 flex-wrap">
                 <a href="{{ url_for('products') }}" class="btn btn-auth px-4 py-2 fw-semibold shadow-sm">
-                    🌸 Khám phá các mẫu hoa ngay
+                    Khám phá các mẫu hoa ngay
                 </a>
-                <a href="{{ url_for('my_orders_view') }}" class="btn btn-outline-secondary px-4 py-2 fw-semibold rounded-pill">
-                    📦 Tra cứu đơn hàng đã đặt
+                <a href="{{ url_for('my_orders_view') }}"
+                    class="btn btn-outline-secondary px-4 py-2 fw-semibold rounded-pill">
+                    Tra cứu đơn hàng đã đặt
                 </a>
             </div>
         </div>
         {% else %}
-
-        <!-- THANH TIẾN ĐỘ MIỄN PHÍ VẬN CHUYỂN -->
-        {% set threshold = 500000 %}
-        {% set needed = threshold - total_price if total_price < threshold else 0 %}
-        {% set percent = ((total_price / threshold) * 100) | round | int if threshold > 0 else 100 %}
-        {% if percent > 100 %}{% set percent = 100 %}{% endif %}
-
-        <div class="auth-card p-3 p-md-4 rounded-4 shadow-sm mb-4" style="background: linear-gradient(135deg, #fffcf5 0%, #fff9e6 100%); border: 1.5px solid rgba(201, 162, 39, 0.35);">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <div class="d-flex align-items-center gap-2">
-                    <span style="font-size: 1.3rem;">🚚</span>
-                    <strong class="text-dark small" id="freeShippingNoticeText">
-                        {% if needed > 0 %}
-                        Mua thêm <span class="text-danger font-monospace fw-bold" id="freeShippingNeededText">{{ "{:,.0f}".format(needed) }} đ</span> để được <span class="text-success fw-bold">MIỄN PHÍ GIAO HÀNG</span> toàn quốc!
-                        {% else %}
-                        🎉 Đơn hàng của bạn đã đủ điều kiện <span class="text-success fw-bold">MIỄN PHÍ VẬN CHUYỂN</span>!
-                        {% endif %}
-                    </strong>
-                </div>
-                <span class="badge bg-warning text-dark font-monospace small" id="freeShippingBadge">
-                    {{ percent }}%
-                </span>
-            </div>
-            <div class="progress rounded-pill" style="height: 10px; background: rgba(0,0,0,0.06);">
-                <div id="freeShippingProgressBar" class="progress-bar progress-bar-striped progress-bar-animated {{ 'bg-success' if percent >= 100 else 'bg-warning' }}" 
-                     role="progressbar" style="width: {{ percent }}%; transition: width 0.4s ease;" aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-        </div>
 
         <!-- DANH SÁCH SẢN PHẨM TRONG GIỎ HÀNG -->
         <div class="row g-4">
             <!-- Cột trái: Bảng sản phẩm -->
             <div class="col-12 col-lg-8">
                 <div class="auth-card p-3 p-md-4 rounded-4 shadow-sm">
-                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom" style="border-color: rgba(33, 36, 61, 0.08) !important;">
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom"
+                        style="border-color: rgba(33, 36, 61, 0.08) !important;">
                         <h5 class="fw-bold mb-0" style="color: #21243D; font-size: 1.1rem;">
                             Danh sách sản phẩm (<span id="cartCountHeader">{{ total_quantity }}</span>)
                         </h5>
-                        <form method="POST" action="{{ url_for('cart_clear') }}" onsubmit="return confirm('Bạn có chắc muốn xóa toàn bộ sản phẩm khỏi giỏ hàng?');">
-                            <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-0" style="font-size: 0.85rem;">
+                        <form method="POST" action="{{ url_for('cart_clear') }}"
+                            onsubmit="return confirm('Bạn có chắc muốn xóa toàn bộ sản phẩm khỏi giỏ hàng?');">
+                            <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-0"
+                                style="font-size: 0.85rem;">
                                 🗑️ Xóa tất cả
                             </button>
                         </form>
@@ -94,48 +74,68 @@
                     <div class="cart-items-list">
                         {% for item in items %}
                         {% set p = item.product %}
-                        <div class="cart-item-row d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 py-3 border-bottom" id="cartRow-{{ p.id }}" style="border-color: rgba(33, 36, 61, 0.06) !important;">
+                        <div class="cart-item-row d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 py-3 border-bottom"
+                            id="cartRow-{{ p.id }}" style="border-color: rgba(33, 36, 61, 0.06) !important;">
                             <!-- Ảnh và Tên -->
                             <div class="d-flex align-items-center gap-3">
-                                <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-decoration-none flex-shrink-0">
-                                    <div class="cart-item-img-box rounded-3 overflow-hidden border" style="width: 76px; height: 76px; background: #fafafa;">
+                                <a href="{{ url_for('product_detail', product_id=p.id) }}"
+                                    class="text-decoration-none flex-shrink-0">
+                                    <div class="cart-item-img-box rounded-3 overflow-hidden border"
+                                        style="width: 76px; height: 76px; background: #fafafa;">
                                         {% if p.thumbnail %}
-                                        <img src="{{ url_for('static', filename='uploads/' + p.thumbnail) }}" alt="{{ p.name }}" class="w-100 h-100 object-fit-cover">
+                                        <img src="{{ url_for('static', filename='uploads/' + p.thumbnail) }}"
+                                            alt="{{ p.name }}" class="w-100 h-100 object-fit-cover">
                                         {% else %}
-                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="font-size: 1.5rem;">🌸</div>
+
                                         {% endif %}
                                     </div>
                                 </a>
                                 <div>
-                                    <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-decoration-none fw-semibold text-dark d-block mb-1" style="font-size: 0.98rem;">
+                                    <a href="{{ url_for('product_detail', product_id=p.id) }}"
+                                        class="text-decoration-none fw-semibold text-dark d-block mb-1"
+                                        style="font-size: 0.98rem;">
                                         {{ p.name }}
                                     </a>
                                     <div class="text-danger fw-bold" style="font-size: 0.95rem;">
                                         {{ "{:,.0f}".format(p.price) }} đ
                                     </div>
-                                    {% if p.stock < 5 and p.stock > 0 %}
-                                    <span class="badge bg-warning-subtle text-warning-emphasis border" style="font-size: 0.72rem;">Chỉ còn {{ p.stock }} bó</span>
-                                    {% elif p.stock == 0 %}
-                                    <span class="badge bg-danger-subtle text-danger border" style="font-size: 0.72rem;">Tạm hết hàng</span>
-                                    {% endif %}
+                                    {% if p.stock < 5 and p.stock> 0 %}
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border"
+                                            style="font-size: 0.72rem;">Chỉ còn {{ p.stock }} bó</span>
+                                        {% elif p.stock == 0 %}
+                                        <span class="badge bg-danger-subtle text-danger border"
+                                            style="font-size: 0.72rem;">Tạm hết hàng</span>
+                                        {% endif %}
                                 </div>
                             </div>
 
                             <!-- Bộ tăng giảm số lượng & Thành tiền -->
-                            <div class="d-flex align-items-center justify-content-between justify-content-sm-end gap-4 ms-sm-auto">
-                                <div class="cart-qty-control d-inline-flex align-items-center border rounded-3 p-1 bg-light">
-                                    <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold btn-cart-minus" data-id="{{ p.id }}">−</button>
-                                    <input type="number" class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold cart-qty-input" 
-                                           data-id="{{ p.id }}" data-max="{{ p.stock }}" value="{{ item.quantity }}" min="1" max="{{ p.stock }}" style="width: 45px; box-shadow: none;">
-                                    <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold btn-cart-plus" data-id="{{ p.id }}" {{ 'disabled' if item.quantity >= p.stock else '' }}>+</button>
+                            <div
+                                class="d-flex align-items-center justify-content-between justify-content-sm-end gap-4 ms-sm-auto">
+                                <div
+                                    class="cart-qty-control d-inline-flex align-items-center border rounded-3 p-1 bg-light">
+                                    <button type="button"
+                                        class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold btn-cart-minus"
+                                        data-id="{{ p.id }}">−</button>
+                                    <input type="number"
+                                        class="form-control form-control-sm text-center border-0 bg-transparent fw-semibold cart-qty-input"
+                                        data-id="{{ p.id }}" data-max="{{ p.stock }}" value="{{ item.quantity }}"
+                                        min="1" max="{{ p.stock }}" style="width: 45px; box-shadow: none;">
+                                    <button type="button"
+                                        class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold btn-cart-plus"
+                                        data-id="{{ p.id }}" {{ 'disabled' if item.quantity>= p.stock else ''
+                                        }}>+</button>
                                 </div>
 
                                 <div class="text-end" style="min-width: 95px;">
-                                    <div class="fw-bold text-dark item-subtotal-val" id="subtotal-{{ p.id }}" style="font-size: 1.05rem;">
+                                    <div class="fw-bold text-dark item-subtotal-val" id="subtotal-{{ p.id }}"
+                                        style="font-size: 1.05rem;">
                                         {{ "{:,.0f}".format(item.subtotal) }} đ
                                     </div>
-                                    <form method="POST" action="{{ url_for('cart_remove', product_id=p.id) }}" class="m-0">
-                                        <button type="submit" class="btn btn-sm text-muted p-0 text-decoration-none" style="font-size: 0.78rem;" title="Xóa khỏi giỏ">
+                                    <form method="POST" action="{{ url_for('cart_remove', product_id=p.id) }}"
+                                        class="m-0">
+                                        <button type="submit" class="btn btn-sm text-muted p-0 text-decoration-none"
+                                            style="font-size: 0.78rem;" title="Xóa khỏi giỏ">
                                             ✕ Xóa
                                         </button>
                                     </form>
@@ -146,10 +146,11 @@
                     </div>
 
                     <div class="pt-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <a href="{{ url_for('products') }}" class="text-decoration-none small text-secondary d-inline-flex align-items-center gap-1 hover-gold">
-                            <span>‹</span> Tiếp tục chọn thêm hoa
+                        <a href="{{ url_for('products') }}"
+                            class="text-decoration-none small text-secondary d-inline-flex align-items-center gap-1 hover-gold">
+                            <span>‹</span> Tiếp tục mua
                         </a>
-                        <span class="text-muted small">Cập nhật số lượng hoàn toàn tự động</span>
+                        <span class="text-muted small">Cập nhật số lượng tự động</span>
                     </div>
                 </div>
             </div>
@@ -157,44 +158,50 @@
             <!-- Cột phải: Thẻ tóm tắt đơn hàng & Nút đặt đơn -->
             <div class="col-12 col-lg-4">
                 <div class="auth-card p-4 rounded-4 shadow-sm position-sticky" style="top: 90px;">
-                    <h5 class="fw-bold mb-3 pb-2 border-bottom" style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
+                    <h5 class="fw-bold mb-3 pb-2 border-bottom"
+                        style="font-family:'Playfair Display',serif; color: #21243D; border-color: rgba(33, 36, 61, 0.08) !important;">
                         Tóm tắt đơn hàng
                     </h5>
 
                     <div class="d-flex justify-content-between text-secondary mb-2 small">
                         <span>Số lượng sản phẩm:</span>
-                        <strong class="text-dark font-monospace" id="cartTotalQty">{{ total_quantity }} bó</strong>
+                        <strong class="text-dark font-monospace" id="cartTotalQty">{{ total_quantity }}</strong>
                     </div>
 
                     <div class="d-flex justify-content-between text-secondary mb-2 small">
                         <span>Tạm tính:</span>
-                        <strong class="text-dark font-monospace" id="cartSubtotal">{{ "{:,.0f}".format(total_price) }} đ</strong>
+                        <strong class="text-dark font-monospace" id="cartSubtotal">{{ "{:,.0f}".format(total_price) }}
+                            đ</strong>
                     </div>
 
                     <div class="d-flex justify-content-between text-secondary mb-3 small">
                         <span>Phí giao hàng:</span>
                         <span class="text-success fw-semibold" id="cartShippingNotice">
-                            {% if total_price >= 500000 %}Miễn phí giao hàng{% else %}Tính khi chốt đơn{% endif %}
+                            Liên hệ báo sau
                         </span>
                     </div>
 
                     <div class="border-top pt-3 mb-3" style="border-color: rgba(33, 36, 61, 0.08) !important;">
                         <div class="d-flex justify-content-between align-items-center mb-1">
                             <span class="fw-bold text-dark fs-6">Tổng tiền:</span>
-                            <span class="fw-bold fs-4 text-danger font-monospace" id="cartTotalPrice">{{ "{:,.0f}".format(total_price) }} đ</span>
+                            <span class="fw-bold fs-4 text-danger font-monospace" id="cartTotalPrice">{{
+                                "{:,.0f}".format(total_price) }} đ</span>
                         </div>
                         <div class="text-muted small" style="font-size: 0.78rem;">
-                            (Đã bao gồm VAT và gói hoa cao cấp)
+                            (Đã bao gồm VAT)
                         </div>
                     </div>
 
-                    <div class="p-3 rounded-3 mb-3" style="background: rgba(253, 250, 242, 0.7); border: 1px dashed rgba(201, 162, 39, 0.4);">
+                    <div class="p-3 rounded-3 mb-3"
+                        style="background: rgba(253, 250, 242, 0.7); border: 1px dashed rgba(201, 162, 39, 0.4);">
                         <div class="small text-secondary mb-0" style="line-height: 1.5;">
-                            ✨ <strong>Thanh toán:</strong> Tiệm sẽ liên hệ xác nhận sau qua Zalo/SĐT. Bạn không cần thanh toán online ngay bây giờ.
+                            ✨ <strong>Thanh toán:</strong> Tiệm sẽ liên hệ xác nhận sau qua Zalo/SĐT. Bạn không cần
+                            thanh toán online ngay bây giờ.
                         </div>
                     </div>
 
-                    <a href="{{ url_for('checkout') }}" class="btn btn-auth w-100 py-3 fw-bold fs-6 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
+                    <a href="{{ url_for('checkout') }}"
+                        class="btn btn-auth w-100 py-3 fw-bold fs-6 rounded-3 shadow-sm d-flex align-items-center justify-content-center gap-2">
                         <span>Tiến hành đặt đơn</span>
                         <span>›</span>
                     </a>
@@ -207,129 +214,111 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    // Xử lý tăng giảm số lượng giỏ hàng bằng AJAX
-    async function updateCartQty(productId, qty) {
-        try {
-            const res = await fetch('/cart/update', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ product_id: productId, quantity: qty })
-            });
-            if (!res.ok) return;
-            const data = await res.json();
-            if (data.success) {
-                // Cập nhật giá sản phẩm
-                const subtotalEl = document.getElementById('subtotal-' + productId);
-                if (subtotalEl) subtotalEl.textContent = data.item_subtotal_str;
+    document.addEventListener('DOMContentLoaded', function () {
+        // Xử lý tăng giảm số lượng giỏ hàng bằng AJAX
+        async function updateCartQty(productId, qty) {
+            try {
+                const res = await fetch('/cart/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_id: productId, quantity: qty })
+                });
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.success) {
+                    // Cập nhật giá sản phẩm
+                    const subtotalEl = document.getElementById('subtotal-' + productId);
+                    if (subtotalEl) subtotalEl.textContent = data.item_subtotal_str;
 
-                // Cập nhật tổng tiền
-                const totalEl = document.getElementById('cartTotalPrice');
-                if (totalEl) totalEl.textContent = data.total_price_str;
+                    // Cập nhật tổng tiền
+                    const totalEl = document.getElementById('cartTotalPrice');
+                    if (totalEl) totalEl.textContent = data.total_price_str;
 
-                const subtotalSummary = document.getElementById('cartSubtotal');
-                if (subtotalSummary) subtotalSummary.textContent = data.total_price_str;
+                    const subtotalSummary = document.getElementById('cartSubtotal');
+                    if (subtotalSummary) subtotalSummary.textContent = data.total_price_str;
 
-                // Cập nhật số lượng
-                const totalQtyEl = document.getElementById('cartTotalQty');
-                if (totalQtyEl) totalQtyEl.textContent = data.total_quantity + ' bó';
+                    // Cập nhật số lượng
+                    const totalQtyEl = document.getElementById('cartTotalQty');
+                    if (totalQtyEl) totalQtyEl.textContent = data.total_quantity + ' bó';
 
-                const headerCount = document.getElementById('cartCountHeader');
-                if (headerCount) headerCount.textContent = data.total_quantity;
+                    const headerCount = document.getElementById('cartCountHeader');
+                    if (headerCount) headerCount.textContent = data.total_quantity;
 
-                // Cập nhật badge trên header
-                const navBadge = document.getElementById('navCartBadge');
-                if (navBadge) {
-                    navBadge.textContent = data.cart_count;
-                    if (data.cart_count > 0) navBadge.classList.remove('d-none');
-                    else navBadge.classList.add('d-none');
-                }
-
-                // Cập nhật thanh tiến độ miễn phí giao hàng
-                const progressBar = document.getElementById('freeShippingProgressBar');
-                const progressBadge = document.getElementById('freeShippingBadge');
-                const noticeText = document.getElementById('freeShippingNoticeText');
-                if (progressBar && data.free_shipping_percent !== undefined) {
-                    progressBar.style.width = data.free_shipping_percent + '%';
-                    if (data.free_shipping_percent >= 100) {
-                        progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-success';
-                        if (noticeText) noticeText.innerHTML = '🎉 Đơn hàng của bạn đã đủ điều kiện <span class="text-success fw-bold">MIỄN PHÍ VẬN CHUYỂN</span>!';
-                        const shipNotice = document.getElementById('cartShippingNotice');
-                        if (shipNotice) shipNotice.textContent = 'Miễn phí giao hàng';
-                    } else {
-                        progressBar.className = 'progress-bar progress-bar-striped progress-bar-animated bg-warning';
-                        if (noticeText) noticeText.innerHTML = `Mua thêm <span class="text-danger font-monospace fw-bold">${new Intl.NumberFormat('vi-VN').format(data.free_shipping_needed)} đ</span> để được <span class="text-success fw-bold">MIỄN PHÍ GIAO HÀNG</span> toàn quốc!`;
+                    // Cập nhật badge trên header
+                    const navBadge = document.getElementById('navCartBadge');
+                    if (navBadge) {
+                        navBadge.textContent = data.cart_count;
+                        if (data.cart_count > 0) navBadge.classList.remove('d-none');
+                        else navBadge.classList.add('d-none');
                     }
-                    if (progressBadge) progressBadge.textContent = data.free_shipping_percent + '%';
-                }
 
-                // Kiểm tra giới hạn số lượng
-                const plusBtn = document.querySelector(`.btn-cart-plus[data-id="${productId}"]`);
-                if (plusBtn) {
-                    if (data.max_reached || data.quantity >= data.available_stock) {
-                        plusBtn.disabled = true;
-                    } else {
-                        plusBtn.disabled = false;
+                    // Kiểm tra giới hạn số lượng
+                    const plusBtn = document.querySelector(`.btn-cart-plus[data-id="${productId}"]`);
+                    if (plusBtn) {
+                        if (data.max_reached || data.quantity >= data.available_stock) {
+                            plusBtn.disabled = true;
+                        } else {
+                            plusBtn.disabled = false;
+                        }
+                    }
+
+                    if (data.quantity === 0) {
+                        const row = document.getElementById('cartRow-' + productId);
+                        if (row) row.remove();
+                        if (data.cart_count === 0) window.location.reload();
                     }
                 }
-
-                if (data.quantity === 0) {
-                    const row = document.getElementById('cartRow-' + productId);
-                    if (row) row.remove();
-                    if (data.cart_count === 0) window.location.reload();
-                }
+            } catch (e) {
+                console.error('Lỗi cập nhật giỏ hàng:', e);
             }
-        } catch (e) {
-            console.error('Lỗi cập nhật giỏ hàng:', e);
         }
-    }
 
-    document.querySelectorAll('.btn-cart-minus').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const id = this.getAttribute('data-id');
-            const input = document.querySelector(`.cart-qty-input[data-id="${id}"]`);
-            if (input) {
-                let val = parseInt(input.value) || 1;
-                if (val > 1) {
-                    val--;
-                    input.value = val;
-                    updateCartQty(id, val);
-                } else if (confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng không?')) {
-                    updateCartQty(id, 0);
+        document.querySelectorAll('.btn-cart-minus').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const input = document.querySelector(`.cart-qty-input[data-id="${id}"]`);
+                if (input) {
+                    let val = parseInt(input.value) || 1;
+                    if (val > 1) {
+                        val--;
+                        input.value = val;
+                        updateCartQty(id, val);
+                    } else if (confirm('Bạn có muốn xóa sản phẩm này khỏi giỏ hàng không?')) {
+                        updateCartQty(id, 0);
+                    }
                 }
-            }
+            });
         });
-    });
 
-    document.querySelectorAll('.btn-cart-plus').forEach(btn => {
-        btn.addEventListener('click', function () {
-            const id = this.getAttribute('data-id');
-            const input = document.querySelector(`.cart-qty-input[data-id="${id}"]`);
-            if (input) {
-                let val = parseInt(input.value) || 1;
-                const max = parseInt(input.getAttribute('data-max')) || 999;
-                if (val < max) {
-                    val++;
-                    input.value = val;
-                    updateCartQty(id, val);
-                } else {
-                    alert(`Sản phẩm này chỉ còn ${max} bó trong kho.`);
+        document.querySelectorAll('.btn-cart-plus').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const id = this.getAttribute('data-id');
+                const input = document.querySelector(`.cart-qty-input[data-id="${id}"]`);
+                if (input) {
+                    let val = parseInt(input.value) || 1;
+                    const max = parseInt(input.getAttribute('data-max')) || 999;
+                    if (val < max) {
+                        val++;
+                        input.value = val;
+                        updateCartQty(id, val);
+                    } else {
+                        alert(`Sản phẩm này chỉ còn ${max} bó trong kho.`);
+                    }
                 }
-            }
+            });
         });
-    });
 
-    document.querySelectorAll('.cart-qty-input').forEach(input => {
-        input.addEventListener('change', function () {
-            const id = this.getAttribute('data-id');
-            let val = parseInt(this.value) || 1;
-            const max = parseInt(this.getAttribute('data-max')) || 999;
-            if (val > max) val = max;
-            if (val < 1) val = 1;
-            this.value = val;
-            updateCartQty(id, val);
+        document.querySelectorAll('.cart-qty-input').forEach(input => {
+            input.addEventListener('change', function () {
+                const id = this.getAttribute('data-id');
+                let val = parseInt(this.value) || 1;
+                const max = parseInt(this.getAttribute('data-max')) || 999;
+                if (val > max) val = max;
+                if (val < 1) val = 1;
+                this.value = val;
+                updateCartQty(id, val);
+            });
         });
     });
-});
 </script>
 {% endblock %}

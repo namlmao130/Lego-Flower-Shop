@@ -6,6 +6,5 @@ gunicorn>=21.2.0
 Pillow>=10.0.0
 itsdangerous>=2.1.2
 Flask-Limiter>=3.8.0
-Flask-Compress>=1.15
 Flask-Caching>=2.3.0
 redis>=5.0.0

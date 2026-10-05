@@ -9,7 +9,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.1">
 </head>
 
 <body>
@@ -21,15 +21,23 @@
         <div class="container">
             <button id="toggleBtn" class="btn btn-link p-0 me-3" type="button"
                 style="color:#EDE6D6; font-size:1.4rem; text-decoration:none;">☰</button>
-            <a class="navbar-brand fw-bold rainbow-brand" href="{{ url_for('index') }}">Lego Flower</a>
+            <a class="navbar-brand fw-bold rainbow-brand d-inline-flex align-items-center gap-2"
+                href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="28" height="28"
+                    class="rounded-circle border"
+                    style="object-fit: cover; border-color: rgba(201, 162, 39, 0.4) !important;">
+                <span>Lego Flower</span>
+            </a>
             <div class="navbar-nav ms-auto align-items-lg-center">
                 <a class="nav-link" href="{{ url_for('index') }}">Trang chủ</a>
                 <a class="nav-link" href="{{ url_for('products') }}">Sản phẩm</a>
-                <a class="nav-link" href="{{ url_for('my_orders_view') }}" title="Tra cứu & Xem đơn hàng">📦 Đơn hàng</a>
-                <a class="nav-link position-relative d-inline-flex align-items-center me-lg-2" href="{{ url_for('view_cart') }}" title="Giỏ hàng">
-                    <span class="me-1">🛒</span>
+                <a class="nav-link" href="{{ url_for('my_orders_view') }}" title="Tra cứu & Xem đơn hàng">Đơn hàng</a>
+                <a class="nav-link position-relative d-inline-flex align-items-center me-lg-2"
+                    href="{{ url_for('view_cart') }}" title="Giỏ hàng">
                     <span>Giỏ hàng</span>
-                    <span id="navCartBadge" class="badge rounded-pill bg-danger ms-1 {{ 'd-none' if cart_count == 0 else '' }}" style="font-size: 0.72rem;">
+                    <span id="navCartBadge"
+                        class="badge rounded-pill bg-danger ms-1 {{ 'd-none' if cart_count == 0 else '' }}"
+                        style="font-size: 0.72rem;">
                         {{ cart_count }}
                     </span>
                 </a>
@@ -83,7 +91,8 @@
 
                         <a class="user-popover-item" href="{{ url_for('my_orders_view') }}">
                             <span class="user-popover-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                     <line x1="3" y1="6" x2="21" y2="6"></line>
                                     <path d="M16 10a4 4 0 0 1-8 0"></path>
@@ -129,11 +138,6 @@
                 {% for cat in nav_categories %}
                 <a href="{{ url_for('products', category=cat.id) }}" class="nav-item"> {{ cat.name }}</a>
                 {% endfor %}
-                <a href="{{ url_for('my_orders_view') }}" class="nav-item">📦 Đơn hàng của bạn</a>
-                <a href="{{ url_for('view_cart') }}" class="nav-item d-flex align-items-center justify-content-between">
-                    <span>🛒 Giỏ hàng</span>
-                    <span class="badge bg-danger rounded-pill {{ 'd-none' if cart_count == 0 else '' }}" style="font-size: 0.75rem;">{{ cart_count }}</span>
-                </a>
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="border-top my-2 pt-2" style="border-color: rgba(255, 255, 255, 0.15) !important;">
                     <div class="d-flex align-items-center gap-2 px-3 py-2 mb-2 rounded-3"
@@ -156,8 +160,6 @@
                             </div>
                         </div>
                     </div>
-                    <a href="{{ url_for('user_settings') }}" class="nav-item">⚙️ Cài đặt tài khoản</a>
-                    <a href="{{ url_for('my_orders_view') }}" class="nav-item">📦 Đơn mua của tôi</a>
                     <a href="{{ url_for('logout') }}" class="nav-item" style="color: #fda4af;">Đăng xuất</a>
                 </div>
                 {% endif %}
@@ -216,9 +218,9 @@
                         từng mảnh ghép tỉ mỉ và sáng tạo.
                     </p>
                     <div class="d-flex align-items-center gap-2 text-white-50" style="font-size: 0.88rem;">
-                        <span>⭐ Chuẩn mảnh ghép</span>
+                        <span>Chuẩn mảnh ghép</span>
                         <span>•</span>
-                        <span>🚚 Giao hàng toàn quốc</span>
+                        <span>Giao hàng toàn quốc</span>
                     </div>
                 </div>
 
@@ -231,7 +233,7 @@
                         <li class="mb-2"><a href="{{ url_for('products') }}"
                                 class="text-white-50 text-decoration-none">Tất cả sản phẩm</a></li>
                         <li class="mb-2"><a href="{{ url_for('my_orders_view') }}"
-                                class="text-white-50 text-decoration-none">📦 Tra cứu đơn hàng</a></li>
+                                class="text-white-50 text-decoration-none">Tra cứu đơn hàng</a></li>
                         {% for cat in nav_categories %}
                         <li class="mb-2"><a href="{{ url_for('products', category=cat.id) }}"
                                 class="text-white-50 text-decoration-none">{{ cat.name }}</a></li>
@@ -244,18 +246,20 @@
                     <h5 class="footer-heading mb-3">Liên hệ hỗ trợ</h5>
                     <ul class="list-unstyled footer-contact mb-0 text-white-50" style="font-size: 0.92rem;">
                         <li class="mb-2">
-                            <strong class="text-white d-block">📞 Hotline / Zalo:</strong>
+                            <strong class="text-white d-block">Hotline / Zalo:</strong>
                             <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
-                                class="text-warning text-decoration-none fw-bold">
+                                class="text-warning text-decoration-none fw-bold d-inline-flex align-items-center gap-1">
+                                <img src="{{ url_for('static', filename='images/zalo_logo.png') }}" alt="Zalo"
+                                    width="16" height="16" style="object-fit: contain; border-radius: 3px;">
                                 0967.701.565
                             </a>
                         </li>
                         <li class="mb-2">
-                            <strong class="text-white d-block">⏰ Giờ phục vụ:</strong>
+                            <strong class="text-white d-block">Giờ phục vụ:</strong>
                             <span>8:00 - 22:00 (Hàng ngày)</span>
                         </li>
                         <li>
-                            <strong class="text-white d-block">🛡️ Chính sách:</strong>
+                            <strong class="text-white d-block">Chính sách:</strong>
                             <span>Bù mảnh miễn phí nếu thiếu</span>
                         </li>
                     </ul>
@@ -285,7 +289,9 @@
             <!-- Header khung chat -->
             <div class="chat-header">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="chat-avatar-badge">🥀</div>
+                    <div class="chat-avatar-badge" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; max-height: 38px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--lego-gold, #c9a227); padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #ffffff;">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="38" height="38" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; max-height: 38px; object-fit: cover; border-radius: 50%; display: block;">
+                    </div>
                     <div>
                         <div class="chat-header-title">Tiệm Hoa Lego</div>
                         <div class="chat-header-status">
@@ -316,7 +322,9 @@
                 <span class="small text-muted fw-semibold">Liên hệ nhanh:</span>
                 <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
                     class="chat-quick-btn chat-zalo-btn" title="Nhắn qua Zalo">
-                    💬 Zalo: 0967.701.565
+                    <img src="{{ url_for('static', filename='images/zalo_logo.png') }}" alt="Zalo" width="18"
+                        height="18" style="object-fit: contain; border-radius: 4px; display: inline-block;">
+                    0967.701.565
                 </a>
                 <a href="tel:0967701565" class="chat-quick-btn chat-phone-btn" title="Gọi Hotline">
                     📞 Hotline
@@ -328,7 +336,7 @@
                 <!-- Tin nhắn chào của shop -->
                 <div class="chat-msg chat-msg-bot">
                     <div class="chat-bubble">
-                        Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? 💐 Bạn có thể chọn câu hỏi gợi ý
+                        Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? Bạn có thể chọn câu hỏi gợi ý
                         bên dưới hoặc nhắn trực tiếp cho shop nhé!
                     </div>
                     <span class="chat-time">Vừa xong</span>
@@ -337,14 +345,14 @@
                 <!-- Các nút câu hỏi gợi ý nhanh -->
                 <div class="chat-suggestions" id="chatSuggestions">
                     <button type="button" class="chat-chip" data-msg="Shop có những mẫu hoa nào làm quà tặng ý nghĩa?">
-                        🌸 Mẫu hoa quà tặng ý nghĩa
+                        Mẫu hoa quà tặng ý nghĩa
                     </button>
                     <button type="button" class="chat-chip"
                         data-msg="Phí vận chuyển và thời gian giao hàng như thế nào?">
-                        🚚 Phí ship & thời gian giao hàng
+                        Phí ship & thời gian giao hàng
                     </button>
                     <button type="button" class="chat-chip" data-msg="Shop có hỗ trợ viết thiệp và gói quà không?">
-                        🎁 Gói quà & thiệp chúc mừng
+                        Gói quà & thiệp chúc mừng
                     </button>
                     <button type="button" class="chat-chip"
                         data-msg="Tôi muốn liên hệ trực tiếp với chủ tiệm qua Zalo/SĐT.">
@@ -366,10 +374,12 @@
         </div>
 
         <!-- Nút biểu tượng nổi (Floating Bubble Trigger) -->
-        <button id="chatToggleBtn" class="chat-toggle-btn position-relative" type="button" aria-label="Mở khung chat với shop"
-            title="Chat với shop">
+        <button id="chatToggleBtn" class="chat-toggle-btn position-relative" type="button"
+            aria-label="Mở khung chat với shop" title="Chat với shop">
             <span class="chat-online-badge"></span>
-            <span id="chatCustomerUnreadBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none shadow-sm" style="font-size: 0.72rem;">0</span>
+            <span id="chatCustomerUnreadBadge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none shadow-sm"
+                style="font-size: 0.72rem;">0</span>
             <span class="chat-icon-open">
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -922,7 +932,7 @@
                         time: timeStr || getCurrentTimeStr()
                     });
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
-                } catch (e) {}
+                } catch (e) { }
             }
 
             // Gửi tin nhắn lên máy chủ (để Admin nhận được)
@@ -969,7 +979,7 @@
                             }
                         });
                     }
-                } catch (e) {}
+                } catch (e) { }
             }
 
             async function loadChatHistory() {
@@ -992,7 +1002,7 @@
                             return;
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 // Nếu server chưa có (phiên mới), đọc từ localStorage
                 try {
@@ -1018,13 +1028,13 @@
                             return;
                         }
                     }
-                } catch (e) {}
+                } catch (e) { }
 
                 resetToWelcome();
             }
 
             function resetToWelcome() {
-                const welcomeText = 'Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? 💐 Bạn có thể chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp cho shop nhé!';
+                const welcomeText = 'Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? Bạn có thể chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp cho shop nhé!';
                 const timeStr = getCurrentTimeStr();
                 chatMessages.innerHTML = '';
                 renderMessageElement(welcomeText, false, timeStr, true, false);
@@ -1083,19 +1093,19 @@
             const botKnowledge = [
                 {
                     keywords: ['chào', 'hello', 'hi', 'alo', 'bắt đầu', 'ơi'],
-                    reply: 'Chào bạn! Tiệm Hoa Lego rất vui được đồng hành cùng bạn. Bạn cần tư vấn chọn mẫu hoa, hỏi phí giao hàng hay cần hỗ trợ gì ạ? 💐'
+                    reply: 'Chào bạn! Tiệm Hoa Lego rất vui được đồng hành cùng bạn. Bạn cần tư vấn chọn mẫu hoa, hỏi phí giao hàng hay cần hỗ trợ gì ạ?'
                 },
                 {
                     keywords: ['quà', 'ý nghĩa', 'chọn hoa', 'tư vấn', 'mẫu nào', 'tặng bạn', 'tặng người yêu', 'sinh nhật', '20/10', '8/3', 'mẫu'],
-                    reply: 'Tiệm có rất nhiều đóa hoa mang ý nghĩa tuyệt vời: 🌹 Hoa hồng (tình yêu vĩnh cửu), 🌻 Hoa hướng dương (năng lượng tích cực & thành công), 🌸 Hoa cẩm tú cầu, hoa tulip... Bạn hãy vào mục "Sản phẩm" trên web hoặc nhắn tin qua Zalo 0967.701.565 để shop gửi ảnh & video mẫu thực tế nhé!'
+                    reply: 'Tiệm có rất nhiều đóa hoa mang ý nghĩa tuyệt vời: Hoa hồng (tình yêu vĩnh cửu), Hoa hướng dương (năng lượng tích cực & thành công), Hoa cẩm tú cầu, hoa tulip... Bạn hãy vào mục "Sản phẩm" trên web hoặc nhắn tin qua Zalo 0967.701.565 để shop gửi ảnh & video mẫu thực tế nhé!'
                 },
                 {
                     keywords: ['ship', 'vận chuyển', 'giao hàng', 'bao lâu', 'phí ship', 'đến nơi', 'giao nhanh'],
-                    reply: 'Shop giao hàng toàn quốc nha! 🚚 Đơn tại nội thành thường nhận trong 1-2 ngày, các tỉnh thành khác từ 2-4 ngày. Từng sản phẩm đều được bọc chống sốc kỹ càng bảo vệ hoa Lego nguyên vẹn tới tận tay bạn.'
+                    reply: 'Shop giao hàng toàn quốc nha! Đơn tại nội thành thường nhận trong 1-2 ngày, các tỉnh thành khác từ 2-4 ngày. Từng sản phẩm đều được bọc chống sốc kỹ càng bảo vệ hoa Lego nguyên vẹn tới tận tay bạn.'
                 },
                 {
                     keywords: ['thiệp', 'gói quà', 'hộp quà', 'lời chúc', 'gói', 'hộp'],
-                    reply: 'Dạ shop có hỗ trợ viết thiệp chúc mừng theo yêu cầu hoàn toàn MIỄN PHÍ và có hộp quà thắt nơ sang trọng. Bạn chỉ cần ghi chú lúc đặt hàng hoặc nhắn qua Zalo: 0967.701.565 là shop chuẩn bị chu đáo ạ! 🎁'
+                    reply: 'Dạ shop có hỗ trợ viết thiệp chúc mừng theo yêu cầu hoàn toàn MIỄN PHÍ và có hộp quà thắt nơ sang trọng. Bạn chỉ cần ghi chú lúc đặt hàng hoặc nhắn qua Zalo: 0967.701.565 là shop chuẩn bị chu đáo ạ!'
                 },
                 {
                     keywords: ['giá', 'bao nhiêu', 'tiền', 'khuyến mãi', 'giảm giá', 'sale'],
@@ -1103,7 +1113,7 @@
                 },
                 {
                     keywords: ['zalo', 'sđt', 'hotline', 'liên hệ', 'gọi', 'chủ shop', 'điện thoại'],
-                    reply: 'Bạn có thể liên hệ trực tiếp chủ tiệm qua Hotline/Zalo: 0967.701.565 để được tư vấn và hỗ trợ hỏa tốc bất cứ lúc nào ạ! 📞'
+                    reply: 'Bạn có thể liên hệ trực tiếp chủ tiệm qua Hotline/Zalo: 0967.701.565 để được tư vấn và hỗ trợ hỏa tốc bất cứ lúc nào ạ!'
                 },
                 {
                     keywords: ['địa chỉ', 'ở đâu', 'cửa hàng', 'shop ở', 'showroom'],
@@ -1118,7 +1128,7 @@
                         return item.reply;
                     }
                 }
-                return 'Dạ Tiệm Hoa Lego đã nhận được tin nhắn của bạn! Đội ngũ tư vấn sẽ phản hồi trong giây lát. Để được hỗ trợ hỏa tốc hoặc xem ảnh mẫu thực tế ngay, bạn có thể bấm liên hệ Zalo: 0967.701.565 nhé! 💐';
+                return 'Dạ Tiệm Hoa Lego đã nhận được tin nhắn của bạn! Đội ngũ tư vấn sẽ phản hồi trong giây lát. Để được hỗ trợ hỏa tốc hoặc xem ảnh mẫu thực tế ngay, bạn có thể bấm liên hệ Zalo: 0967.701.565 nhé!';
             }
 
             function showTypingIndicator() {
@@ -1216,28 +1226,32 @@
     <!--   MINI-CART TOAST NOTIFICATION CONTAINER     -->
     <!-- ============================================ -->
     <div id="cartToastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
-        <div id="cartToast" class="toast align-items-center border-0 shadow-lg rounded-4 overflow-hidden" role="alert" aria-live="assertive" aria-atomic="true" style="min-width: 310px; max-width: 360px; border: 1.5px solid rgba(201, 162, 39, 0.45) !important; background: #ffffff;">
+        <div id="cartToast" class="toast align-items-center border-0 shadow-lg rounded-4 overflow-hidden" role="alert"
+            aria-live="assertive" aria-atomic="true"
+            style="min-width: 310px; max-width: 360px; border: 1.5px solid rgba(201, 162, 39, 0.45) !important; background: #ffffff;">
             <div class="toast-header border-0 py-2 px-3" style="background: rgba(253, 250, 242, 0.95);">
-                <span class="me-2" style="font-size: 1.1rem;">🌸</span>
-                <strong class="me-auto text-dark" style="font-family:'Playfair Display',serif; font-size: 0.95rem;">Đã thêm vào giỏ hàng!</strong>
+                <span class="me-2" style="font-size: 1.1rem;"></span>
+                <strong class="me-auto text-dark" style="font-family:'Playfair Display',serif; font-size: 0.95rem;">Đã
+                    thêm vào giỏ hàng!</strong>
                 <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Đóng"></button>
             </div>
             <div class="toast-body p-3 bg-white border-top" style="border-color: rgba(33, 36, 61, 0.06) !important;">
                 <div class="d-flex align-items-center gap-3 mb-3">
-                    <img id="cartToastImg" src="" alt="Hoa Lego" class="rounded-3 border object-fit-cover flex-shrink-0" style="width: 52px; height: 52px; background: #fafafa;">
+                    <img id="cartToastImg" src="" alt="Hoa Lego" class="rounded-3 border object-fit-cover flex-shrink-0"
+                        style="width: 52px; height: 52px; background: #fafafa;">
                     <div class="overflow-hidden">
-                        <div id="cartToastTitle" class="fw-bold text-dark text-truncate" style="font-size: 0.92rem;">Tên sản phẩm</div>
+                        <div id="cartToastTitle" class="fw-bold text-dark text-truncate" style="font-size: 0.92rem;">Tên
+                            sản phẩm</div>
                         <div id="cartToastPrice" class="text-danger fw-semibold small">0 đ</div>
                     </div>
                 </div>
-                <div id="cartToastFreeShip" class="small text-muted mb-3 d-none p-2 rounded-2" style="background: rgba(253, 250, 242, 0.7); font-size: 0.8rem;">
-                    <!-- Free shipping note -->
-                </div>
                 <div class="d-flex gap-2">
-                    <a href="{{ url_for('view_cart') }}" class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 fw-semibold py-1">
+                    <a href="{{ url_for('view_cart') }}"
+                        class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 fw-semibold py-1">
                         Xem giỏ hàng
                     </a>
-                    <a href="{{ url_for('checkout') }}" class="btn btn-auth btn-sm rounded-pill flex-grow-1 fw-semibold py-1 text-white text-center">
+                    <a href="{{ url_for('checkout') }}"
+                        class="btn btn-auth btn-sm rounded-pill flex-grow-1 fw-semibold py-1 text-white text-center">
                         Đặt đơn ngay
                     </a>
                 </div>
@@ -1246,50 +1260,37 @@
     </div>
 
     <script>
-    // Global Cart Toast Trigger
-    window.showCartToast = function(data) {
-        if (!data) return;
-        const toastEl = document.getElementById('cartToast');
-        const toastTitle = document.getElementById('cartToastTitle');
-        const toastPrice = document.getElementById('cartToastPrice');
-        const toastImg = document.getElementById('cartToastImg');
-        const toastFreeShip = document.getElementById('cartToastFreeShip');
-        const navBadge = document.getElementById('navCartBadge');
+        // Global Cart Toast Trigger
+        window.showCartToast = function (data) {
+            if (!data) return;
+            const toastEl = document.getElementById('cartToast');
+            const toastTitle = document.getElementById('cartToastTitle');
+            const toastPrice = document.getElementById('cartToastPrice');
+            const toastImg = document.getElementById('cartToastImg');
+            const navBadge = document.getElementById('navCartBadge');
 
-        if (toastTitle) toastTitle.textContent = data.product_name || 'Đã thêm sản phẩm';
-        if (toastPrice) toastPrice.textContent = data.product_price_str || '';
-        if (toastImg) {
-            const imgSrc = data.thumbnail || data.product_image;
-            if (imgSrc) {
-                toastImg.src = imgSrc;
-                toastImg.style.display = 'block';
-            } else {
-                toastImg.style.display = 'none';
+            if (toastTitle) toastTitle.textContent = data.product_name || 'Đã thêm sản phẩm';
+            if (toastPrice) toastPrice.textContent = data.product_price_str || '';
+            if (toastImg) {
+                const imgSrc = data.thumbnail || data.product_image;
+                if (imgSrc) {
+                    toastImg.src = imgSrc;
+                    toastImg.style.display = 'block';
+                } else {
+                    toastImg.style.display = 'none';
+                }
             }
-        }
-        if (navBadge && data.cart_count !== undefined) {
-            navBadge.textContent = data.cart_count;
-            if (data.cart_count > 0) navBadge.classList.remove('d-none');
-            else navBadge.classList.add('d-none');
-        }
-
-        if (toastFreeShip) {
-            if (data.free_shipping_needed !== undefined && data.free_shipping_needed > 0) {
-                toastFreeShip.innerHTML = `🚚 Mua thêm <strong>${data.free_shipping_needed.toLocaleString('vi-VN')} đ</strong> để được <strong>Freeship</strong>!`;
-                toastFreeShip.classList.remove('d-none');
-            } else if (data.free_shipping_needed === 0) {
-                toastFreeShip.innerHTML = `🎉 Giỏ hàng đã đạt mốc <strong>Miễn phí vận chuyển</strong>!`;
-                toastFreeShip.classList.remove('d-none');
-            } else {
-                toastFreeShip.classList.add('d-none');
+            if (navBadge && data.cart_count !== undefined) {
+                navBadge.textContent = data.cart_count;
+                if (data.cart_count > 0) navBadge.classList.remove('d-none');
+                else navBadge.classList.add('d-none');
             }
-        }
 
-        if (toastEl && window.bootstrap && window.bootstrap.Toast) {
-            const bsToast = window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4500 });
-            bsToast.show();
-        }
-    };
+            if (toastEl && window.bootstrap && window.bootstrap.Toast) {
+                const bsToast = window.bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4500 });
+                bsToast.show();
+            }
+        };
     </script>
 </body>
 

@@ -81,28 +81,37 @@
 
             {% if product.stock > 0 %}
             <!-- KHUNG ĐẶT MUA & THÊM VÀO GIỎ HÀNG -->
-            <div class="product-purchase-box my-4 p-3 p-md-4 rounded-4 shadow-sm" style="background: rgba(255, 255, 255, 0.85); border: 1.5px solid rgba(201, 162, 39, 0.35);">
+            <div class="product-purchase-box my-4 p-3 p-md-4 rounded-4 shadow-sm"
+                style="background: rgba(255, 255, 255, 0.85); border: 1.5px solid rgba(201, 162, 39, 0.35);">
                 <div class="d-flex align-items-center gap-3 mb-3 flex-wrap">
                     <span class="fw-semibold text-secondary small">Số lượng:</span>
                     <div class="cart-qty-control d-inline-flex align-items-center border rounded-3 p-1 bg-white">
-                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold" id="btnDetailMinus">−</button>
-                        <input type="number" id="detailQtyInput" class="form-control form-control-sm text-center border-0 bg-transparent fw-bold" 
-                               value="1" min="1" max="{{ product.stock }}" style="width: 50px; box-shadow: none;">
-                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold" id="btnDetailPlus">+</button>
+                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold"
+                            id="btnDetailMinus">−</button>
+                        <input type="number" id="detailQtyInput"
+                            class="form-control form-control-sm text-center border-0 bg-transparent fw-bold" value="1"
+                            min="1" max="{{ product.stock }}" style="width: 50px; box-shadow: none;">
+                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold"
+                            id="btnDetailPlus">+</button>
                     </div>
                     <span class="small text-muted">(Còn <strong>{{ product.stock }}</strong> bó có sẵn)</span>
                 </div>
 
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-outline-dark d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 rounded-3 fw-semibold flex-grow-1" id="btnAddToCart">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button"
+                        class="btn btn-outline-dark d-inline-flex align-items-center justify-content-center gap-2 px-3 py-2 rounded-3 fw-semibold flex-grow-1"
+                        id="btnAddToCart">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="9" cy="21" r="1"></circle>
                             <circle cx="20" cy="21" r="1"></circle>
                             <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
                         </svg>
                         <span>Thêm vào giỏ</span>
                     </button>
-                    <button type="button" class="btn btn-auth d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 rounded-3 fw-bold flex-grow-1 shadow-sm" id="btnBuyNow">
+                    <button type="button"
+                        class="btn btn-auth d-inline-flex align-items-center justify-content-center gap-2 px-4 py-2 rounded-3 fw-bold flex-grow-1 shadow-sm"
+                        id="btnBuyNow">
                         <span>Mua ngay</span>
                     </button>
                 </div>
@@ -117,9 +126,9 @@
             <div class="contact-box mt-4 p-3 rounded-4"
                 style="background: rgba(255, 255, 255, 0.7); border: 1.5px solid var(--lego-gold); backdrop-filter: blur(10px);">
                 <div class="d-flex align-items-center gap-2 mb-2">
-                    <span style="font-size: 1.4rem;">💐</span>
+
                     <div>
-                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa Lego chính hãng</strong>
+                        <strong class="d-block" style="color: #21243D; font-size: 1rem;">Đặt mua hoa lego</strong>
                         <small class="text-muted">Hỗ trợ tư vấn mẫu hoa và giao hàng toàn quốc</small>
                     </div>
                 </div>
@@ -127,7 +136,9 @@
                     <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
                         class="btn btn-primary d-inline-flex align-items-center gap-2 px-3 py-2"
                         style="background: #0068FF !important; border-color: #0068FF !important; color: #fff !important;">
-                        <span>💬 Nhắn Zalo tư vấn</span>
+                        <img src="{{ url_for('static', filename='images/zalo_logo.png') }}" alt="Zalo" width="20"
+                            height="20" style="object-fit: contain; border-radius: 4px;">
+                        <span>Nhắn Zalo tư vấn</span>
                     </a>
                     <a href="tel:0967701565"
                         class="btn btn-outline-dark d-inline-flex align-items-center gap-2 px-3 py-2">
@@ -214,9 +225,12 @@
                 <div class="d-flex align-items-center gap-2">
                     <div class="review-avatar-box">
                         {% if r.customer and r.customer.avatar %}
-                        <img src="{{ url_for('static', filename='uploads/avatars/' + r.customer.avatar) }}" alt="{{ r.customer_name }}" class="rounded-circle" style="width: 28px; height: 28px; object-fit: cover; border: 1.5px solid var(--lego-gold);">
+                        <img src="{{ url_for('static', filename='uploads/avatars/' + r.customer.avatar) }}"
+                            alt="{{ r.customer_name }}" class="rounded-circle"
+                            style="width: 28px; height: 28px; object-fit: cover; border: 1.5px solid var(--lego-gold);">
                         {% else %}
-                        <div class="user-avatar-circle" style="width: 28px; height: 28px; font-size: 0.78rem;">{{ r.customer_name[:1].upper() }}</div>
+                        <div class="user-avatar-circle" style="width: 28px; height: 28px; font-size: 0.78rem;">{{
+                            r.customer_name[:1].upper() }}</div>
                         {% endif %}
                     </div>
                     <strong style="color:#21243D;">{{ r.customer_name }}</strong>
@@ -231,12 +245,14 @@
                     {% if current_user.is_authenticated %}
                     {% if current_user.__class__.__name__ == 'Admin' %}
                     <form method="post" action="{{ url_for('admin_delete_review', review_id=r.id) }}"
-                        data-confirm="Bạn có chắc muốn xóa đánh giá này?" data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay" data-confirm-type="danger">
+                        data-confirm="Bạn có chắc muốn xóa đánh giá này?" data-confirm-title="Xóa đánh giá"
+                        data-confirm-ok="Xóa ngay" data-confirm-type="danger">
                         <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa (admin)</button>
                     </form>
                     {% elif current_user.__class__.__name__ == 'Customer' and r.customer_id == current_user.id %}
                     <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
-                        data-confirm="Bạn có chắc muốn xóa đánh giá của bạn?" data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay" data-confirm-type="danger">
+                        data-confirm="Bạn có chắc muốn xóa đánh giá của bạn?" data-confirm-title="Xóa đánh giá"
+                        data-confirm-ok="Xóa ngay" data-confirm-type="danger">
                         <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa đánh giá của tôi</button>
                     </form>
                     {% endif %}
@@ -300,82 +316,82 @@
     {% endif %}
 
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const qtyInput = document.getElementById('detailQtyInput');
-        const minusBtn = document.getElementById('btnDetailMinus');
-        const plusBtn = document.getElementById('btnDetailPlus');
-        const addBtn = document.getElementById('btnAddToCart');
-        const buyBtn = document.getElementById('btnBuyNow');
-        const maxStock = parseInt("{{ product.stock }}") || 999;
-        const productId = parseInt("{{ product.id }}");
+        document.addEventListener('DOMContentLoaded', function () {
+            const qtyInput = document.getElementById('detailQtyInput');
+            const minusBtn = document.getElementById('btnDetailMinus');
+            const plusBtn = document.getElementById('btnDetailPlus');
+            const addBtn = document.getElementById('btnAddToCart');
+            const buyBtn = document.getElementById('btnBuyNow');
+            const maxStock = parseInt("{{ product.stock }}") || 999;
+            const productId = parseInt("{{ product.id }}");
 
-        if (minusBtn && qtyInput) {
-            minusBtn.addEventListener('click', () => {
-                let val = parseInt(qtyInput.value) || 1;
-                if (val > 1) qtyInput.value = val - 1;
-            });
-        }
-
-        if (plusBtn && qtyInput) {
-            plusBtn.addEventListener('click', () => {
-                let val = parseInt(qtyInput.value) || 1;
-                if (val < maxStock) qtyInput.value = val + 1;
-                else alert(`Tiệm chỉ còn ${maxStock} bó có sẵn.`);
-            });
-        }
-
-        async function handleAddCart(buyNow = false) {
-            const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
-            try {
-                if (addBtn) addBtn.disabled = true;
-                if (buyBtn) buyBtn.disabled = true;
-
-                const res = await fetch('/cart/add', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ product_id: productId, quantity: qty, buy_now: buyNow })
+            if (minusBtn && qtyInput) {
+                minusBtn.addEventListener('click', () => {
+                    let val = parseInt(qtyInput.value) || 1;
+                    if (val > 1) qtyInput.value = val - 1;
                 });
+            }
 
-                if (buyNow) {
-                    window.location.href = "{{ url_for('checkout') }}";
-                    return;
-                }
+            if (plusBtn && qtyInput) {
+                plusBtn.addEventListener('click', () => {
+                    let val = parseInt(qtyInput.value) || 1;
+                    if (val < maxStock) qtyInput.value = val + 1;
+                    else alert(`Tiệm chỉ còn ${maxStock} bó có sẵn.`);
+                });
+            }
 
-                const data = await res.json();
-                if (data.success) {
-                    const navBadge = document.getElementById('navCartBadge');
-                    if (navBadge) {
-                        navBadge.textContent = data.cart_count;
-                        navBadge.classList.remove('d-none');
+            async function handleAddCart(buyNow = false) {
+                const qty = parseInt(qtyInput ? qtyInput.value : 1) || 1;
+                try {
+                    if (addBtn) addBtn.disabled = true;
+                    if (buyBtn) buyBtn.disabled = true;
+
+                    const res = await fetch('/cart/add', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: productId, quantity: qty, buy_now: buyNow })
+                    });
+
+                    if (buyNow) {
+                        window.location.href = "{{ url_for('checkout') }}";
+                        return;
                     }
 
-                    if (window.showCartToast) {
-                        window.showCartToast(data);
-                    }
+                    const data = await res.json();
+                    if (data.success) {
+                        const navBadge = document.getElementById('navCartBadge');
+                        if (navBadge) {
+                            navBadge.textContent = data.cart_count;
+                            navBadge.classList.remove('d-none');
+                        }
 
-                    const origText = addBtn.innerHTML;
-                    addBtn.innerHTML = '<span>✓ Đã thêm vào giỏ!</span>';
-                    addBtn.classList.replace('btn-outline-dark', 'btn-success');
-                    setTimeout(() => {
-                        addBtn.innerHTML = origText;
-                        addBtn.classList.replace('btn-success', 'btn-outline-dark');
-                        addBtn.disabled = false;
+                        if (window.showCartToast) {
+                            window.showCartToast(data);
+                        }
+
+                        const origText = addBtn.innerHTML;
+                        addBtn.innerHTML = '<span>✓ Đã thêm vào giỏ!</span>';
+                        addBtn.classList.replace('btn-outline-dark', 'btn-success');
+                        setTimeout(() => {
+                            addBtn.innerHTML = origText;
+                            addBtn.classList.replace('btn-success', 'btn-outline-dark');
+                            addBtn.disabled = false;
+                            if (buyBtn) buyBtn.disabled = false;
+                        }, 1400);
+                    } else {
+                        alert(data.error || 'Có lỗi xảy ra.');
+                        if (addBtn) addBtn.disabled = false;
                         if (buyBtn) buyBtn.disabled = false;
-                    }, 1400);
-                } else {
-                    alert(data.error || 'Có lỗi xảy ra.');
+                    }
+                } catch (e) {
+                    console.error('Lỗi thêm giỏ hàng:', e);
                     if (addBtn) addBtn.disabled = false;
                     if (buyBtn) buyBtn.disabled = false;
                 }
-            } catch (e) {
-                console.error('Lỗi thêm giỏ hàng:', e);
-                if (addBtn) addBtn.disabled = false;
-                if (buyBtn) buyBtn.disabled = false;
             }
-        }
 
-        if (addBtn) addBtn.addEventListener('click', () => handleAddCart(false));
-        if (buyBtn) buyBtn.addEventListener('click', () => handleAddCart(true));
-    });
+            if (addBtn) addBtn.addEventListener('click', () => handleAddCart(false));
+            if (buyBtn) buyBtn.addEventListener('click', () => handleAddCart(true));
+        });
     </script>
-{% endblock %}
+    {% endblock %}
