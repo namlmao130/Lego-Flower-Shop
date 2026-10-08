@@ -2,6 +2,7 @@ import os
 import time
 import uuid
 import smtplib
+import urllib.parse
 from datetime import datetime
 from functools import wraps
 from email.mime.text import MIMEText
@@ -10,7 +11,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, abo
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
-from sqlalchemy import func, event
+from sqlalchemy import func, event, or_
 from sqlalchemy.orm import selectinload
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -42,11 +43,11 @@ if Compress:
 # Cache RAM / Redis cho dữ liệu ít thay đổi
 cache = Cache(app)
 
-# Rate limiting chống spam, brute-force
+# Rate limiting chống spam, brute-force (mức mặc định cao để không cản trở duyệt web / stress test)
 limiter = Limiter(
     get_remote_address,
     app=app,
-    default_limits=["200 per minute", "3000 per hour"],
+    default_limits=[app.config.get('RATELIMIT_DEFAULT', "1200 per minute, 20000 per hour")],
     storage_uri=app.config.get('RATELIMIT_STORAGE_URI', 'memory://'),
 )
 
@@ -57,9 +58,13 @@ os.makedirs(app.config.get('AVATAR_UPLOAD_FOLDER', os.path.join(app.config['UPLO
 # Khởi tạo database
 db.init_app(app)
 
-# Bật WAL mode cho SQLite: cho phép đọc và ghi diễn ra ĐỒNG THỜI thay vì khóa
-# toàn bộ file database mỗi lần ghi -> giảm hẳn lỗi "database is locked" khi
-# nhiều khách cùng xem sản phẩm trong lúc có người đang gửi review/chat/đặt hàng.
+# Tối ưu hóa hiệu năng cực đại cho SQLite:
+# - WAL mode: đọc và ghi đồng thời không khóa file
+# - synchronous=NORMAL: giảm bớt I/O disk flush không cần thiết trong WAL mode
+# - cache_size=-64000: mở rộng 64MB bộ nhớ cache RAM cho SQLite (mặc định chỉ 2MB)
+# - mmap_size=268435456: Memory-mapped I/O (256MB), đọc dữ liệu trực tiếp từ RAM không tốn syscall
+# - temp_store=MEMORY: bảng tạm và sắp xếp chạy trong RAM
+# - busy_timeout=15000: tự động chờ tới 15s nếu có giao dịch ghi khác đang chạy
 if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
     with app.app_context():
         @event.listens_for(db.engine, 'connect')
@@ -67,6 +72,10 @@ if app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite'):
             cursor = dbapi_connection.cursor()
             cursor.execute('PRAGMA journal_mode=WAL')
             cursor.execute('PRAGMA synchronous=NORMAL')
+            cursor.execute('PRAGMA cache_size=-64000')
+            cursor.execute('PRAGMA mmap_size=268435456')
+            cursor.execute('PRAGMA temp_store=MEMORY')
+            cursor.execute('PRAGMA busy_timeout=15000')
             cursor.close()
 
 # Khởi tạo Flask-Login — dùng chung cho cả Admin (quản trị) và Customer (khách hàng).
@@ -154,7 +163,7 @@ def generate_order_code():
 
 
 def get_cart_details():
-    """Lấy danh sách sản phẩm, tổng tiền và tổng số lượng từ session cart."""
+    """Lấy danh sách sản phẩm, tổng tiền và tổng số lượng từ session cart (truy vấn 1 lần duy nhất)."""
     cart = session.get('cart', {})
     items = []
     total_price = 0
@@ -164,25 +173,40 @@ def get_cart_details():
         cart = {}
 
     to_remove = []
+    pids = []
+    valid_entries = []
     for pid_str, qty in list(cart.items()):
         try:
             pid = int(pid_str)
-            product = Product.query.get(pid)
-            if not product:
+            qty = int(qty)
+            if qty > 0:
+                pids.append(pid)
+                valid_entries.append((pid_str, pid, qty))
+            else:
                 to_remove.append(pid_str)
-                continue
-            subtotal = product.price * qty
-            total_price += subtotal
-            total_quantity += qty
-            items.append({
-                'product': product,
-                'quantity': qty,
-                'subtotal': subtotal,
-                'in_stock': product.stock >= qty,
-                'available_stock': product.stock
-            })
         except (ValueError, TypeError):
             to_remove.append(pid_str)
+
+    products_by_id = {}
+    if pids:
+        prods = Product.query.options(selectinload(Product.media)).filter(Product.id.in_(pids)).all()
+        products_by_id = {p.id: p for p in prods}
+
+    for pid_str, pid, qty in valid_entries:
+        product = products_by_id.get(pid)
+        if not product:
+            to_remove.append(pid_str)
+            continue
+        subtotal = product.price * qty
+        total_price += subtotal
+        total_quantity += qty
+        items.append({
+            'product': product,
+            'quantity': qty,
+            'subtotal': subtotal,
+            'in_stock': product.stock >= qty,
+            'available_stock': product.stock
+        })
 
     if to_remove:
         for r in to_remove:
@@ -191,6 +215,25 @@ def get_cart_details():
         session.modified = True
 
     return items, total_price, total_quantity
+
+
+@app.before_request
+def csrf_protect_origin():
+    """Bảo vệ chống tấn công CSRF (Cross-Site Request Forgery) trên các yêu cầu thay đổi trạng thái (POST, PUT, DELETE, PATCH).
+    Kiểm tra Origin hoặc Referer phải xuất phát từ chính tên miền của máy chủ."""
+    if request.method in ('POST', 'PUT', 'DELETE', 'PATCH'):
+        origin = request.headers.get('Origin')
+        referer = request.headers.get('Referer')
+        target_host = request.host.lower()
+
+        if origin:
+            parsed_origin = urllib.parse.urlparse(origin).netloc.lower()
+            if parsed_origin != target_host:
+                abort(403)
+        elif referer:
+            parsed_referer = urllib.parse.urlparse(referer).netloc.lower()
+            if parsed_referer != target_host:
+                abort(403)
 
 
 @app.after_request
@@ -204,7 +247,24 @@ def add_header(response):
     # trình duyệt lưu cache lâu (1 ngày). Giúp khách quay lại xem nhiều sản phẩm không
     # phải tải lại cùng 1 ảnh nhiều lần -> giảm tải băng thông + số request vào server.
     elif request.path.startswith('/static/'):
-        response.headers['Cache-Control'] = 'public, max-age=86400'
+        response.headers['Cache-Control'] = 'public, max-age=86400, immutable'
+
+    # CÁC HEADER BẢO MẬT BẮT BUỘC (DEFENSE-IN-DEPTH)
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), camera=(), microphone=(), payment=()'
+    response.headers['Content-Security-Policy'] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com data:; "
+        "img-src 'self' data: blob: https://zalo.me; "
+        "media-src 'self' blob:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'self';"
+    )
     return response
 
 
@@ -218,17 +278,33 @@ def get_media_type(filename):
     return 'video' if ext in app.config['ALLOWED_VIDEO_EXTENSIONS'] else 'image'
 
 
+def is_valid_image_content(file_stream):
+    """Xác thực nội dung file thực sự là ảnh hợp lệ, ngăn chặn tải file thực thi/script trá hình."""
+    try:
+        file_stream.seek(0)
+        with Image.open(file_stream) as img:
+            img.verify()
+        file_stream.seek(0)
+        return True
+    except Exception:
+        file_stream.seek(0)
+        return False
+
+
 def save_media_files(files, product_id):
     """Lưu nhiều file ảnh/video, trả về danh sách ProductMedia đã tạo (chưa commit)."""
     saved = []
     for file in files:
         if file and file.filename and allowed_file(file.filename):
+            media_type = get_media_type(file.filename)
+            if media_type == 'image' and not is_valid_image_content(file.stream):
+                continue
             filename = secure_filename(f"{product_id}_{file.filename}")
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             saved.append(ProductMedia(
                 product_id=product_id,
                 filename=filename,
-                media_type=get_media_type(filename)
+                media_type=media_type
             ))
     return saved
 
@@ -244,13 +320,19 @@ def index():
     category_id = request.args.get('category', type=int)
 
     # Carousel phía trên: cố định các sản phẩm nổi bật mới nhất, hoàn toàn không bị ảnh hưởng bởi tìm kiếm
-    # selectinload(reviews): tải kèm review bằng 1 câu query duy nhất thay vì mỗi sản phẩm
-    # lại chạy riêng 1 câu SELECT reviews khi template gọi product.average_rating/review_count
-    # (vấn đề N+1 query) -> trang chủ load nhanh hơn đáng kể khi nhiều khách cùng truy cập.
-    carousel_products = Product.query.options(selectinload(Product.reviews)) \
-        .order_by(Product.id.desc()).limit(6).all()
+    # selectinload(reviews, media, category): tải kèm toàn bộ dữ liệu chỉ bằng 3 câu query thay vì
+    # mỗi sản phẩm lại chạy riêng SELECT media / reviews / category (giải quyết triệt để vấn đề N+1 query)
+    carousel_products = Product.query.options(
+        selectinload(Product.reviews),
+        selectinload(Product.media),
+        selectinload(Product.category)
+    ).order_by(Product.id.desc()).limit(6).all()
 
-    query = Product.query.options(selectinload(Product.reviews))
+    query = Product.query.options(
+        selectinload(Product.reviews),
+        selectinload(Product.media),
+        selectinload(Product.category)
+    )
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
@@ -294,7 +376,11 @@ def products():
     category_id = request.args.get('category', type=int)
     page = request.args.get('page', 1, type=int)
 
-    query = Product.query.options(selectinload(Product.reviews))
+    query = Product.query.options(
+        selectinload(Product.reviews),
+        selectinload(Product.media),
+        selectinload(Product.category)
+    )
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
@@ -390,7 +476,7 @@ def send_password_reset_email(to_email, reset_url):
 
 
 @app.route('/register', methods=['GET', 'POST'])
-@limiter.limit("8 per minute")  # chặn spam tạo tài khoản hàng loạt
+@limiter.limit("5 per minute, 15 per hour")  # chặn spam tạo tài khoản hàng loạt
 def register():
     if current_user.is_authenticated and isinstance(current_user, Customer):
         return redirect(url_for('index'))
@@ -611,7 +697,7 @@ def user_settings():
 
 
 @app.route('/login', methods=['GET', 'POST'])
-@limiter.limit("10 per minute")  # chống brute-force đoán mật khẩu
+@limiter.limit("5 per minute, 25 per hour")  # chống brute-force đoán mật khẩu
 def login():
     if current_user.is_authenticated and isinstance(current_user, Customer):
         return redirect(url_for('index'))
@@ -716,17 +802,28 @@ def logout():
 
 @app.route('/product/<int:product_id>')
 def product_detail(product_id):
-    product = Product.query.get_or_404(product_id)
+    product = Product.query.options(
+        selectinload(Product.media),
+        selectinload(Product.reviews).selectinload(Review.customer),
+        selectinload(Product.category)
+    ).get_or_404(product_id)
+
     # Lấy tối đa 4 sản phẩm cùng danh mục gợi ý thêm (loại trừ sản phẩm hiện tại)
     related_products = []
     if product.category_id:
-        related_products = Product.query.filter(
+        related_products = Product.query.options(
+            selectinload(Product.media),
+            selectinload(Product.reviews)
+        ).filter(
             Product.category_id == product.category_id,
             Product.id != product.id
         ).order_by(Product.id.desc()).limit(4).all()
     if not related_products:
         # Nếu danh mục này không còn sp khác, lấy 4 sp mới nhất khác
-        related_products = Product.query.filter(Product.id != product.id).order_by(Product.id.desc()).limit(4).all()
+        related_products = Product.query.options(
+            selectinload(Product.media),
+            selectinload(Product.reviews)
+        ).filter(Product.id != product.id).order_by(Product.id.desc()).limit(4).all()
 
     # Nếu khách hàng đã đăng nhập, kiểm tra xem họ đã đánh giá sản phẩm này chưa
     # (để ẩn form và hiện thông báo thay vì cho đánh giá trùng)
@@ -1178,7 +1275,7 @@ def admin_root():
 
 
 @app.route('/admin/login', methods=['GET', 'POST'])
-@limiter.limit("10 per minute")  # chống brute-force đoán mật khẩu admin
+@limiter.limit("5 per minute, 20 per hour")  # chống brute-force đoán mật khẩu admin
 def admin_login():
     if request.method == 'POST':
         username = request.form.get('username')
@@ -1211,7 +1308,10 @@ def admin_dashboard():
     q = request.args.get('q', '').strip()
     category_id = request.args.get('category', type=int)
 
-    query = Product.query.options(selectinload(Product.reviews))
+    query = Product.query.options(
+        selectinload(Product.media),
+        selectinload(Product.category)
+    )
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
@@ -1447,7 +1547,10 @@ def admin_orders():
     status_filter = request.args.get('status', '').strip()
     q = request.args.get('q', '').strip()
 
-    query = Order.query
+    query = Order.query.options(
+        selectinload(Order.customer),
+        selectinload(Order.items).selectinload(OrderItem.product).selectinload(Product.media)
+    )
     if status_filter:
         query = query.filter(Order.status == status_filter)
     if q:
@@ -1526,6 +1629,7 @@ def api_chat_send():
     data = request.get_json(silent=True) or request.form
     session_id = (data.get('session_id') or '').strip()
     message = (data.get('message') or '').strip()
+    prev_guest_session = (data.get('prev_guest_session') or '').strip()
 
     if not session_id:
         return jsonify({'error': 'Thiếu session_id'}), 400
@@ -1540,11 +1644,24 @@ def api_chat_send():
     if current_user.is_authenticated and isinstance(current_user, Customer):
         customer_id = current_user.id
         sender_name = current_user.full_name or f'Khách hàng #{current_user.id}'
-        # Cập nhật các tin nhắn cũ chưa gắn customer_id của session này
-        ChatMessage.query.filter_by(session_id=session_id, customer_id=None).update({
-            'customer_id': customer_id,
-            'sender_name': sender_name
-        })
+        canonical_session = f'cust_{customer_id}'
+
+        # Gộp tất cả tin nhắn từ phiên cũ (nếu có) sang canonical session để không bị tách đoạn chat
+        sessions_to_merge = [s for s in [session_id, prev_guest_session] if s and s != canonical_session]
+        if sessions_to_merge:
+            ChatMessage.query.filter(ChatMessage.session_id.in_(sessions_to_merge)).update({
+                'session_id': canonical_session,
+                'customer_id': customer_id,
+                'sender_name': sender_name
+            }, synchronize_session=False)
+
+        # Đảm bảo toàn bộ tin nhắn trước đây của khách này đều thuộc canonical session
+        ChatMessage.query.filter(
+            ChatMessage.customer_id == customer_id,
+            ChatMessage.session_id != canonical_session
+        ).update({'session_id': canonical_session}, synchronize_session=False)
+
+        session_id = canonical_session
 
     msg = ChatMessage(
         session_id=session_id,
@@ -1570,15 +1687,27 @@ def api_chat_messages():
     if not session_id:
         return jsonify({'error': 'Thiếu session_id'}), 400
 
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        canonical_session = f'cust_{current_user.id}'
+        if session_id != canonical_session:
+            ChatMessage.query.filter_by(session_id=session_id).update({
+                'session_id': canonical_session,
+                'customer_id': current_user.id,
+                'sender_name': current_user.full_name or f'Khách hàng #{current_user.id}'
+            }, synchronize_session=False)
+            db.session.commit()
+        session_id = canonical_session
+
     query = ChatMessage.query.filter_by(session_id=session_id)
     if after_id > 0:
         query = query.filter(ChatMessage.id > after_id)
 
     msgs = query.order_by(ChatMessage.id.asc()).all()
 
-    # Đánh dấu các tin nhắn của Admin gửi cho khách này là đã đọc
-    ChatMessage.query.filter_by(session_id=session_id, sender_type='admin', is_read=False).update({'is_read': True})
-    db.session.commit()
+    # Đánh dấu các tin nhắn của Admin gửi cho khách này là đã đọc (chỉ commit khi thực sự có tin mới chưa đọc)
+    if any(m.sender_type == 'admin' and not m.is_read for m in msgs):
+        ChatMessage.query.filter_by(session_id=session_id, sender_type='admin', is_read=False).update({'is_read': True})
+        db.session.commit()
 
     return jsonify({'messages': [m.to_dict() for m in msgs]})
 
@@ -1593,7 +1722,7 @@ def admin_chat():
 @app.route('/api/admin/chat/conversations')
 @admin_required
 def api_admin_chat_conversations():
-    """Lấy danh sách các cuộc trò chuyện từ tất cả khách hàng."""
+    """Lấy danh sách các cuộc trò chuyện từ tất cả khách hàng (tối ưu hóa batch query)."""
     subquery = db.session.query(
         ChatMessage.session_id,
         func.max(ChatMessage.id).label('max_id')
@@ -1602,17 +1731,27 @@ def api_admin_chat_conversations():
     latest_messages = db.session.query(ChatMessage).join(
         subquery,
         ChatMessage.id == subquery.c.max_id
-    ).order_by(ChatMessage.id.desc()).all()
+    ).options(selectinload(ChatMessage.customer)).order_by(ChatMessage.id.desc()).all()
+
+    # Tính toán số tin chưa đọc trong 1 câu query duy nhất (thay vì lặp N câu query)
+    unread_map = dict(
+        db.session.query(ChatMessage.session_id, func.count(ChatMessage.id))
+        .filter(ChatMessage.sender_type == 'customer', ChatMessage.is_read == False)
+        .group_by(ChatMessage.session_id)
+        .all()
+    )
 
     conversations = []
     for msg in latest_messages:
-        unread = ChatMessage.query.filter_by(
-            session_id=msg.session_id,
-            sender_type='customer',
-            is_read=False
-        ).count()
-
+        unread = unread_map.get(msg.session_id, 0)
         cust = msg.customer
+        if not cust and msg.session_id.startswith('cust_'):
+            try:
+                cid = int(msg.session_id.replace('cust_', ''))
+                cust = db.session.get(Customer, cid)
+            except Exception:
+                pass
+
         cust_info = {
             'id': cust.id if cust else None,
             'name': cust.full_name if cust else msg.sender_name,
@@ -1638,21 +1777,41 @@ def api_admin_chat_conversations():
 @admin_required
 def api_admin_chat_messages(session_id):
     """Lấy toàn bộ tin nhắn trong một cuộc trò chuyện và đánh dấu đã đọc."""
-    msgs = ChatMessage.query.filter_by(session_id=session_id).order_by(ChatMessage.id.asc()).all()
+    cust_id = None
+    if session_id.startswith('cust_'):
+        try:
+            cust_id = int(session_id.replace('cust_', ''))
+        except Exception:
+            pass
 
-    # Đánh dấu các tin nhắn của khách đã được admin xem
-    ChatMessage.query.filter_by(
-        session_id=session_id,
-        sender_type='customer',
-        is_read=False
-    ).update({'is_read': True})
+    if cust_id:
+        msgs = ChatMessage.query.filter(
+            or_(ChatMessage.session_id == session_id, ChatMessage.customer_id == cust_id)
+        ).order_by(ChatMessage.id.asc()).all()
+        ChatMessage.query.filter(
+            ChatMessage.customer_id == cust_id,
+            ChatMessage.session_id != session_id
+        ).update({'session_id': session_id}, synchronize_session=False)
+        ChatMessage.query.filter(
+            or_(ChatMessage.session_id == session_id, ChatMessage.customer_id == cust_id),
+            ChatMessage.sender_type == 'customer',
+            ChatMessage.is_read == False
+        ).update({'is_read': True}, synchronize_session=False)
+    else:
+        msgs = ChatMessage.query.filter_by(session_id=session_id).order_by(ChatMessage.id.asc()).all()
+        ChatMessage.query.filter_by(
+            session_id=session_id,
+            sender_type='customer',
+            is_read=False
+        ).update({'is_read': True})
     db.session.commit()
 
-    first_cust_msg = ChatMessage.query.filter(
-        ChatMessage.session_id == session_id,
-        ChatMessage.customer_id.isnot(None)
-    ).first()
-    cust = first_cust_msg.customer if first_cust_msg else None
+    cust = None
+    if cust_id:
+        cust = db.session.get(Customer, cust_id)
+    if not cust:
+        first_cust_msg = next((m for m in msgs if m.customer_id), None)
+        cust = first_cust_msg.customer if first_cust_msg else None
 
     cust_info = {
         'id': cust.id if cust else None,
@@ -1681,12 +1840,20 @@ def api_admin_chat_reply():
     if not session_id or not message:
         return jsonify({'error': 'Thiếu session_id hoặc nội dung tin nhắn'}), 400
 
-    last_msg = ChatMessage.query.filter_by(session_id=session_id).first()
-    customer_id = last_msg.customer_id if last_msg else None
+    cust_id = None
+    if session_id.startswith('cust_'):
+        try:
+            cust_id = int(session_id.replace('cust_', ''))
+        except Exception:
+            pass
+
+    if not cust_id:
+        last_msg = ChatMessage.query.filter_by(session_id=session_id).first()
+        cust_id = last_msg.customer_id if last_msg else None
 
     reply_msg = ChatMessage(
         session_id=session_id,
-        customer_id=customer_id,
+        customer_id=cust_id,
         sender_type='admin',
         sender_name=getattr(current_user, 'username', 'Quản trị viên'),
         message=message,
@@ -1704,6 +1871,52 @@ def api_admin_chat_unread_count():
     """Lấy tổng số tin nhắn chưa đọc từ khách hàng cho huy hiệu Admin."""
     unread_count = ChatMessage.query.filter_by(sender_type='customer', is_read=False).count()
     return jsonify({'unread_count': unread_count})
+
+
+# ============================================
+#   XỬ LÝ LỖI BẢO MẬT & TRẢ VỀ TRANG LỖI AN TOÀN
+# ============================================
+
+@app.errorhandler(400)
+def handle_error_400(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Yêu cầu không hợp lệ'}), 400
+    return render_template('error.html', code=400, title='Yêu cầu không hợp lệ', message='Yêu cầu gửi lên máy chủ không đúng định dạng hoặc thiếu tham số bắt buộc.'), 400
+
+
+@app.errorhandler(403)
+def handle_error_403(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Từ chối truy cập (Forbidden)'}), 403
+    return render_template('error.html', code=403, title='Từ chối truy cập', message='Bạn không có quyền truy cập vào khu vực này hoặc yêu cầu bị chặn bởi cơ chế bảo vệ CSRF.'), 403
+
+
+@app.errorhandler(404)
+def handle_error_404(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Tài nguyên không tồn tại'}), 404
+    return render_template('error.html', code=404, title='Không tìm thấy trang', message='Trang hoặc sản phẩm bạn đang tìm kiếm không tồn tại hoặc đã được gỡ bỏ.'), 404
+
+
+@app.errorhandler(413)
+def handle_error_413(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Dữ liệu tải lên vượt quá giới hạn cho phép (tối đa 16MB)'}), 413
+    return render_template('error.html', code=413, title='Tệp quá lớn', message='Dung lượng tệp tải lên vượt quá giới hạn an toàn tối đa cho phép của máy chủ (tối đa 16MB).'), 413
+
+
+@app.errorhandler(429)
+def handle_error_429(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Quá nhiều yêu cầu. Vui lòng thử lại sau.'}), 429
+    return render_template('error.html', code=429, title='Quá nhiều yêu cầu', message='Hệ thống phát hiện tần suất gửi yêu cầu quá nhanh. Vui lòng chờ giây lát rồi thao tác tiếp.'), 429
+
+
+@app.errorhandler(500)
+def handle_error_500(e):
+    if request.path.startswith('/api/'):
+        return jsonify({'error': 'Lỗi máy chủ nội bộ'}), 500
+    return render_template('error.html', code=500, title='Sự cố hệ thống', message='Đã xảy ra sự cố nội bộ. Đội ngũ kỹ thuật đã được thông báo để khắc phục sớm nhất.'), 500
 
 
 # ============================================

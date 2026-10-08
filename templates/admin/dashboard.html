@@ -22,12 +22,12 @@
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <span class="navbar-brand">🛠️ Admin - Quản lý sản phẩm</span>
+            <span class="navbar-brand">Admin - Quản lý sản phẩm</span>
             <div>
-                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2" target="_blank">🌐 Xem trang web</a>
-                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm me-2 fw-semibold">📦 Đơn hàng</a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2" target="_blank">Xem website</a>
+                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm me-2 fw-semibold">Đơn hàng</a>
                 <a href="{{ url_for('admin_chat') }}" class="btn btn-outline-light btn-sm me-2 fw-semibold position-relative">
-                    💬 Tin nhắn khách
+                    Tin nhắn
                     <span id="adminUnreadChatBadge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">0</span>
                 </a>
                 <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm me-2">Danh mục</a>
@@ -51,7 +51,12 @@
                 <form method="GET" action="{{ url_for('admin_dashboard') }}" class="row g-2 align-items-center" id="adminSearchForm">
                     <div class="col-12 col-md-5">
                         <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">🔍</span>
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                            </span>
                             <input type="text" name="q" id="adminSearchInput" class="form-control border-start-0" 
                                    placeholder="Tìm kiếm sản phẩm theo tên..." 
                                    value="{{ search_query or '' }}" autocomplete="off">
@@ -87,7 +92,7 @@
                     </h2>
                     <button type="submit" id="btnDeleteSelected" class="btn btn-danger btn-sm" disabled 
                             onclick="return confirmBulkDelete();">
-                        🗑️ Xóa các mục đã chọn (<span id="selectedCount">0</span>)
+                        Xóa đã chọn (<span id="selectedCount">0</span>)
                     </button>
                 </div>
                 <div class="d-flex gap-2">

@@ -39,11 +39,11 @@ class Product(db.Model):
     __tablename__ = 'products'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
-    price = db.Column(db.Float, nullable=False)
+    price = db.Column(db.Float, nullable=False, index=True)
     description = db.Column(db.Text, nullable=True)
     image = db.Column(db.String(200), nullable=True)  # ảnh cũ (giữ để tương thích ngược)
     stock = db.Column(db.Integer, default=0)
-    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True, index=True)
 
     @property
     def thumbnail(self):
@@ -73,7 +73,7 @@ class ProductMedia(db.Model):
     """Nhiều ảnh/video cho 1 sản phẩm, hiển thị dạng carousel ở trang chi tiết."""
     __tablename__ = 'product_media'
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     filename = db.Column(db.String(255), nullable=False)
     media_type = db.Column(db.String(10), nullable=False, default='image')  # 'image' hoặc 'video'
 
@@ -88,9 +88,9 @@ class Review(db.Model):
     __tablename__ = 'reviews'
 
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
     # customer_id: NULL nếu là khách vãng lai gửi review không đăng nhập (giữ tương thích ngược)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True, index=True)
     customer_name = db.Column(db.String(100), nullable=False)
     rating = db.Column(db.Integer, nullable=False)  # 1 đến 5 sao
     comment = db.Column(db.Text, nullable=True)
@@ -168,12 +168,12 @@ class ChatMessage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     session_id = db.Column(db.String(64), nullable=False, index=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True, index=True)
     sender_type = db.Column(db.String(20), nullable=False)  # 'customer' hoặc 'admin'
     sender_name = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    is_read = db.Column(db.Boolean, default=False)
+    is_read = db.Column(db.Boolean, default=False, index=True)
 
     customer = db.relationship('Customer', backref=db.backref('chat_messages', lazy=True))
 
@@ -200,7 +200,7 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_code = db.Column(db.String(32), unique=True, nullable=False, index=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=True, index=True)
 
     customer_name = db.Column(db.String(100), nullable=False)
     customer_phone = db.Column(db.String(20), nullable=False, index=True)
@@ -210,7 +210,7 @@ class Order(db.Model):
     cancel_reason = db.Column(db.String(255), nullable=True)  # Lý do hủy đơn nếu có
 
     total_price = db.Column(db.Float, nullable=False, default=0.0)
-    status = db.Column(db.String(20), nullable=False, default='pending')  # pending, confirmed, shipping, completed, cancelled
+    status = db.Column(db.String(20), nullable=False, default='pending', index=True)  # pending, confirmed, shipping, completed, cancelled
     payment_status = db.Column(db.String(30), nullable=False, default='contact_later')  # contact_later, paid, unpaid
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -264,8 +264,8 @@ class OrderItem(db.Model):
     __tablename__ = 'order_items'
 
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False)
-    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('orders.id'), nullable=False, index=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=True, index=True)
 
     product_name = db.Column(db.String(200), nullable=False)
     product_price = db.Column(db.Float, nullable=False)

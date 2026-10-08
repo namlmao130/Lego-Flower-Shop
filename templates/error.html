@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}{{ code }} - {{ title }} | Lego Flower Shop{% endblock %}
+
+{% block content %}
+<div class="container py-5 my-5 text-center" style="max-width: 600px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="display-1 fw-bold text-danger mb-2" style="letter-spacing: 2px;">{{ code }}</div>
+        <h2 class="fw-bold mb-3 text-dark">{{ title }}</h2>
+        <p class="text-secondary mb-4 fs-6 leading-relaxed">
+            {{ message }}
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('index') }}" class="btn btn-dark rounded-pill px-4 py-2 fw-semibold">
+                Trang chủ
+            </a>
+            <a href="javascript:history.back()" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-semibold">
+                Quay lại
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

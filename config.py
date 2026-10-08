@@ -3,6 +3,30 @@ from datetime import timedelta
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+def get_or_create_secret_key(base_dir):
+    """Đảm bảo SECRET_KEY luôn là chuỗi ngẫu nhiên bảo mật cao, không dùng chuỗi mặc định dễ đoán."""
+    env_secret = os.environ.get('SECRET_KEY', '').strip()
+    if env_secret and env_secret != 'doi-chuoi-nay-thanh-gi-do-bi-mat-cua-ban':
+        return env_secret
+    key_path = os.path.join(base_dir, '.secret_key')
+    if os.path.isfile(key_path):
+        try:
+            with open(key_path, 'r', encoding='utf-8') as f:
+                k = f.read().strip()
+                if k:
+                    return k
+        except Exception:
+            pass
+    import secrets
+    new_key = secrets.token_hex(32)
+    try:
+        with open(key_path, 'w', encoding='utf-8') as f:
+            f.write(new_key)
+    except Exception:
+        pass
+    return new_key
+
+
 class Config:
     # Mặc định dùng SQLite trong thư mục dự án, hoặc dùng DATABASE_URL nếu có cấu hình
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(BASE_DIR, 'shop.db'))
@@ -17,11 +41,11 @@ class Config:
     # - pool_pre_ping: tự kiểm tra kết nối còn sống trước khi dùng, tránh lỗi kết nối "chết"
     #   khi server rảnh lâu rồi có traffic trở lại.
     SQLALCHEMY_ENGINE_OPTIONS = {
-        'connect_args': {'timeout': 15},
+        'connect_args': {'timeout': 15, 'check_same_thread': False},
         'pool_pre_ping': True,
     }
 
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'doi-chuoi-nay-thanh-gi-do-bi-mat-cua-ban')
+    SECRET_KEY = get_or_create_secret_key(BASE_DIR)
 
     # ------------------------------------------------------------------
     # CACHE + RATE LIMITING
@@ -49,9 +73,19 @@ class Config:
     CACHE_REDIS_URL = os.environ.get('CACHE_REDIS_URL', REDIS_URL)
     CACHE_DEFAULT_TIMEOUT = 300
     RATELIMIT_STORAGE_URI = os.environ.get('RATELIMIT_STORAGE_URI', _default_ratelimit_uri)
+    RATELIMIT_DEFAULT = os.environ.get('RATELIMIT_DEFAULT', '1200 per minute, 20000 per hour')
 
+    # Bảo mật Session và Cookie
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+    SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('true', '1')
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     REMEMBER_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_SAMESITE = 'Lax'
+    REMEMBER_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'false').lower() in ('true', '1')
+
+    # Giới hạn kích thước payload tối đa (16MB) chống tấn công làm tràn bộ đệm máy chủ
+    MAX_CONTENT_LENGTH = int(os.environ.get('MAX_CONTENT_LENGTH', 16 * 1024 * 1024))
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads')
     AVATAR_UPLOAD_FOLDER = os.path.join(BASE_DIR, 'static', 'uploads', 'avatars')
     ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}

@@ -3,5 +3,8 @@ __pycache__/
 *$py.class
 venv/
 .env
+.secret_key
+*.db-wal
+*.db-shm
 .DS_Store
 Thumbs.db

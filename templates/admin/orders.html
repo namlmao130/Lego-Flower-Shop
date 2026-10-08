@@ -50,13 +50,13 @@
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid px-4">
-            <span class="navbar-brand fw-bold">🛠️ Admin - Quản lý đơn hàng</span>
+            <span class="navbar-brand fw-bold">Admin - Quản lý đơn hàng</span>
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm" target="_blank">🌐 Xem trang web</a>
-                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm fw-bold">📦 Đơn hàng</a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm" target="_blank">Xem website</a>
+                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm fw-bold">Đơn hàng</a>
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">Sản phẩm</a>
-                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm">📂 Danh mục</a>
-                <a href="{{ url_for('admin_chat') }}" class="btn btn-outline-light btn-sm">💬 Tin nhắn</a>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm">Danh mục</a>
+                <a href="{{ url_for('admin_chat') }}" class="btn btn-outline-light btn-sm">Tin nhắn</a>
                 <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Đăng xuất</a>
             </div>
         </div>
@@ -135,7 +135,7 @@
                         {% if not orders %}
                         <tr>
                             <td colspan="7" class="text-center py-5 text-muted">
-                                📦 Không tìm thấy đơn hàng nào phù hợp.
+                                Không tìm thấy đơn hàng nào phù hợp.
                             </td>
                         </tr>
                         {% else %}
@@ -155,9 +155,9 @@
                             </td>
                             <td>
                                 <div class="fw-semibold text-dark">{{ o.customer_name }}</div>
-                                <div class="small text-primary">📞 {{ o.customer_phone }}</div>
+                                <div class="small text-secondary">SĐT: {{ o.customer_phone }}</div>
                                 <div class="small text-muted text-truncate" style="max-width: 220px;" title="{{ o.shipping_address }}">
-                                    📍 {{ o.shipping_address }}
+                                    {{ o.shipping_address }}
                                 </div>
                             </td>
                             <td>
@@ -170,7 +170,7 @@
                                 </div>
                                 {% if o.customer_note %}
                                 <div class="small text-secondary fst-italic mt-1" style="max-width: 250px;">
-                                    💌 Thiệp/ghi chú: "{{ o.customer_note }}"
+                                    Ghi chú: "{{ o.customer_note }}"
                                 </div>
                                 {% endif %}
                             </td>
@@ -181,22 +181,22 @@
                             <td>
                                 <form method="POST" action="{{ url_for('admin_order_update_status', order_id=o.id) }}" class="m-0">
                                     <select name="status" class="form-select form-select-sm order-status-select border-{{ 'warning' if o.status=='pending' else ('info' if o.status=='confirmed' else ('primary' if o.status=='shipping' else ('success' if o.status=='completed' else 'danger'))) }}" onchange="this.form.submit()">
-                                        <option value="pending" {{ 'selected' if o.status=='pending' else '' }}>⏳ Chờ xác nhận</option>
-                                        <option value="confirmed" {{ 'selected' if o.status=='confirmed' else '' }}>📋 Đã xác nhận</option>
-                                        <option value="shipping" {{ 'selected' if o.status=='shipping' else '' }}>🚚 Đang giao hàng</option>
-                                        <option value="completed" {{ 'selected' if o.status=='completed' else '' }}>✅ Hoàn thành</option>
-                                        <option value="cancelled" {{ 'selected' if o.status=='cancelled' else '' }}>❌ Đã hủy</option>
+                                        <option value="pending" {{ 'selected' if o.status=='pending' else '' }}>Chờ xác nhận</option>
+                                        <option value="confirmed" {{ 'selected' if o.status=='confirmed' else '' }}>Đã xác nhận</option>
+                                        <option value="shipping" {{ 'selected' if o.status=='shipping' else '' }}>Đang giao hàng</option>
+                                        <option value="completed" {{ 'selected' if o.status=='completed' else '' }}>Hoàn thành</option>
+                                        <option value="cancelled" {{ 'selected' if o.status=='cancelled' else '' }}>Đã hủy</option>
                                     </select>
                                 </form>
                             </td>
                             <td class="text-end pe-4">
                                 <div class="d-inline-flex gap-1">
                                     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#orderModal-{{ o.id }}" title="Xem chi tiết đơn">
-                                        👁️ Xem
+                                        Xem
                                     </button>
                                     <form method="POST" action="{{ url_for('admin_order_delete', order_id=o.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng #{{ o.order_code }} không?');" class="d-inline">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa đơn">
-                                            🗑️
+                                            Xóa
                                         </button>
                                     </form>
                                 </div>
@@ -216,12 +216,12 @@
                                                 </div>
                                                 <div class="mb-3 pb-3 border-bottom">
                                                     <strong class="d-block mb-1">Thông tin người nhận:</strong>
-                                                    <div>👤 <strong>Họ tên:</strong> {{ o.customer_name }}</div>
-                                                    <div>📞 <strong>Điện thoại:</strong> <a href="tel:{{ o.customer_phone }}">{{ o.customer_phone }}</a></div>
-                                                    <div>📍 <strong>Địa chỉ giao:</strong> {{ o.shipping_address }}</div>
+                                                    <div><strong>Họ tên:</strong> {{ o.customer_name }}</div>
+                                                    <div><strong>Điện thoại:</strong> <a href="tel:{{ o.customer_phone }}">{{ o.customer_phone }}</a></div>
+                                                    <div><strong>Địa chỉ giao:</strong> {{ o.shipping_address }}</div>
                                                     {% if o.customer_note %}
                                                     <div class="mt-2 p-2 rounded bg-light border small">
-                                                        💌 <strong>Lời chúc viết thiệp / Lưu ý:</strong><br>
+                                                        <strong>Ghi chú / Lời chúc viết thiệp:</strong><br>
                                                         <span class="fst-italic text-secondary">"{{ o.customer_note }}"</span>
                                                     </div>
                                                     {% endif %}
@@ -235,7 +235,7 @@
                                                                 {% if item.product_image %}
                                                                 <img src="{{ url_for('static', filename='uploads/' + item.product_image) }}" alt="{{ item.product_name }}" class="w-100 h-100 object-fit-cover">
                                                                 {% else %}
-                                                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted">🌸</div>
+                                                                <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted small bg-light">-</div>
                                                                 {% endif %}
                                                             </div>
                                                             <div>
@@ -256,7 +256,7 @@
                                             </div>
                                             <div class="modal-footer border-0">
                                                 <a href="https://zalo.me/{{ o.customer_phone }}" target="_blank" class="btn btn-primary btn-sm me-auto">
-                                                    💬 Nhắn Zalo khách
+                                                    Nhắn Zalo
                                                 </a>
                                                 <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Đóng</button>
                                             </div>

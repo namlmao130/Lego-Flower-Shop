@@ -8,12 +8,13 @@
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <span class="navbar-brand">🛠️ Admin - Quản lý danh mục</span>
+            <span class="navbar-brand">Admin - Quản lý danh mục</span>
             <div>
-                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2" target="_blank">🌐 Xem trang web</a>
-                <a href="{{ url_for('admin_orders') }}" class="btn btn-outline-light btn-sm me-2">📦 Đơn hàng</a>
-                <a href="{{ url_for('admin_chat') }}" class="btn btn-warning btn-sm me-2 fw-semibold">💬 Tin nhắn khách</a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm me-2" target="_blank">Xem website</a>
+                <a href="{{ url_for('admin_orders') }}" class="btn btn-outline-light btn-sm me-2">Đơn hàng</a>
+                <a href="{{ url_for('admin_chat') }}" class="btn btn-outline-light btn-sm me-2 fw-semibold">Tin nhắn</a>
                 <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm me-2">Sản phẩm</a>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-warning btn-sm me-2 fw-bold">Danh mục</a>
                 <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-light btn-sm">Đăng xuất</a>
             </div>
         </div>

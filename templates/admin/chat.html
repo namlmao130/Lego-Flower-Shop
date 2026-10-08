@@ -204,19 +204,62 @@
             text-align: center;
             padding: 20px;
         }
+        .conv-filter-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .conv-filter-btn {
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #475569;
+            font-size: 0.76rem;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+        }
+        .conv-filter-btn:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+        .conv-filter-btn.active {
+            background: #1B2140;
+            color: #ffffff;
+            border-color: #1B2140;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
+            animation: pulseDot 1.8s infinite;
+        }
+        @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
+            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid px-4">
             <span class="navbar-brand fw-bold">
-                🛠️ Admin - Tin nhắn khách hàng
+                Admin - Tin nhắn khách hàng
             </span>
             <div class="d-flex align-items-center gap-2">
-                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm" target="_blank">🌐 Xem trang web</a>
-                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm fw-bold">📦 Đơn hàng</a>
-                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">Quản lý sản phẩm</a>
-                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm">📂 Danh mục</a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-sm" target="_blank">Xem website</a>
+                <a href="{{ url_for('admin_orders') }}" class="btn btn-warning btn-sm fw-bold">Đơn hàng</a>
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">Sản phẩm</a>
+                <a href="{{ url_for('admin_categories') }}" class="btn btn-outline-light btn-sm">Danh mục</a>
                 <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger btn-sm">Đăng xuất</a>
             </div>
         </div>
@@ -232,6 +275,15 @@
                         <span id="unreadTotalBadge" class="badge bg-danger rounded-pill d-none">0 mới</span>
                     </div>
                     <input type="text" id="searchConvInput" class="form-control form-control-sm" placeholder="Tìm theo tên, SĐT khách...">
+                </div>
+
+                <!-- Tabs lọc danh sách hội thoại -->
+                <div class="conv-filter-tabs">
+                    <button type="button" class="conv-filter-btn active" data-filter="all">Tất cả</button>
+                    <button type="button" class="conv-filter-btn" data-filter="unread">
+                        Chưa đọc <span id="filterUnreadBadge" class="badge bg-danger rounded-pill d-none ms-1" style="font-size: 0.65rem;">0</span>
+                    </button>
+                    <button type="button" class="conv-filter-btn" data-filter="member">Thành viên</button>
                 </div>
 
                 <div class="conversation-list" id="conversationList">
@@ -259,6 +311,9 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <h6 class="fw-bold mb-0 text-dark" id="activeName">Khách hàng</h6>
                                     <span id="activeBadge" class="badge bg-secondary rounded-pill" style="font-size: 0.65rem;">Khách vãng lai</span>
+                                    <span class="d-inline-flex align-items-center gap-1 text-muted" style="font-size: 0.72rem;">
+                                        <span class="live-dot"></span> Đang trực tuyến
+                                    </span>
                                 </div>
                                 <div class="text-muted small mt-1" id="activeContact" style="font-size: 0.78rem;">
                                     Chưa có số điện thoại
@@ -267,7 +322,7 @@
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshActiveBtn" title="Làm mới cuộc trò chuyện">
-                                🔄 Tải lại
+                                Tải lại
                             </button>
                         </div>
                     </div>
@@ -279,10 +334,12 @@
                     <div class="chat-composer">
                         <!-- Tin nhắn mẫu nhanh -->
                         <div class="quick-chips-row">
-                            <button type="button" class="quick-chip-btn" data-text="Dạ Tiệm Hoa Lego xin chào bạn ạ! 🌸">🌸 Chào khách</button>
-                            <button type="button" class="quick-chip-btn" data-text="Dạ mẫu hoa này hiện đang có sẵn tại tiệm nha bạn! 💐">💐 Báo còn hàng</button>
-                            <button type="button" class="quick-chip-btn" data-text="Shop có hỗ trợ giao hỏa tốc và tặng kèm thiệp chúc mừng miễn phí nhé!">🎁 Quà tặng & Thiệp</button>
-                            <button type="button" class="quick-chip-btn" data-text="Bạn có thể để lại số điện thoại hoặc nhắn qua Zalo 0967.701.565 để shop gửi ảnh thật nhé!">📞 Xin Zalo</button>
+                            <button type="button" class="quick-chip-btn" data-text="Dạ Tiệm Hoa Lego xin chào bạn ạ!">Chào khách</button>
+                            <button type="button" class="quick-chip-btn" data-text="Dạ mẫu hoa này hiện đang có sẵn tại tiệm nha bạn!">Báo còn hàng</button>
+                            <button type="button" class="quick-chip-btn" data-text="Shop có hỗ trợ giao hỏa tốc và tặng kèm thiệp chúc mừng miễn phí nhé!">Quà tặng & Thiệp</button>
+                            <button type="button" class="quick-chip-btn" data-text="Dạ bạn cần nhận hoa vào ngày giờ nào ạ? Shop có hỗ trợ hẹn giờ giao chính xác nhé!">Hẹn giờ giao</button>
+                            <button type="button" class="quick-chip-btn" data-text="Dạ bên shop có nhận ship COD tận nơi hoặc chuyển khoản tiện lợi ạ!">Thanh toán & COD</button>
+                            <button type="button" class="quick-chip-btn" data-text="Bạn có thể để lại số điện thoại hoặc nhắn qua Zalo 0967.701.565 để shop gửi ảnh thật nhé!">Xin Zalo</button>
                         </div>
 
                         <form id="adminReplyForm" class="d-flex gap-2">
@@ -304,9 +361,15 @@
         document.addEventListener('DOMContentLoaded', function () {
             let activeSessionId = null;
             let conversationsData = [];
+            let currentFilter = 'all';
+            let previousTotalUnread = -1;
+            const baseTitle = document.title;
+            let titleBlinkTimer = null;
+
             const conversationList = document.getElementById('conversationList');
             const searchInput = document.getElementById('searchConvInput');
             const unreadBadge = document.getElementById('unreadTotalBadge');
+            const filterUnreadBadge = document.getElementById('filterUnreadBadge');
             const noActiveChat = document.getElementById('noActiveChat');
             const activeChatBox = document.getElementById('activeChatBox');
             const chatThread = document.getElementById('chatThread');
@@ -318,6 +381,53 @@
             const activeName = document.getElementById('activeName');
             const activeBadge = document.getElementById('activeBadge');
             const activeContact = document.getElementById('activeContact');
+
+            // Âm thanh thông báo tin nhắn khách mới (Web Audio API)
+            function playNotificationSound() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                    osc.frequency.setValueAtTime(880, ctx.currentTime + 0.09); // A5
+                    gain.gain.setValueAtTime(0.18, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.35);
+                } catch (e) {}
+            }
+
+            // Nhấp nháy tiêu đề tab khi có tin nhắn chưa đọc
+            function setTabAttention(unreadCount) {
+                if (unreadCount > 0) {
+                    if (!titleBlinkTimer) {
+                        let toggle = false;
+                        titleBlinkTimer = setInterval(() => {
+                            document.title = toggle ? `(${unreadCount}) Tin nhắn mới!` : baseTitle;
+                            toggle = !toggle;
+                        }, 1000);
+                    }
+                } else {
+                    if (titleBlinkTimer) {
+                        clearInterval(titleBlinkTimer);
+                        titleBlinkTimer = null;
+                    }
+                    document.title = baseTitle;
+                }
+            }
+
+            // Filter Tabs
+            document.querySelectorAll('.conv-filter-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.conv-filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.getAttribute('data-filter') || 'all';
+                    renderConversations(conversationsData);
+                });
+            });
 
             // Quick canned responses
             document.querySelectorAll('.quick-chip-btn').forEach(btn => {
@@ -344,17 +454,40 @@
             function updateTotalUnread() {
                 let total = 0;
                 conversationsData.forEach(c => total += (c.unread_count || 0));
+
+                // Chuông báo khi có tin nhắn chưa đọc tăng lên
+                if (previousTotalUnread !== -1 && total > previousTotalUnread) {
+                    playNotificationSound();
+                }
+                previousTotalUnread = total;
+
                 if (total > 0) {
                     unreadBadge.textContent = total + ' mới';
                     unreadBadge.classList.remove('d-none');
+                    if (filterUnreadBadge) {
+                        filterUnreadBadge.textContent = total;
+                        filterUnreadBadge.classList.remove('d-none');
+                    }
+                    setTabAttention(total);
                 } else {
                     unreadBadge.classList.add('d-none');
+                    if (filterUnreadBadge) filterUnreadBadge.classList.add('d-none');
+                    setTabAttention(0);
                 }
             }
 
             function renderConversations(list) {
                 const query = (searchInput.value || '').trim().toLowerCase();
                 const filtered = list.filter(item => {
+                    // Lọc theo Tab
+                    if (currentFilter === 'unread' && (!item.unread_count || item.unread_count <= 0)) {
+                        return false;
+                    }
+                    if (currentFilter === 'member' && !item.customer.is_member) {
+                        return false;
+                    }
+
+                    // Lọc theo từ khóa tìm kiếm
                     if (!query) return true;
                     const name = (item.customer.name || '').toLowerCase();
                     const phone = (item.customer.phone || '').toLowerCase();
@@ -437,7 +570,7 @@
                     if (cust.is_member) {
                         activeBadge.className = 'badge bg-success rounded-pill';
                         activeBadge.textContent = 'Khách thành viên';
-                        activeContact.innerHTML = `📞 ${cust.phone || 'Chưa có SĐT'} • ✉️ ${cust.email || 'Chưa có email'} • Ngày tham gia: ${cust.created_at || 'Mới'}`;
+                        activeContact.innerHTML = `SĐT: ${cust.phone || 'Chưa có'} • Email: ${cust.email || 'Chưa có'} • Ngày tham gia: ${cust.created_at || 'Mới'}`;
                     } else {
                         activeBadge.className = 'badge bg-secondary rounded-pill';
                         activeBadge.textContent = 'Khách vãng lai';
@@ -474,13 +607,25 @@
                 chatThread.scrollTop = chatThread.scrollHeight;
             }
 
-            // 3. Admin gửi tin nhắn trả lời
+            // 3. Admin gửi tin nhắn trả lời (Optimistic UI Update)
             adminReplyForm.addEventListener('submit', async function (e) {
                 e.preventDefault();
                 const text = adminReplyInput.value.trim();
                 if (!text || !activeSessionId) return;
 
-                adminReplyInput.disabled = true;
+                // Thêm tin nhắn ngay lập tức lên màn hình (trải nghiệm siêu mượt)
+                const now = new Date();
+                const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+                const optimisticBubble = document.createElement('div');
+                optimisticBubble.className = 'admin-msg-bubble admin-msg-me';
+                optimisticBubble.innerHTML = `
+                    <div>${escapeHtml(text)}</div>
+                    <div class="admin-msg-time">Bạn • ${timeStr} <span style="font-size:0.65rem; opacity:0.8;">✓</span></div>
+                `;
+                chatThread.appendChild(optimisticBubble);
+                chatThread.scrollTop = chatThread.scrollHeight;
+                adminReplyInput.value = '';
+
                 try {
                     const res = await fetch('/api/admin/chat/reply', {
                         method: 'POST',
@@ -492,15 +637,15 @@
                     });
                     const data = await res.json();
                     if (data.success) {
-                        adminReplyInput.value = '';
-                        await loadActiveMessages();
+                        fetchConversations();
                     } else {
+                        optimisticBubble.remove();
                         alert(data.error || 'Không thể gửi tin nhắn.');
                     }
                 } catch (e) {
+                    optimisticBubble.remove();
                     console.error('Lỗi khi gửi phản hồi:', e);
                 } finally {
-                    adminReplyInput.disabled = false;
                     adminReplyInput.focus();
                 }
             });

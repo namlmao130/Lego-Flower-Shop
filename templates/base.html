@@ -9,7 +9,147 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.3">
+    <style>
+        /* Bong bóng xem trước tin nhắn nổi sang trọng */
+        .chat-floating-toast {
+            position: absolute;
+            bottom: 76px;
+            right: 0;
+            width: 290px;
+            max-width: calc(100vw - 36px);
+            background: #ffffff !important;
+            border-radius: 18px !important;
+            border: 1.5px solid rgba(201, 162, 39, 0.45) !important;
+            box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18), 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+            padding: 12px 14px 10px !important;
+            cursor: pointer;
+            z-index: 1000;
+            animation: toastPopIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .chat-floating-toast:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 42px rgba(15, 23, 42, 0.24) !important;
+            border-color: var(--lego-gold, #c9a227) !important;
+        }
+        @keyframes toastPopIn {
+            from { opacity: 0; transform: translateY(14px) scale(0.92); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .chat-toast-arrow {
+            position: absolute;
+            bottom: -7px;
+            right: 22px;
+            width: 13px;
+            height: 13px;
+            background: #ffffff;
+            border-right: 1.5px solid rgba(201, 162, 39, 0.45);
+            border-bottom: 1.5px solid rgba(201, 162, 39, 0.45);
+            transform: rotate(45deg);
+        }
+        .chat-toast-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .chat-toast-avatar-ring {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1.5px solid var(--lego-gold, #c9a227);
+            background: #ffffff;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .chat-toast-avatar-ring img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+        .chat-toast-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #1B2140;
+            line-height: 1.2;
+        }
+        .chat-toast-subtitle {
+            font-size: 0.7rem;
+            color: #64748b;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 1px;
+        }
+        .chat-toast-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #22c55e;
+            display: inline-block;
+        }
+        .chat-toast-close {
+            background: #f1f5f9 !important;
+            border: none !important;
+            outline: none !important;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b !important;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            padding: 0;
+            flex-shrink: 0;
+        }
+        .chat-toast-close:hover {
+            background: #e2e8f0 !important;
+            color: #0f172a !important;
+            transform: scale(1.1);
+        }
+        .chat-toast-body {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 8px 12px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 6px;
+        }
+        .chat-toast-msg {
+            font-size: 0.82rem;
+            color: #1e293b;
+            line-height: 1.45;
+            word-break: break-word;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .chat-toast-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--lego-gold, #c9a227);
+            padding-top: 2px;
+            letter-spacing: 0.2px;
+        }
+        .chat-toast-footer svg {
+            transition: transform 0.2s ease;
+        }
+        .chat-floating-toast:hover .chat-toast-footer svg {
+            transform: translateX(3px);
+        }
+    </style>
 </head>
 
 <body>
@@ -361,16 +501,56 @@
                 </div>
             </div>
 
+            <!-- Nút cuộn nhanh xuống cuối khi đọc tin cũ -->
+            <button type="button" id="chatScrollBottomBtn" class="chat-scroll-bottom-btn d-none" aria-label="Cuộn xuống tin nhắn mới" title="Cuộn xuống dưới">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M19 12l-7 7-7-7"/>
+                </svg>
+            </button>
+
             <!-- Khung nhập tin nhắn -->
             <form id="chatForm" class="chat-footer">
                 <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn cho shop..."
                     autocomplete="off" maxlength="300" required>
-                <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Gửi tin nhắn" title="Gửi">
+                <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Gửi tin nhắn" title="Gửi" disabled>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
                     </svg>
                 </button>
             </form>
+        </div>
+
+        <!-- Bong bóng xem trước tin nhắn mới khi chat đang đóng (Thiết kế sang trọng) -->
+        <div id="chatFloatingToast" class="chat-floating-toast d-none" role="alert">
+            <div class="chat-toast-arrow"></div>
+            <div class="chat-toast-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="chat-toast-avatar-ring">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="26" height="26">
+                    </div>
+                    <div>
+                        <div class="chat-toast-title">Tiệm Hoa Lego</div>
+                        <div class="chat-toast-subtitle">
+                            <span class="chat-toast-dot"></span> Vừa gửi tin nhắn
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="chatToastCloseBtn" class="chat-toast-close" aria-label="Đóng thông báo" title="Đóng">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="chat-toast-body">
+                <div id="chatToastText" class="chat-toast-msg">Bạn có tin nhắn mới từ shop...</div>
+            </div>
+            <div class="chat-toast-footer">
+                <span>Bấm để trả lời ngay</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </div>
         </div>
 
         <!-- Nút biểu tượng nổi (Floating Bubble Trigger) -->
@@ -818,14 +998,17 @@
             const clearChatBtn = document.getElementById('clearChatBtn');
             const chatForm = document.getElementById('chatForm');
             const chatInput = document.getElementById('chatInput');
+            const chatSendBtn = document.getElementById('chatSendBtn');
             const chatMessages = document.getElementById('chatMessages');
             const chatSuggestions = document.getElementById('chatSuggestions');
+            const chatScrollBottomBtn = document.getElementById('chatScrollBottomBtn');
+            const chatFloatingToast = document.getElementById('chatFloatingToast');
             const chatIconOpen = chatToggleBtn ? chatToggleBtn.querySelector('.chat-icon-open') : null;
             const chatIconClose = chatToggleBtn ? chatToggleBtn.querySelector('.chat-icon-close') : null;
 
             if (!chatToggleBtn || !chatWindow || !chatMessages) return;
 
-            const STORAGE_KEY = 'lego_flower_chat_history';
+            const STORAGE_PREFIX = 'lego_flower_chat_history_';
             const STATE_KEY = 'lego_flower_chat_open';
             const SESSION_KEY = 'lego_flower_chat_session_id';
             const customerUnreadBadge = document.getElementById('chatCustomerUnreadBadge');
@@ -833,13 +1016,97 @@
             let isOpen = false;
             let unreadAdminCount = 0;
             let lastLoadedMsgId = 0;
+            let toastTimer = null;
 
-            // Lấy hoặc tạo sessionId định danh phiên chat của khách
-            let chatSessionId = localStorage.getItem(SESSION_KEY);
-            if (!chatSessionId) {
-                chatSessionId = 'session_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-                localStorage.setItem(SESSION_KEY, chatSessionId);
+            // Âm thanh thông báo tin nhắn từ shop (Web Audio API)
+            function playCustomerChime() {
+                try {
+                    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+                    osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
+                    gain.gain.setValueAtTime(0.12, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.4);
+                } catch (e) {}
             }
+
+            // Bong bóng nổi xem trước tin nhắn khi chat đang đóng
+            function showFloatingToast(text) {
+                if (!chatFloatingToast || isOpen) return;
+                const toastMsg = document.getElementById('chatToastText');
+                if (toastMsg) toastMsg.textContent = text;
+                chatFloatingToast.classList.remove('d-none');
+                if (toastTimer) clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    chatFloatingToast.classList.add('d-none');
+                }, 6500);
+            }
+
+            if (chatFloatingToast) {
+                chatFloatingToast.addEventListener('click', (e) => {
+                    if (e.target.closest('#chatToastCloseBtn')) {
+                        e.stopPropagation();
+                        chatFloatingToast.classList.add('d-none');
+                        if (toastTimer) clearTimeout(toastTimer);
+                        return;
+                    }
+                    chatFloatingToast.classList.add('d-none');
+                    if (toastTimer) clearTimeout(toastTimer);
+                    toggleChat(true);
+                });
+            }
+
+            // Nút cuộn nhanh xuống cuối khi đọc tin cũ
+            if (chatScrollBottomBtn) {
+                chatMessages.addEventListener('scroll', () => {
+                    const distanceToBottom = chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight;
+                    if (distanceToBottom > 120) {
+                        chatScrollBottomBtn.classList.remove('d-none');
+                    } else {
+                        chatScrollBottomBtn.classList.add('d-none');
+                    }
+                });
+                chatScrollBottomBtn.addEventListener('click', () => {
+                    chatMessages.scrollTo({ top: chatMessages.scrollHeight, behavior: 'smooth' });
+                });
+            }
+
+            // Kích hoạt nút gửi khi có nội dung
+            if (chatInput && chatSendBtn) {
+                chatInput.addEventListener('input', () => {
+                    chatSendBtn.disabled = !chatInput.value.trim();
+                });
+            }
+
+            // Xác định sessionId định danh phiên chat của khách:
+            // 1. Khách thành viên: cố định là cust_<id> (không đổi khi F5, làm mới chat hay đổi thiết bị)
+            // 2. Khách vãng lai: lưu guestId trong localStorage (cố định trên trình duyệt, không đổi khi F5 hay bấm làm mới)
+            const loggedInCustId = {{ current_user.id if (current_user.is_authenticated and current_user.__class__.__name__ == 'Customer') else 'null' }};
+            let chatSessionId;
+            if (loggedInCustId) {
+                chatSessionId = 'cust_' + loggedInCustId;
+                const prevGuestSession = localStorage.getItem(SESSION_KEY);
+                if (prevGuestSession && prevGuestSession !== chatSessionId && !prevGuestSession.startsWith('cust_')) {
+                    sessionStorage.setItem('lego_prev_guest_session', prevGuestSession);
+                }
+                localStorage.setItem(SESSION_KEY, chatSessionId);
+            } else {
+                chatSessionId = localStorage.getItem(SESSION_KEY);
+                if (!chatSessionId || chatSessionId.startsWith('cust_')) {
+                    chatSessionId = 'guest_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
+                    localStorage.setItem(SESSION_KEY, chatSessionId);
+                }
+            }
+
+            const STORAGE_KEY = STORAGE_PREFIX + chatSessionId;
+            const AUTOREPLY_KEY = 'lego_flower_chat_replied_' + chatSessionId;
 
             function toggleChat(state) {
                 isOpen = (state !== undefined) ? state : !isOpen;
@@ -848,6 +1115,8 @@
                     chatWindow.setAttribute('aria-hidden', 'false');
                     if (chatIconOpen) chatIconOpen.classList.add('d-none');
                     if (chatIconClose) chatIconClose.classList.remove('d-none');
+                    if (chatFloatingToast) chatFloatingToast.classList.add('d-none');
+                    if (toastTimer) clearTimeout(toastTimer);
                     sessionStorage.setItem(STATE_KEY, '1');
                     unreadAdminCount = 0;
                     if (customerUnreadBadge) customerUnreadBadge.classList.add('d-none');
@@ -886,7 +1155,8 @@
                 if (showTime) {
                     const time = document.createElement('span');
                     time.className = 'chat-time';
-                    time.textContent = timeStr || getCurrentTimeStr();
+                    const timeText = timeStr || getCurrentTimeStr();
+                    time.innerHTML = `${timeText}${isUser ? ' <span class="chat-check" title="Đã gửi">✓</span>' : ''}`;
                     msgDiv.appendChild(time);
                 }
 
@@ -938,15 +1208,21 @@
             // Gửi tin nhắn lên máy chủ (để Admin nhận được)
             async function sendToServer(text) {
                 try {
+                    const prevGuest = sessionStorage.getItem('lego_prev_guest_session');
+                    const payload = {
+                        session_id: chatSessionId,
+                        message: text
+                    };
+                    if (prevGuest) {
+                        payload.prev_guest_session = prevGuest;
+                    }
                     const res = await fetch('/api/chat/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            session_id: chatSessionId,
-                            message: text
-                        })
+                        body: JSON.stringify(payload)
                     });
                     if (res.ok) {
+                        if (prevGuest) sessionStorage.removeItem('lego_prev_guest_session');
                         const data = await res.json();
                         if (data.message && data.message.id) {
                             lastLoadedMsgId = Math.max(lastLoadedMsgId, data.message.id);
@@ -965,10 +1241,14 @@
                     const data = await res.json();
                     const msgs = data.messages || [];
                     if (msgs.length > 0) {
+                        let hasNewAdminMsg = false;
+                        let lastAdminText = '';
                         msgs.forEach(msg => {
                             lastLoadedMsgId = Math.max(lastLoadedMsgId, msg.id);
                             if (msg.sender_type === 'admin') {
                                 appendLiveMessage(msg.message, false, msg.time_str);
+                                hasNewAdminMsg = true;
+                                lastAdminText = msg.message;
                                 if (!isOpen) {
                                     unreadAdminCount++;
                                     if (customerUnreadBadge) {
@@ -978,6 +1258,12 @@
                                 }
                             }
                         });
+                        if (hasNewAdminMsg) {
+                            playCustomerChime();
+                            if (!isOpen && lastAdminText) {
+                                showFloatingToast(lastAdminText);
+                            }
+                        }
                     }
                 } catch (e) { }
             }
@@ -1051,29 +1337,28 @@
                 scrollChatToBottom();
             }
 
-            // Nút làm mới / xóa lịch sử chat
+            // Nút làm mới / đồng bộ cuộc trò chuyện (giữ nguyên cuộc trò chuyện, không tách phiên bên admin)
             if (clearChatBtn) {
                 clearChatBtn.addEventListener('click', async function (e) {
                     e.stopPropagation();
-                    const ok = await window.appConfirm({
-                        title: 'Làm mới cuộc trò chuyện',
-                        message: 'Bạn có muốn làm mới cuộc trò chuyện này không?',
-                        confirmText: 'Làm mới',
-                        cancelText: 'Hủy',
-                        type: 'warning'
-                    });
-                    if (ok) {
-                        chatSessionId = 'session_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-                        localStorage.setItem(SESSION_KEY, chatSessionId);
-                        localStorage.removeItem(STORAGE_KEY);
-                        localStorage.removeItem(AUTOREPLY_KEY);
-                        lastLoadedMsgId = 0;
-                        resetToWelcome();
+                    const svgIcon = clearChatBtn.querySelector('svg');
+                    if (svgIcon) svgIcon.classList.add('chat-icon-spin');
+                    clearChatBtn.disabled = true;
+
+                    try {
+                        // Đồng bộ lại lịch sử tin nhắn mới nhất từ server
+                        await loadChatHistory();
+                        scrollChatToBottom();
+                    } catch (err) {
+                        console.error('Lỗi khi làm mới đoạn chat:', err);
+                    } finally {
+                        setTimeout(() => {
+                            if (svgIcon) svgIcon.classList.remove('chat-icon-spin');
+                            clearChatBtn.disabled = false;
+                        }, 400);
                     }
                 });
             }
-
-            const AUTOREPLY_KEY = 'lego_flower_chat_replied';
 
             function hasAlreadyAutoReplied() {
                 if (localStorage.getItem(AUTOREPLY_KEY) === '1') return true;
@@ -1154,7 +1439,10 @@
 
                 // Gửi tin nhắn của người dùng với tính năng gom cụm tin nhắn liền mạch
                 appendLiveMessage(text, true);
-                if (chatInput) chatInput.value = '';
+                if (chatInput) {
+                    chatInput.value = '';
+                    if (chatSendBtn) chatSendBtn.disabled = true;
+                }
 
                 // GỬI LÊN SERVER ĐỂ ADMIN NHẬN ĐƯỢC
                 sendToServer(text);
