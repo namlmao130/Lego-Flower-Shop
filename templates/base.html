@@ -9,8 +9,19 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.4">
     <style>
+        /* Tự động ẩn thanh điều hướng khi lướt xuống & trượt xuống khi lướt lên */
+        .shop-navbar {
+            transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease !important;
+            will-change: transform;
+        }
+        .shop-navbar.nav-scrolled-hidden {
+            transform: translateY(-100%) !important;
+            box-shadow: none !important;
+            pointer-events: none !important;
+        }
+
         /* Bong bóng xem trước tin nhắn nổi sang trọng */
         .chat-floating-toast {
             position: absolute;
@@ -951,84 +962,83 @@
 
 
         // =======================================================
-        // ĐIỀU KHIỂN ẨN / HIỆN KHUNG ĐẦU TRANG KHI CUỘN TRÊN ĐIỆN THOẠI
-        // (Ẩn thu lên trên khi lướt xuống - Hiện trượt xuống khi lướt lên)
+        // ĐIỀU KHIỂN ẨN / HIỆN KHUNG ĐẦU TRANG KHI CUỘN TRANG
+        // (Lướt xuống -> Thu lên trên | Lướt lên -> Trượt xuống)
         // =======================================================
         (function () {
             const navEl = document.querySelector('.shop-navbar');
             if (!navEl) return;
 
-            let lastScrollY = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+            let lastScrollY = Math.max(0, window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0);
             let isNavHidden = false;
             let navScrollTicking = false;
-            const SCROLL_DELTA_THRESHOLD = 8; // Ngưỡng chống rung giật khi chạm nhẹ ngón tay
-            const SCROLL_MIN_OFFSET = 60;     // Chỉ kích hoạt ẩn khi đã cuộn qua độ cao thanh điều hướng
+            const SCROLL_DELTA = 4;
+            const SCROLL_MIN_OFFSET = 35;
 
-            function updateNavbarVisibility() {
-                const currentScrollY = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+            function setNavbarVisibility(hidden) {
+                if (hidden && !isNavHidden) {
+                    navEl.classList.add('nav-scrolled-hidden');
+                    navEl.style.transform = 'translateY(-100%)';
+                    navEl.style.boxShadow = 'none';
+                    navEl.style.pointerEvents = 'none';
+                    isNavHidden = true;
 
-                // Chỉ áp dụng hiệu ứng trên điện thoại & máy tính bảng (<= 991.98px)
-                if (window.innerWidth > 991.98) {
-                    if (isNavHidden) {
-                        navEl.classList.remove('nav-scrolled-hidden');
-                        isNavHidden = false;
+                    // Đóng menu tài khoản nếu đang mở để tránh bị kẹt
+                    const openUserMenu = document.querySelector('.user-popover-menu.show');
+                    if (openUserMenu) {
+                        openUserMenu.classList.remove('show');
+                        const userBtn = document.getElementById('userMenuBtn');
+                        if (userBtn && window.bootstrap && window.bootstrap.Dropdown) {
+                            const bsDrop = window.bootstrap.Dropdown.getInstance(userBtn);
+                            if (bsDrop) bsDrop.hide();
+                        }
                     }
-                    lastScrollY = currentScrollY;
-                    return;
+                } else if (!hidden && isNavHidden) {
+                    navEl.classList.remove('nav-scrolled-hidden');
+                    navEl.style.transform = 'translateY(0)';
+                    navEl.style.boxShadow = '';
+                    navEl.style.pointerEvents = '';
+                    isNavHidden = false;
                 }
+            }
+
+            function handleNavbarScroll() {
+                const currentScrollY = Math.max(0, window.scrollY || window.pageYOffset || document.documentElement.scrollTop || 0);
 
                 // Nếu menu hoa hồng bên trái đang mở thì giữ nguyên để tiện thao tác
                 if (typeof isOpen !== 'undefined' && isOpen) {
+                    setNavbarVisibility(false);
                     lastScrollY = currentScrollY;
                     return;
                 }
 
-                // Luôn hiển thị lại thanh navbar khi quay về sát đầu trang
-                if (currentScrollY <= 15) {
-                    if (isNavHidden) {
-                        navEl.classList.remove('nav-scrolled-hidden');
-                        isNavHidden = false;
-                    }
+                // Sát đỉnh trang (<= 20px) luôn hiển thị thanh điều hướng
+                if (currentScrollY <= 20) {
+                    setNavbarVisibility(false);
                     lastScrollY = currentScrollY;
                     return;
                 }
 
-                // Tránh giật khi người dùng kéo nảy (rubber-band) ở đáy trang trên iOS
-                const maxScrollY = document.documentElement.scrollHeight - window.innerHeight;
-                if (currentScrollY > maxScrollY - 10) {
+                // Chặn hiệu ứng nảy rubber-band ở đáy trang
+                const maxScroll = (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+                if (maxScroll > 0 && currentScrollY >= maxScroll - 15) {
+                    lastScrollY = currentScrollY;
                     return;
                 }
 
                 const diff = currentScrollY - lastScrollY;
 
-                // Bỏ qua chuyển động nếu độ chênh lệch nhỏ hơn ngưỡng rung
-                if (Math.abs(diff) < SCROLL_DELTA_THRESHOLD) {
+                // Bỏ qua chuyển động vi mô
+                if (Math.abs(diff) < SCROLL_DELTA) {
                     return;
                 }
 
                 if (diff > 0 && currentScrollY > SCROLL_MIN_OFFSET) {
-                    // LƯỚT XUỐNG: Ẩn khung đầu trang (animation thu lên trên)
-                    if (!isNavHidden) {
-                        navEl.classList.add('nav-scrolled-hidden');
-                        isNavHidden = true;
-
-                        // Đóng menu popover cá nhân nếu đang mở để tránh bị kẹt
-                        const openUserMenu = document.querySelector('.user-popover-menu.show');
-                        if (openUserMenu) {
-                            openUserMenu.classList.remove('show');
-                            const userBtn = document.getElementById('userMenuBtn');
-                            if (userBtn && window.bootstrap && window.bootstrap.Dropdown) {
-                                const bsDrop = window.bootstrap.Dropdown.getInstance(userBtn);
-                                if (bsDrop) bsDrop.hide();
-                            }
-                        }
-                    }
+                    // LƯỚT XUỐNG: Thu lên trên
+                    setNavbarVisibility(true);
                 } else if (diff < 0) {
-                    // LƯỚT LÊN: Hiện lại khung đầu trang (animation trượt xuống dưới)
-                    if (isNavHidden) {
-                        navEl.classList.remove('nav-scrolled-hidden');
-                        isNavHidden = false;
-                    }
+                    // LƯỚT LÊN: Trượt xuống dưới
+                    setNavbarVisibility(false);
                 }
 
                 lastScrollY = currentScrollY;
@@ -1037,17 +1047,10 @@
             window.addEventListener('scroll', () => {
                 if (!navScrollTicking) {
                     window.requestAnimationFrame(() => {
-                        updateNavbarVisibility();
+                        handleNavbarScroll();
                         navScrollTicking = false;
                     });
                     navScrollTicking = true;
-                }
-            }, { passive: true });
-
-            window.addEventListener('resize', () => {
-                if (window.innerWidth > 991.98 && isNavHidden) {
-                    navEl.classList.remove('nav-scrolled-hidden');
-                    isNavHidden = false;
                 }
             }, { passive: true });
         })();

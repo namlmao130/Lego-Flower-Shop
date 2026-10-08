@@ -879,21 +879,22 @@ footer.bg-dark {
     cursor: grabbing;
 }
 
-/* ===== Nút điều hướng Carousel dạng Pill (PREV / NEXT) ===== */
+/* ===== Nút điều hướng Carousel dạng Tròn (PREV / NEXT) ===== */
 .hero-carousel-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 6px 22px;
-    border-radius: 9999px;
+    width: 44px;
+    height: 44px;
+    padding: 0 !important;
+    border-radius: 50%;
     border: 1.5px solid #1a1a1a;
-    background-color: rgba(250, 248, 245, 0.85);
+    background-color: rgba(250, 248, 245, 0.9);
     color: #1a1a1a;
     font-family: 'Nunito', -apple-system, sans-serif;
-    font-size: 0.85rem;
+    font-size: 1.35rem;
     font-weight: 700;
-    letter-spacing: 0.5px;
+    line-height: 1;
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
