@@ -121,6 +121,17 @@ h1, h2, h3, .hero-title {
     -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.2);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+    transition: transform 0.36s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+    will-change: transform;
+}
+
+/* Tự động thu lên trên khi lướt xuống & trượt xuống khi lướt lên trên điện thoại */
+@media (max-width: 991.98px) {
+    .shop-navbar.nav-scrolled-hidden {
+        transform: translateY(-100%) !important;
+        box-shadow: none !important;
+        pointer-events: none;
+    }
 }
 .shop-navbar .navbar-brand {
     color: var(--lego-gold-light) !important;
@@ -1071,13 +1082,33 @@ input::-webkit-search-results-decoration {
     }
 
     .hero-card {
-        width: 180px !important;
-        height: 300px !important;
-        padding: 10px !important;
+        width: 215px !important;
+        height: 315px !important;
+        padding: 12px !important;
+        border-radius: 18px !important;
+        border: 2px solid rgba(201, 162, 39, 0.45) !important;
+        background: #ffffff !important;
+        animation: none !important; /* Tắt tuyệt đối animation lặp gradient để giải phóng CPU/GPU trên điện thoại */
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+        will-change: transform, opacity !important;
     }
 
     .hero-card img {
-        height: 180px !important;
+        height: 185px !important;
+        border-radius: 12px !important;
+    }
+
+    .hero-card strong {
+        font-size: 0.9rem !important;
+        color: #1e293b !important;
+        margin-top: 6px !important;
+    }
+
+    .hero-card-price {
+        font-size: 0.95rem !important;
+        font-family: inherit !important;
+        color: #b91c1c !important;
+        font-weight: 800 !important;
     }
 
     .search-filter-box {
@@ -1195,17 +1226,17 @@ input::-webkit-search-results-decoration {
         transform: translateX(-295px);
     }
 
-    /* Thu gọn khung carousel và viewfinder vừa vặn màn hình điện thoại */
+    /* Thu gọn khung carousel và ẩn viewfinder trên màn hình điện thoại để giao diện thanh thoát */
     .hero-carousel-stage {
-        height: 340px !important;
+        height: 330px !important;
         max-width: 100% !important;
-        touch-action: pan-x pan-y !important;
+        perspective: none !important; /* Loại bỏ tính toán 3D nặng nề trên mobile */
+        touch-action: pan-y !important;
         overscroll-behavior-x: contain;
     }
 
     .hero-viewfinder {
-        width: 204px !important;
-        height: 320px !important;
+        display: none !important; /* Ẩn khung viền vàng trên điện thoại */
     }
 
     .shop-navbar .navbar-brand {
