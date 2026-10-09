@@ -5,11 +5,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Shop Online{% endblock %}</title>
+    <!-- Resource hints: cho phép trình duyệt mở kết nối sớm tới CDN & Google Fonts -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link
         href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin"
-        rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.4">
+        rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@600;700&display=swap&subset=vietnamese,latin-ext,latin"
+        rel="stylesheet"></noscript>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.6">
     <style>
         /* Tự động ẩn thanh điều hướng khi lướt xuống & trượt xuống khi lướt lên */
         .shop-navbar {
@@ -20,6 +29,52 @@
             transform: translateY(-100%) !important;
             box-shadow: none !important;
             pointer-events: none !important;
+        }
+
+        /* Khắc phục triệt để lỗi tràn viền menu tài khoản trên điện thoại */
+        .user-popover-menu {
+            right: 0 !important;
+            left: auto !important;
+            max-width: calc(100vw - 20px) !important;
+        }
+
+        @media (max-width: 991.98px) {
+            .shop-navbar .container {
+                padding-left: 12px !important;
+                padding-right: 12px !important;
+            }
+            .shop-navbar .navbar-nav {
+                width: 100% !important;
+                display: flex !important;
+                flex-direction: row !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 2px !important;
+                padding-top: 5px !important;
+                padding-bottom: 3px !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+                margin-top: 4px !important;
+            }
+            .shop-navbar .nav-link {
+                font-size: 0.8rem !important;
+                padding: 4px 6px !important;
+                white-space: nowrap !important;
+                text-align: center !important;
+            }
+            .user-menu-dropdown {
+                position: static !important;
+            }
+            .user-popover-menu {
+                position: absolute !important;
+                top: 100% !important;
+                right: 10px !important;
+                left: auto !important;
+                width: min(285px, calc(100vw - 20px)) !important;
+                max-width: calc(100vw - 20px) !important;
+                transform: none !important;
+                margin-top: 6px !important;
+                z-index: 1095 !important;
+            }
         }
 
         /* Bong bóng xem trước tin nhắn nổi sang trọng */
@@ -612,7 +667,7 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" defer></script>
     <script>
         // =======================================================
         // HỆ THỐNG HỘP THOẠI XÁC NHẬN SANG TRỌNG (WINDOW.APPCONFIRM)
@@ -1342,14 +1397,29 @@
                 }
             }
 
-            // Kiểm tra tin nhắn mới từ Admin (Polling)
-            async function pollAdminMessages() {
+            // Kiểm tra tin nhắn mới từ Admin - Adaptive backoff polling:
+            // Khi chat đang hoạt động (vừa gửi/nhận tin): poll nhanh mỗi 3.5s
+            // Khi không có tin mới: poll ngày càng chậm lại (tối đa 18s) để tiết kiệm requests
+            let _pollTimer = null;
+            let _pollDelay = 3500;
+            let _pollIdleCount = 0;
+            const POLL_MIN = 3500;
+            const POLL_MAX = 18000;
+
+            function schedulePoll() {
+                if (_pollTimer) clearTimeout(_pollTimer);
+                _pollTimer = setTimeout(adaptivePoll, _pollDelay);
+            }
+
+            async function adaptivePoll() {
                 try {
                     const res = await fetch(`/api/chat/messages?session_id=${encodeURIComponent(chatSessionId)}&after_id=${lastLoadedMsgId}`);
-                    if (!res.ok) return;
+                    if (!res.ok) { schedulePoll(); return; }
                     const data = await res.json();
                     const msgs = data.messages || [];
                     if (msgs.length > 0) {
+                        _pollIdleCount = 0;
+                        _pollDelay = POLL_MIN;
                         let hasNewAdminMsg = false;
                         let lastAdminText = '';
                         msgs.forEach(msg => {
@@ -1373,9 +1443,18 @@
                                 showFloatingToast(lastAdminText);
                             }
                         }
+                    } else {
+                        _pollIdleCount++;
+                        // Tăng dần thời gian chờ sau mỗi lần idle, tối đa POLL_MAX
+                        _pollDelay = Math.min(_pollDelay * 1.25, POLL_MAX);
                     }
-                } catch (e) { }
+                } catch (e) {
+                    _pollDelay = Math.min(_pollDelay * 1.5, POLL_MAX);
+                }
+                schedulePoll();
             }
+
+            function pollAdminMessages() { adaptivePoll(); }
 
             async function loadChatHistory() {
                 // Ưu tiên tải tin nhắn từ server trước
@@ -1610,7 +1689,7 @@
 
             // Khởi tạo lịch sử chat & kích hoạt kiểm tra tin nhắn mới từ Admin
             loadChatHistory();
-            setInterval(pollAdminMessages, 3500);
+            schedulePoll();
 
             // Khôi phục trạng thái mở chat từ sessionStorage nếu trước đó đang mở
             if (sessionStorage.getItem(STATE_KEY) === '1') {

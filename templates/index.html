@@ -40,7 +40,10 @@
                         href="{{ url_for('product_detail', product_id=product.id) }}">
                         {% if product.thumbnail %}
                         <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}"
-                            alt="{{ product.name }}">
+                            alt="{{ product.name }}"
+                            loading="{{ 'eager' if loop.index0 <= 1 else 'lazy' }}"
+                            decoding="async"
+                            width="240" height="340">
                         {% else %}
                         <span class="hero-card-placeholder">Chưa có ảnh</span>
                         {% endif %}

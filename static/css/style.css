@@ -230,13 +230,16 @@ h1, h2, h3, .hero-title {
 
 .user-popover-menu {
     width: 285px;
+    max-width: calc(100vw - 24px) !important;
     background: #282828 !important;
     border: 1px solid rgba(255, 255, 255, 0.14) !important;
     border-radius: 12px !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55) !important;
     padding: 12px 0 8px 0 !important;
-    margin-top: 10px !important;
+    margin-top: 8px !important;
     z-index: 1060 !important;
+    right: 0 !important;
+    left: auto !important;
     animation: userMenuFadeIn 0.18s ease-out;
 }
 
@@ -1240,21 +1243,58 @@ input::-webkit-search-results-decoration {
         display: none !important; /* Ẩn khung viền vàng trên điện thoại */
     }
 
+    .shop-navbar .container {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+
     .shop-navbar .navbar-brand {
-        font-size: 1.35rem !important;
+        font-size: 1.25rem !important;
     }
 
     #toggleBtn {
-        min-width: 44px;
-        min-height: 44px;
+        min-width: 40px;
+        min-height: 40px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
     }
 
+    .shop-navbar .navbar-nav {
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: row !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 2px !important;
+        padding-top: 5px !important;
+        padding-bottom: 3px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.12) !important;
+        margin-top: 4px !important;
+    }
+
     .shop-navbar .nav-link {
-        font-size: 0.88rem !important;
-        padding: 8px 6px !important;
+        font-size: 0.8rem !important;
+        padding: 4px 6px !important;
+        white-space: nowrap !important;
+        text-align: center !important;
+    }
+
+    /* MENU TÀI KHOẢN TRÊN ĐIỆN THOẠI: Neo chuẩn xác vào góc phải màn hình, chặn Popper transform làm tràn màn hình */
+    .user-menu-dropdown {
+        position: static !important;
+    }
+
+    .user-popover-menu {
+        position: absolute !important;
+        top: 100% !important;
+        right: 10px !important;
+        left: auto !important;
+        width: min(285px, calc(100vw - 20px)) !important;
+        max-width: calc(100vw - 20px) !important;
+        transform: none !important;
+        margin-top: 6px !important;
+        z-index: 1095 !important;
     }
 
     .user-greeting {

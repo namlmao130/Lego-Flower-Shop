@@ -45,6 +45,10 @@ class Product(db.Model):
     stock = db.Column(db.Integer, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True, index=True)
 
+    __table_args__ = (
+        db.Index('idx_products_category_id_desc', 'category_id', 'id'),
+    )
+
     @property
     def thumbnail(self):
         """Ảnh đại diện dùng cho trang chủ/danh sách: ưu tiên ảnh đầu tiên trong media"""
@@ -177,6 +181,11 @@ class ChatMessage(db.Model):
 
     customer = db.relationship('Customer', backref=db.backref('chat_messages', lazy=True))
 
+    __table_args__ = (
+        db.Index('idx_chat_messages_session_id_id', 'session_id', 'id'),
+        db.Index('idx_chat_messages_unread_badge', 'sender_type', 'is_read'),
+    )
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -217,6 +226,10 @@ class Order(db.Model):
 
     customer = db.relationship('Customer', backref=db.backref('orders', lazy=True, order_by='Order.created_at.desc()'))
     items = db.relationship('OrderItem', backref='order', cascade='all, delete-orphan', lazy=True)
+
+    __table_args__ = (
+        db.Index('idx_orders_customer_created', 'customer_id', 'created_at'),
+    )
 
     @property
     def status_label(self):
