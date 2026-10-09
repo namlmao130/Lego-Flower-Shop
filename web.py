@@ -1,12 +1,15 @@
 import os
 import time
 import uuid
+import hmac
+import secrets
 import smtplib
 import urllib.parse
 from datetime import datetime
 from functools import wraps
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import parseaddr
 from flask import Flask, render_template, request, redirect, url_for, flash, abort, jsonify, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.utils import secure_filename
@@ -489,12 +492,14 @@ def get_reset_serializer():
     return URLSafeTimedSerializer(app.config['SECRET_KEY'])
 
 
-def send_password_reset_email(to_email, reset_url):
-    """Gửi email chứa liên kết đặt lại mật khẩu.
-    Nếu chưa cấu hình thông tin SMTP (ở môi trường local/dev), tự động in link ra Terminal."""
+def send_password_reset_email(to_email, reset_url, verification_code):
+    """Gửi mã xác thực và liên kết đặt lại mật khẩu qua SMTP."""
     mail_username = app.config.get('MAIL_USERNAME')
     mail_password = app.config.get('MAIL_PASSWORD')
-    sender = app.config.get('MAIL_DEFAULT_SENDER') or mail_username or 'Lego Flower <noreply@legoflower.com>'
+    configured_sender = app.config.get('MAIL_DEFAULT_SENDER', '').strip()
+    configured_sender_email = parseaddr(configured_sender)[1]
+    sender_email = configured_sender_email or mail_username
+    sender = configured_sender if configured_sender_email else f'Lego Flower <{sender_email}>'
 
     html_content = f"""
     <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 28px; border: 1.5px solid #C9A227; border-radius: 16px; background: #ffffff;">
@@ -504,7 +509,9 @@ def send_password_reset_email(to_email, reset_url):
         </div>
         <p style="color: #333333; font-size: 15px; line-height: 1.6;">Xin chào,</p>
         <p style="color: #333333; font-size: 15px; line-height: 1.6;">Chúng tôi nhận được yêu cầu đặt lại mật khẩu cho tài khoản Lego Flower liên kết với địa chỉ email <strong>{to_email}</strong>.</p>
-        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Vui lòng nhấn vào nút bên dưới để tiến hành thiết lập mật khẩu mới (liên kết có hiệu lực trong vòng 30 phút):</p>
+        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Mã xác thực của bạn là:</p>
+        <div style="text-align: center; margin: 20px 0; font-size: 30px; font-weight: bold; letter-spacing: 8px; color: #21243D;">{verification_code}</div>
+        <p style="color: #333333; font-size: 15px; line-height: 1.6;">Nhập mã này tại trang đặt lại mật khẩu. Mã và liên kết có hiệu lực trong vòng 30 phút.</p>
         <div style="text-align: center; margin: 30px 0;">
             <a href="{reset_url}" style="display: inline-block; background: #C9A227; color: #ffffff; text-decoration: none; padding: 12px 30px; border-radius: 10px; font-weight: bold; font-size: 15px; letter-spacing: 0.3px;">Đặt lại mật khẩu</a>
         </div>
@@ -520,12 +527,7 @@ def send_password_reset_email(to_email, reset_url):
     """
 
     if not mail_username or not mail_password:
-        print("\n" + "="*70)
-        print(" [EMAIL SIMULATOR - DEV] RESET PASSWORD LINK:")
-        print(f" To: {to_email}")
-        print(f" Reset URL: {reset_url}")
-        print("="*70 + "\n")
-        return True, "simulated"
+        return False, 'Chưa cấu hình MAIL_USERNAME và MAIL_PASSWORD.'
 
     try:
         msg = MIMEMultipart('alternative')
@@ -534,12 +536,13 @@ def send_password_reset_email(to_email, reset_url):
         msg['To'] = to_email
         msg.attach(MIMEText(html_content, 'html', 'utf-8'))
 
-        server = smtplib.SMTP(app.config.get('MAIL_SERVER'), app.config.get('MAIL_PORT'), timeout=10)
-        if app.config.get('MAIL_USE_TLS'):
-            server.starttls()
-        server.login(mail_username, mail_password)
-        server.sendmail(sender, [to_email], msg.as_string())
-        server.quit()
+        with smtplib.SMTP(app.config.get('MAIL_SERVER'), app.config.get('MAIL_PORT'), timeout=10) as server:
+            server.ehlo()
+            if app.config.get('MAIL_USE_TLS'):
+                server.starttls()
+                server.ehlo()
+            server.login(mail_username, mail_password)
+            server.sendmail(sender_email, [to_email], msg.as_string())
         return True, "sent"
     except Exception as ex:
         print(f"[ERROR GỬI EMAIL] {ex}")
@@ -813,11 +816,19 @@ def forgot_password():
         customer = Customer.query.filter(func.lower(Customer.email) == email).first()
         if customer:
             serializer = get_reset_serializer()
-            token = serializer.dumps(customer.email, salt='password-reset-salt')
+            verification_code = f'{secrets.randbelow(1_000_000):06d}'
+            token = serializer.dumps(
+                {'email': customer.email, 'code': verification_code},
+                salt='password-reset-salt'
+            )
             reset_url = url_for('reset_password', token=token, _external=True)
-            send_password_reset_email(customer.email, reset_url)
+            sent, error = send_password_reset_email(customer.email, reset_url, verification_code)
+            if not sent:
+                app.logger.error('Không thể gửi email đặt lại mật khẩu cho %s: %s', customer.email, error)
+                flash('Hệ thống chưa thể gửi mã xác thực. Vui lòng thử lại sau hoặc liên hệ cửa hàng.', 'error')
+                return render_template('forgot_password.html', email=email)
 
-        flash('Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (kể cả mục Spam/Thư rác).', 'success')
+        flash('Nếu email của bạn tồn tại trong hệ thống, chúng tôi đã gửi mã xác thực và liên kết đặt lại mật khẩu. Vui lòng kiểm tra hộp thư (kể cả mục Spam/Thư rác).', 'success')
         return redirect(url_for('login'))
 
     return render_template('forgot_password.html')
@@ -831,7 +842,14 @@ def reset_password(token):
 
     serializer = get_reset_serializer()
     try:
-        email = serializer.loads(token, salt='password-reset-salt', max_age=1800)
+        reset_payload = serializer.loads(token, salt='password-reset-salt', max_age=1800)
+        # Hỗ trợ các liên kết cũ đã phát hành trước khi bổ sung mã xác thực.
+        if isinstance(reset_payload, dict):
+            email = reset_payload.get('email', '')
+            expected_code = str(reset_payload.get('code', ''))
+        else:
+            email = str(reset_payload)
+            expected_code = ''
     except SignatureExpired:
         flash('Liên kết đặt lại mật khẩu đã hết hạn (chỉ có hiệu lực trong 30 phút). Vui lòng yêu cầu lại.', 'error')
         return redirect(url_for('forgot_password'))
@@ -845,22 +863,26 @@ def reset_password(token):
         return redirect(url_for('forgot_password'))
 
     if request.method == 'POST':
+        verification_code = request.form.get('verification_code', '').strip()
         password = request.form.get('password', '')
         password2 = request.form.get('password2', '')
 
+        if expected_code and not hmac.compare_digest(verification_code, expected_code):
+            flash('Mã xác thực không chính xác. Vui lòng kiểm tra lại email.', 'error')
+            return render_template('reset_password.html', token=token, requires_code=True)
         if len(password) < 6:
             flash('Mật khẩu mới phải có ít nhất 6 ký tự.', 'error')
-            return render_template('reset_password.html', token=token)
+            return render_template('reset_password.html', token=token, requires_code=bool(expected_code))
         if password != password2:
             flash('Mật khẩu xác nhận không khớp.', 'error')
-            return render_template('reset_password.html', token=token)
+            return render_template('reset_password.html', token=token, requires_code=bool(expected_code))
 
         customer.set_password(password)
         db.session.commit()
         flash('Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới ngay bây giờ.', 'success')
         return redirect(url_for('login'))
 
-    return render_template('reset_password.html', token=token)
+    return render_template('reset_password.html', token=token, requires_code=bool(expected_code))
 
 
 @app.route('/logout')
@@ -2014,4 +2036,3 @@ with app.app_context():
 
 if __name__ == '__main__':
     app.run(debug=True)
-

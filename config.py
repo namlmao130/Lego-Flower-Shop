@@ -3,6 +3,34 @@ from datetime import timedelta
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 
+
+def load_project_env(base_dir):
+    """Nạp cấu hình cục bộ từ .env mà không ghi đè biến môi trường khi deploy."""
+    env_path = os.path.join(base_dir, '.env')
+    if not os.path.isfile(env_path):
+        return
+
+    try:
+        with open(env_path, 'r', encoding='utf-8') as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if not line or line.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                key = key.strip()
+                value = value.strip()
+                if len(value) >= 2 and value[0] == value[-1] and value[0] in ('"', "'"):
+                    value = value[1:-1]
+                if key:
+                    os.environ.setdefault(key, value)
+    except OSError:
+        # Không để lỗi file cấu hình cục bộ làm ứng dụng không khởi động được.
+        pass
+
+
+load_project_env(BASE_DIR)
+
+
 def get_or_create_secret_key(base_dir):
     """Đảm bảo SECRET_KEY luôn là chuỗi ngẫu nhiên bảo mật cao, không dùng chuỗi mặc định dễ đoán."""
     env_secret = os.environ.get('SECRET_KEY', '').strip()
@@ -29,7 +57,7 @@ def get_or_create_secret_key(base_dir):
 
 class Config:
     # Mặc định dùng SQLite trong thư mục dự án, hoặc dùng DATABASE_URL nếu có cấu hình
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', 'sqlite:///' + os.path.join(BASE_DIR, 'shop.db'))
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').strip() or ('sqlite:///' + os.path.join(BASE_DIR, 'shop.db'))
     if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
         SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
 
@@ -99,4 +127,5 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', '1']
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'Lego Flower <noreply@legoflower.com>')
+    # Để trống sẽ tự dùng MAIL_USERNAME, tránh dùng địa chỉ "From" chưa được SMTP cho phép.
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', '').strip()
