@@ -28,7 +28,15 @@ def load_project_env(base_dir):
         pass
 
 
+load_project_env('/etc/secrets')
 load_project_env(BASE_DIR)
+
+
+def normalize_database_url(value):
+    for prefix in ('postgres://', 'postgresql://'):
+        if value.startswith(prefix):
+            return 'postgresql+psycopg://' + value[len(prefix):]
+    return value
 
 
 def get_or_create_secret_key(base_dir):
@@ -58,8 +66,9 @@ def get_or_create_secret_key(base_dir):
 class Config:
     # Mặc định dùng SQLite trong thư mục dự án, hoặc dùng DATABASE_URL nếu có cấu hình
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL', '').strip() or ('sqlite:///' + os.path.join(BASE_DIR, 'shop.db'))
-    if SQLALCHEMY_DATABASE_URI and SQLALCHEMY_DATABASE_URI.startswith('postgres://'):
-        SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = normalize_database_url(SQLALCHEMY_DATABASE_URI)
+    if os.environ.get('REQUIRE_POSTGRES', '').lower() == 'true' and not SQLALCHEMY_DATABASE_URI.startswith('postgresql'):
+        raise RuntimeError('DATABASE_URL must point to PostgreSQL for this deployment.')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
@@ -68,10 +77,13 @@ class Config:
     #   SQLite sẽ CHỜ tối đa 15s thay vì báo lỗi "database is locked" ngay lập tức.
     # - pool_pre_ping: tự kiểm tra kết nối còn sống trước khi dùng, tránh lỗi kết nối "chết"
     #   khi server rảnh lâu rồi có traffic trở lại.
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'connect_args': {'timeout': 15, 'check_same_thread': False},
-        'pool_pre_ping': True,
-    }
+    SQLALCHEMY_ENGINE_OPTIONS = {'pool_pre_ping': True}
+    if SQLALCHEMY_DATABASE_URI.startswith('sqlite'):
+        SQLALCHEMY_ENGINE_OPTIONS['connect_args'] = {'timeout': 15, 'check_same_thread': False}
+    elif SQLALCHEMY_DATABASE_URI.startswith('postgresql'):
+        SQLALCHEMY_ENGINE_OPTIONS.update(
+            connect_args={'connect_timeout': 10}, pool_size=5, max_overflow=5,
+        )
 
     SECRET_KEY = get_or_create_secret_key(BASE_DIR)
 

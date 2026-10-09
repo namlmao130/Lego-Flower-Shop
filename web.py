@@ -15,23 +15,13 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 from sqlalchemy import func, event, or_
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-try:
-    from flask_compress import Compress
-except ImportError:
-    Compress = None
+from flask_compress import Compress
 from flask_caching import Cache
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
-import gzip
 from PIL import Image, ImageOps
-
-COMPRESSIBLE_MIMETYPES = (
-    'text/html', 'text/css', 'text/xml', 'text/javascript',
-    'application/javascript', 'application/json', 'application/xml',
-    'image/svg+xml'
-)
 
 from config import Config
 from models import db, Product, Category, Admin, ProductMedia, Review, Customer, ChatMessage, Order, OrderItem, PHONE_REGEX, EMAIL_REGEX, normalize_phone
@@ -43,12 +33,8 @@ app.config.from_object(Config)
 if os.environ.get('TRUST_PROXY', 'false').lower() == 'true':
     app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
-# Nén response (HTML/CSS/JS/JSON) nếu môi trường có sẵn thư viện
-if Compress:
-    try:
-        Compress(app)
-    except Exception:
-        pass
+# Một cơ chế nén duy nhất, tôn trọng Accept-Encoding của trình duyệt.
+Compress(app)
 
 # Cache RAM / Redis cho dữ liệu ít thay đổi
 cache = Cache(app)
@@ -106,9 +92,6 @@ def ensure_database_indexes():
             conn.commit()
     except Exception:
         pass
-
-with app.app_context():
-    ensure_database_indexes()
 
 # Khởi tạo Flask-Login — dùng chung cho cả Admin (quản trị) và Customer (khách hàng).
 # Hai loại tài khoản được phân biệt bằng tiền tố trong get_id(): "admin-<id>" / "customer-<id>"
@@ -299,21 +282,6 @@ def add_header(response):
         "frame-ancestors 'self';"
     )
 
-    # TỰ ĐỘNG NÉN GZIP HIỆU NĂNG CAO: Giảm 75-85% dung lượng HTML, CSS, JS, JSON gửi qua mạng
-    accept_encoding = request.headers.get('Accept-Encoding', '')
-    if 'gzip' in accept_encoding.lower() and 200 <= response.status_code < 300:
-        if 'Content-Encoding' not in response.headers and not response.direct_passthrough:
-            c_type = (response.content_type or '').split(';')[0].strip().lower()
-            if any(c_type.startswith(m) for m in COMPRESSIBLE_MIMETYPES):
-                body = response.get_data()
-                if len(body) >= 500:
-                    compressed = gzip.compress(body, compresslevel=6)
-                    if len(compressed) < len(body):
-                        response.set_data(compressed)
-                        response.headers['Content-Encoding'] = 'gzip'
-                        response.headers['Content-Length'] = len(compressed)
-                        response.headers['Vary'] = 'Accept-Encoding'
-
     return response
 
 
@@ -390,17 +358,22 @@ def save_media_files(files, product_id):
 #   TRANG PUBLIC (không cần login)
 # ============================================
 
+def product_cards_query(with_ratings=True):
+    """Load only the relationships and rating fields used by product cards."""
+    options = [selectinload(Product.media), joinedload(Product.category)]
+    if with_ratings:
+        options.append(selectinload(Product.reviews).load_only(Review.product_id, Review.rating))
+    return Product.query.options(*options)
+
+
 @app.route('/')
 def index():
     # Trang chủ: hỗ trợ tìm kiếm sản phẩm và lọc theo danh mục
     q = request.args.get('q', '').strip()
     category_id = request.args.get('category', type=int)
+    is_partial = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1'
 
-    query = Product.query.options(
-        selectinload(Product.reviews),
-        selectinload(Product.media),
-        selectinload(Product.category)
-    )
+    query = product_cards_query()
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
@@ -409,19 +382,15 @@ def index():
     if not (q or category_id):
         # TỐI ƯU HÓA TRUY VẤN TRANG CHỦ: Gom 1 lần truy vấn duy nhất lấy 8 sản phẩm mới nhất.
         # 6 sản phẩm đầu tiên hiển thị trên carousel, toàn bộ 8 sản phẩm hiển thị ở danh sách bên dưới.
-        # Giảm hơn 60% số câu truy vấn SQL trên trang chủ (từ 8 câu xuống còn 3 câu)!
+        # Tái sử dụng cùng danh sách để không truy vấn riêng cho carousel.
         products = query.order_by(Product.id.desc()).limit(8).all()
         carousel_products = products[:6]
     else:
-        carousel_products = Product.query.options(
-            selectinload(Product.reviews),
-            selectinload(Product.media),
-            selectinload(Product.category)
-        ).order_by(Product.id.desc()).limit(6).all()
+        carousel_products = [] if is_partial else product_cards_query(with_ratings=False).order_by(Product.id.desc()).limit(6).all()
         products = query.order_by(Product.id.desc()).limit(60).all()
 
     # Nếu là yêu cầu AJAX (chỉ load lại phần sản phẩm bên dưới)
-    if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.args.get('ajax') == '1':
+    if is_partial:
         return render_template(
             '_product_list_partial.html',
             products=products,
@@ -450,11 +419,7 @@ def products():
     category_id = request.args.get('category', type=int)
     page = request.args.get('page', 1, type=int)
 
-    query = Product.query.options(
-        selectinload(Product.reviews),
-        selectinload(Product.media),
-        selectinload(Product.category)
-    )
+    query = product_cards_query()
     if category_id:
         query = query.filter_by(category_id=category_id)
     if q:
@@ -898,25 +863,19 @@ def product_detail(product_id):
     product = Product.query.options(
         selectinload(Product.media),
         selectinload(Product.reviews).selectinload(Review.customer),
-        selectinload(Product.category)
+        joinedload(Product.category)
     ).get_or_404(product_id)
 
     # Lấy tối đa 4 sản phẩm cùng danh mục gợi ý thêm (loại trừ sản phẩm hiện tại)
     related_products = []
     if product.category_id:
-        related_products = Product.query.options(
-            selectinload(Product.media),
-            selectinload(Product.reviews)
-        ).filter(
+        related_products = product_cards_query(with_ratings=False).filter(
             Product.category_id == product.category_id,
             Product.id != product.id
         ).order_by(Product.id.desc()).limit(4).all()
     if not related_products:
         # Nếu danh mục này không còn sp khác, lấy 4 sp mới nhất khác
-        related_products = Product.query.options(
-            selectinload(Product.media),
-            selectinload(Product.reviews)
-        ).filter(Product.id != product.id).order_by(Product.id.desc()).limit(4).all()
+        related_products = product_cards_query(with_ratings=False).filter(Product.id != product.id).order_by(Product.id.desc()).limit(4).all()
 
     # Nếu khách hàng đã đăng nhập, kiểm tra xem họ đã đánh giá sản phẩm này chưa
     # (để ẩn form và hiện thông báo thay vì cho đánh giá trùng)
@@ -1194,7 +1153,24 @@ def checkout():
         for item in items:
             p = item['product']
             qty = item['quantity']
-            p.stock -= qty
+
+            # Trừ tồn kho trực tiếp trong database để các checkout đồng thời
+            # không thể cùng mua một lượng hàng đã hết.
+            updated = db.session.query(Product).filter(
+                Product.id == p.id,
+                Product.stock >= qty
+            ).update(
+                {Product.stock: Product.stock - qty},
+                synchronize_session=False
+            )
+            if updated != 1:
+                db.session.rollback()
+                flash(
+                    f'Rất tiếc, sản phẩm "{p.name}" vừa có người khác mua hết. '
+                    'Vui lòng kiểm tra lại giỏ hàng!',
+                    'error'
+                )
+                return redirect(url_for('view_cart'))
 
             order_item = OrderItem(
                 order_id=order.id,
@@ -2023,15 +1999,30 @@ def create_default_admin():
     """Tạo sẵn 1 tài khoản admin nếu chưa có, để bạn login lần đầu."""
     if not Admin.query.filter_by(username='admin').first():
         admin = Admin(username='admin')
-        admin.set_password('admin123')  # NHỚ đổi mật khẩu này sau khi login lần đầu
+        password = os.environ.get('ADMIN_PASSWORD', '')
+        if not password and db.engine.dialect.name == 'postgresql':
+            raise RuntimeError('Set ADMIN_PASSWORD before initializing a new PostgreSQL database.')
+        admin.set_password(password or 'admin123')
         db.session.add(admin)
         db.session.commit()
-        print(">>> Đã tạo tài khoản admin mặc định: username=admin, password=admin123")
+        print('>>> Đã tạo tài khoản admin: username=admin')
 
 
 with app.app_context():
-    db.create_all()          # tạo các bảng nếu chưa có
-    create_default_admin()   # tạo tài khoản admin mặc định
+    if db.engine.dialect.name == 'postgresql':
+        # Serialize schema/bootstrap across Gunicorn workers on first startup.
+        with db.engine.connect() as bootstrap_connection:
+            bootstrap_connection.execute(db.text('SELECT pg_advisory_lock(72024001)'))
+            try:
+                db.create_all()
+                ensure_database_indexes()
+                create_default_admin()
+            finally:
+                bootstrap_connection.execute(db.text('SELECT pg_advisory_unlock(72024001)'))
+    else:
+        db.create_all()
+        ensure_database_indexes()
+        create_default_admin()
 
 
 if __name__ == '__main__':

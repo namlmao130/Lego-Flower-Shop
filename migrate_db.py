@@ -26,6 +26,8 @@ def column_exists(cursor, table, column):
 
 
 def main():
+    if not Config.SQLALCHEMY_DATABASE_URI.startswith('sqlite:///'):
+        raise SystemExit('Legacy SQLite migration only. PostgreSQL schema is created by web.py; transfer data with transfer_to_postgres.py before first startup.')
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 

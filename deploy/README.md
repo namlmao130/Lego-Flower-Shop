@@ -1,5 +1,20 @@
 # Hướng dẫn triển khai (Deploy)
 
+## Docker trên Render
+
+Project có sẵn `Dockerfile` ở thư mục gốc. Khi tạo hoặc sửa Web Service trên Render:
+
+1. Chọn **Language: Docker**.
+2. Đặt **Dockerfile Path** là `./Dockerfile` (hoặc để mặc định nếu Render tự phát hiện).
+3. Để trống **Docker Command** để Render chạy lệnh `CMD` trong Dockerfile.
+4. Trong **Environment Variables** của Render, thêm `DATABASE_URL` (Internal Database URL của Render Postgres), `ADMIN_PASSWORD`, `SECRET_KEY`, `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`, `TRUST_PROXY=true`, và `SESSION_COOKIE_SECURE=true`.
+   Không thêm `MAIL_PASSWORD` vào Git, Dockerfile, hay Docker Command.
+5. Lưu bằng **Save, rebuild, and deploy**.
+
+Container tự lắng nghe trên `0.0.0.0:$PORT`; Render cung cấp biến `PORT` khi chạy.
+
+> **Dữ liệu:** Container yêu cầu PostgreSQL qua DATABASE_URL. Xem [hướng dẫn PostgreSQL](POSTGRESQL.md) để cấu hình và chuyển dữ liệu cũ. Ảnh upload vẫn cần Persistent Disk tại `/app/static/uploads`; PostgreSQL không lưu nội dung ảnh. Docker không đóng gói SQLite hoặc secrets của máy local.
+
 Có 2 kiểu triển khai khác nhau — chọn 1 theo nơi bạn định host:
 
 ## Cách 1: Nền tảng PaaS (Render, Railway, Heroku...) — ĐƠN GIẢN, khuyên dùng cho đồ án

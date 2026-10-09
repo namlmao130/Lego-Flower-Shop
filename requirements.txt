@@ -10,3 +10,4 @@ Flask-Caching>=2.3.0
 redis>=5.0.0
 waitress>=2.1.2
 Flask-Compress>=1.15
+psycopg[binary]>=3.2,<4
