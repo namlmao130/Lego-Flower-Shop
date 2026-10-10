@@ -22,6 +22,20 @@ def invalidate_categories_cache():
     cache.delete("all_categories")
 
 
+def get_categories_with_products():
+    """Return session-bound categories with products loaded for admin screens.
+
+    Cached category objects are intentionally not used here: a cached ORM object
+    may be detached from the request's database session, so lazy-loading
+    ``category.products`` would fail in production.
+    """
+    return (
+        Category.query.options(selectinload(Category.products))
+        .order_by(Category.name)
+        .all()
+    )
+
+
 def product_cards_query(with_ratings=True):
     """Load only the relationships and rating fields used by product cards."""
     options = [selectinload(Product.media), joinedload(Product.category)]

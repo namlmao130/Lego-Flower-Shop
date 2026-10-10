@@ -110,6 +110,9 @@ class AppTests(unittest.TestCase):
             self.assertIn(b"admin-layout", response.data, path)
             self.assertIn(b"/static/css/admin.css", response.data, path)
 
+        category_response = self.client.get("/admin/categories")
+        self.assertIn(b"1 s\xe1\xba\xa3n ph\xe1\xba\xa9m", category_response.data)
+
     def test_vietnamese_search_ranking_and_fields(self):
         from app.services.search_service import search_products
 

@@ -5,12 +5,12 @@ from flask import flash, redirect, render_template, request, url_for
 from app.extensions import db
 from app.models import Category
 from app.security import admin_required
-from app.services.catalog_service import get_cached_categories, invalidate_categories_cache
+from app.services.catalog_service import get_categories_with_products, invalidate_categories_cache
 
 
 @admin_required
 def admin_categories():
-    categories = get_cached_categories()
+    categories = get_categories_with_products()
     return render_template("admin/categories.html", categories=categories)
 
 
