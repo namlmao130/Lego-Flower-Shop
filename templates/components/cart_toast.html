@@ -1,0 +1,36 @@
+    <!-- ============================================ -->
+    <!--   MINI-CART TOAST NOTIFICATION CONTAINER     -->
+    <!-- ============================================ -->
+    <div id="cartToastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1090;">
+        <div id="cartToast" class="toast align-items-center border-0 shadow-lg rounded-4 overflow-hidden" role="alert"
+            aria-live="assertive" aria-atomic="true"
+            style="min-width: 310px; max-width: 360px; border: 1.5px solid rgba(201, 162, 39, 0.45) !important; background: #ffffff;">
+            <div class="toast-header border-0 py-2 px-3" style="background: rgba(253, 250, 242, 0.95);">
+                <span class="me-2" style="font-size: 1.1rem;"></span>
+                <strong class="me-auto text-dark" style="font-family:'Playfair Display',serif; font-size: 0.95rem;">Đã
+                    thêm vào giỏ hàng!</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Đóng"></button>
+            </div>
+            <div class="toast-body p-3 bg-white border-top" style="border-color: rgba(33, 36, 61, 0.06) !important;">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <img id="cartToastImg" src="" alt="Hoa Lego" class="rounded-3 border object-fit-cover flex-shrink-0"
+                        style="width: 52px; height: 52px; background: #fafafa;">
+                    <div class="overflow-hidden">
+                        <div id="cartToastTitle" class="fw-bold text-dark text-truncate" style="font-size: 0.92rem;">Tên
+                            sản phẩm</div>
+                        <div id="cartToastPrice" class="text-danger fw-semibold small">0 đ</div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('view_cart') }}"
+                        class="btn btn-outline-dark btn-sm rounded-pill flex-grow-1 fw-semibold py-1">
+                        Xem giỏ hàng
+                    </a>
+                    <a href="{{ url_for('checkout') }}"
+                        class="btn btn-auth btn-sm rounded-pill flex-grow-1 fw-semibold py-1 text-white text-center">
+                        Đặt đơn ngay
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>

@@ -1,0 +1,157 @@
+    <!-- ============================================ -->
+    <!--   WIDGET CHAT VỚI SHOP (FLOATING LIVE CHAT)  -->
+    <!-- ============================================ -->
+    <div id="chatWidget" class="chat-widget" data-chat-session-id="{{ chat_session_id }}">
+        <!-- Cửa sổ Chat -->
+        <div id="chatWindow" class="chat-window" role="dialog" aria-modal="false"
+            aria-labelledby="chatWindowTitle" aria-hidden="true">
+            <!-- Header khung chat -->
+            <div class="chat-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="chat-avatar-badge" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; max-height: 38px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--lego-gold, #c9a227); padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #ffffff;">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="38" height="38" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; max-height: 38px; object-fit: cover; border-radius: 50%; display: block;">
+                    </div>
+                    <div>
+                        <div class="chat-header-title" id="chatWindowTitle">Tiệm Hoa Lego</div>
+                        <div class="chat-header-status">
+                            <span class="chat-status-dot"></span> Tư vấn trực tiếp qua website
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <button type="button" id="clearChatBtn" class="chat-header-action-btn"
+                        aria-label="Làm mới đoạn chat" title="Làm mới cuộc trò chuyện">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
+                            <path d="M21 3v5h-5"></path>
+                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"></path>
+                            <path d="M3 21v-5h5"></path>
+                        </svg>
+                    </button>
+                    <button type="button" id="closeChatBtn" class="chat-close-btn" aria-label="Thu nhỏ chat"
+                        title="Đóng chat">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thanh kênh liên hệ nhanh (Zalo & Hotline) -->
+            <div class="chat-quick-channels">
+                <span class="small text-muted fw-semibold">Liên hệ nhanh:</span>
+                <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
+                    class="chat-quick-btn chat-zalo-btn" title="Nhắn qua Zalo">
+                    <img src="{{ url_for('static', filename='images/zalo_logo.png') }}" alt="Zalo" width="18"
+                        height="18" style="object-fit: contain; border-radius: 4px; display: inline-block;">
+                    0967.701.565
+                </a>
+                <a href="tel:0967701565" class="chat-quick-btn chat-phone-btn" title="Gọi Hotline">
+                    📞 Hotline
+                </a>
+            </div>
+
+            <!-- Khu vực nội dung tin nhắn -->
+            <div id="chatMessages" class="chat-body">
+                <!-- Tin nhắn chào của shop -->
+                <div class="chat-msg chat-msg-bot">
+                    <div class="chat-bubble">
+                        Xin chào bạn! Hãy để lại câu hỏi, shop sẽ phản hồi ngay trong cuộc trò chuyện này.
+                    </div>
+                    <span class="chat-time">Vừa xong</span>
+                </div>
+
+                <!-- Các nút câu hỏi gợi ý nhanh -->
+                <div class="chat-suggestions" id="chatSuggestions">
+                    <button type="button" class="chat-chip" data-msg="Shop có những mẫu hoa nào làm quà tặng ý nghĩa?">
+                        Mẫu hoa quà tặng ý nghĩa
+                    </button>
+                    <button type="button" class="chat-chip"
+                        data-msg="Phí vận chuyển và thời gian giao hàng như thế nào?">
+                        Phí ship & thời gian giao hàng
+                    </button>
+                    <button type="button" class="chat-chip" data-msg="Shop có hỗ trợ viết thiệp và gói quà không?">
+                        Gói quà & thiệp chúc mừng
+                    </button>
+                    <button type="button" class="chat-chip"
+                        data-msg="Tôi muốn liên hệ trực tiếp với chủ tiệm qua Zalo/SĐT.">
+                        📞 Hotline & Zalo trực tiếp
+                    </button>
+                </div>
+            </div>
+
+            <!-- Nút cuộn nhanh xuống cuối khi đọc tin cũ -->
+            <button type="button" id="chatScrollBottomBtn" class="chat-scroll-bottom-btn d-none" aria-label="Cuộn xuống tin nhắn mới" title="Cuộn xuống dưới">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 5v14M19 12l-7 7-7-7"/>
+                </svg>
+            </button>
+
+            <!-- Khung nhập tin nhắn -->
+            <div id="chatNetworkStatus" class="chat-network-status d-none" role="status" aria-live="polite"></div>
+            <form id="chatForm" class="chat-footer">
+                <label for="chatInput" class="visually-hidden">Tin nhắn gửi shop</label>
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Nhập tin nhắn cho shop..."
+                    autocomplete="off" maxlength="2000" required></textarea>
+                <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Gửi tin nhắn" title="Gửi" disabled>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- Bong bóng xem trước tin nhắn mới khi chat đang đóng (Thiết kế sang trọng) -->
+        <div id="chatFloatingToast" class="chat-floating-toast d-none" role="alert">
+            <div class="chat-toast-arrow"></div>
+            <div class="chat-toast-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="chat-toast-avatar-ring">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="26" height="26">
+                    </div>
+                    <div>
+                        <div class="chat-toast-title">Tiệm Hoa Lego</div>
+                        <div class="chat-toast-subtitle">
+                            <span class="chat-toast-dot"></span> Vừa gửi tin nhắn
+                        </div>
+                    </div>
+                </div>
+                <button type="button" id="chatToastCloseBtn" class="chat-toast-close" aria-label="Đóng thông báo" title="Đóng">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="chat-toast-body">
+                <div id="chatToastText" class="chat-toast-msg">Bạn có tin nhắn mới từ shop...</div>
+            </div>
+            <div class="chat-toast-footer">
+                <span>Bấm để trả lời ngay</span>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Nút biểu tượng nổi (Floating Bubble Trigger) -->
+        <button id="chatToggleBtn" class="chat-toggle-btn position-relative" type="button"
+            aria-label="Mở khung chat với shop" title="Chat với shop">
+            <span class="chat-online-badge"></span>
+            <span id="chatCustomerUnreadBadge"
+                class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none shadow-sm"
+                style="font-size: 0.72rem;">0</span>
+            <span class="chat-icon-open">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                </svg>
+            </span>
+            <span class="chat-icon-close d-none">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </span>
+        </button>
+    </div>

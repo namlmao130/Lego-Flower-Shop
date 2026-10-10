@@ -1,0 +1,72 @@
+    <!-- ============================================ -->
+    <!--   CHÂN TRANG (FOOTER) SANG TRỌNG            -->
+    <!-- ============================================ -->
+    <footer class="shop-footer mt-5">
+        <div class="container py-5">
+            <div class="row g-4 justify-content-between">
+                <!-- Cột 1: Giới thiệu thương hiệu -->
+                <div class="col-12 col-md-5 col-lg-4">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <h4 class="mb-0 fw-bold rainbow-brand" style="font-size: 1.6rem;">Lego Flower</h4>
+                    </div>
+                    <p class="text-white-50 mb-3" style="line-height: 1.6; font-size: 0.92rem;">
+                        Bộ sưu tập hoa Lego tinh tế, vĩnh cửu theo thời gian. Món quà ý nghĩa, gửi gắm yêu thương qua
+                        từng mảnh ghép tỉ mỉ và sáng tạo.
+                    </p>
+                    <div class="d-flex align-items-center gap-2 text-white-50" style="font-size: 0.88rem;">
+                        <span>Chuẩn mảnh ghép</span>
+                        <span>•</span>
+                        <span>Giao hàng toàn quốc</span>
+                    </div>
+                </div>
+
+                <!-- Cột 2: Khám phá nhanh -->
+                <div class="col-6 col-md-3 col-lg-3">
+                    <h5 class="footer-heading mb-3">Khám phá</h5>
+                    <ul class="list-unstyled footer-links mb-0">
+                        <li class="mb-2"><a href="{{ url_for('index') }}"
+                                class="text-white-50 text-decoration-none">Trang chủ</a></li>
+                        <li class="mb-2"><a href="{{ url_for('products') }}"
+                                class="text-white-50 text-decoration-none">Tất cả sản phẩm</a></li>
+                        <li class="mb-2"><a href="{{ url_for('my_orders_view') }}"
+                                class="text-white-50 text-decoration-none">Tra cứu đơn hàng</a></li>
+                        {% for cat in nav_categories %}
+                        <li class="mb-2"><a href="{{ url_for('products', category=cat.id) }}"
+                                class="text-white-50 text-decoration-none">{{ cat.name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <!-- Cột 3: Liên hệ & Hỗ trợ -->
+                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
+                    <h5 class="footer-heading mb-3">Liên hệ hỗ trợ</h5>
+                    <ul class="list-unstyled footer-contact mb-0 text-white-50" style="font-size: 0.92rem;">
+                        <li class="mb-2">
+                            <strong class="text-white d-block">Hotline / Zalo:</strong>
+                            <a href="https://zalo.me/0967701565" target="_blank" rel="noopener noreferrer"
+                                class="text-warning text-decoration-none fw-bold d-inline-flex align-items-center gap-1">
+                                <img src="{{ url_for('static', filename='images/zalo_logo.png') }}" alt="Zalo"
+                                    width="16" height="16" style="object-fit: contain; border-radius: 3px;">
+                                0967.701.565
+                            </a>
+                        </li>
+                        <li class="mb-2">
+                            <strong class="text-white d-block">Giờ phục vụ:</strong>
+                            <span>8:00 - 22:00 (Hàng ngày)</span>
+                        </li>
+                        <li>
+                            <strong class="text-white d-block">Chính sách:</strong>
+                            <span>Bù mảnh miễn phí nếu thiếu</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Dòng bản quyền dưới cùng -->
+            <div class="footer-bottom mt-4 pt-3 border-top d-flex flex-wrap justify-content-between align-items-center"
+                style="border-color: rgba(255, 255, 255, 0.1) !important;">
+                <p class="mb-0 text-white-50 small">&copy; 2026 Lego Flower Shop. Tất cả các quyền được bảo lưu.</p>
+                <p class="mb-0 text-white-50 small">Trao gửi yêu thương qua từng mảnh ghép 💖</p>
+            </div>
+        </div>
+    </footer>

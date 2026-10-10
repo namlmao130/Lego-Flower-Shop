@@ -8,16 +8,23 @@ The storefront uses server-rendered Jinja templates with progressively enhanced 
 templates/
 ├── base.html                    # Global document shell and extension blocks
 ├── components/                  # Reusable Jinja UI components
+│   ├── site_header.html
+│   ├── site_footer.html
+│   ├── chat_widget.html
+│   ├── confirm_modal.html
+│   ├── cart_toast.html
 │   └── product_search.html
 └── _product_list_partial.html   # AJAX-compatible product results
 
 static/
 ├── css/
 │   ├── style.css                # Existing storefront styles
+│   ├── app-shell.css            # Global shell and floating component styles
 │   └── design-system.css        # Tokens, shared states and accessibility rules
 └── js/
+    ├── app-shell.js              # Global navigation, chat, modal and toast behavior
     └── components/
-        └── product-search.js    # Progressive enhancement for product filtering
+        └── product-search.js     # Progressive enhancement for product filtering
 ```
 
 ## Template extension points

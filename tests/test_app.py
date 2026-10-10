@@ -150,6 +150,13 @@ class AppTests(unittest.TestCase):
                 self.assertIn("js/components/product-search.js", html)
                 self.assertEqual(html.count("data-product-search"), 1)
 
+    def test_base_layout_uses_external_shell_assets(self):
+        html = self.client.get("/").get_data(as_text=True)
+        self.assertIn("css/app-shell.css", html)
+        self.assertIn("js/app-shell.js", html)
+        self.assertIn("data-chat-session-id=", html)
+        self.assertNotIn("const chatSessionId =", html)
+
     def test_customer_login_and_settings(self):
         response = self.client.post(
             "/login",
