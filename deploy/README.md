@@ -7,8 +7,8 @@ Project có sẵn `Dockerfile` ở thư mục gốc. Khi tạo hoặc sửa Web 
 1. Chọn **Language: Docker**.
 2. Đặt **Dockerfile Path** là `./Dockerfile` (hoặc để mặc định nếu Render tự phát hiện).
 3. Để trống **Docker Command** để Render chạy lệnh `CMD` trong Dockerfile.
-4. Trong **Environment Variables** của Render, thêm `DATABASE_URL` (Internal Database URL của Render Postgres), `ADMIN_PASSWORD`, `SECRET_KEY`, `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_TLS`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_DEFAULT_SENDER`, `TRUST_PROXY=true`, và `SESSION_COOKIE_SECURE=true`.
-   Không thêm `MAIL_PASSWORD` vào Git, Dockerfile, hay Docker Command.
+4. Trong **Environment Variables** của Render, thêm `DATABASE_URL` (Internal Database URL của Render Postgres), `ADMIN_PASSWORD`, `SECRET_KEY`, `TRUST_PROXY=true`, và `SESSION_COOKIE_SECURE=true`. Cấu hình email theo [hướng dẫn Brevo HTTPS](EMAIL.md) cho Render Free.
+   Không thêm API key hoặc mật khẩu vào Git, Dockerfile, hay Docker Command.
 5. Lưu bằng **Save, rebuild, and deploy**.
 
 Container tự lắng nghe trên `0.0.0.0:$PORT`; Render cung cấp biến `PORT` khi chạy.
@@ -27,7 +27,7 @@ Việc cần làm:
 2. Kết nối repo với Render/Railway.
 3. Set các biến môi trường (Environment Variables) trong dashboard của nền tảng:
    - `SECRET_KEY` — chuỗi bí mật ngẫu nhiên dài
-   - `MAIL_USERNAME`, `MAIL_PASSWORD` — để tính năng quên mật khẩu gửi được email
+   - Email: dùng [Brevo HTTPS](EMAIL.md) trên Render Free. `MAIL_USERNAME`, `MAIL_PASSWORD` chỉ dành cho môi trường cho phép SMTP.
    - `REDIS_URL` — **nếu** nền tảng có cung cấp Redis add-on (Render có "Redis" miễn phí ở gói thấp nhất, Railway có plugin Redis). Nếu không set, app vẫn chạy bình thường với RAM, chỉ là rate-limit sẽ hơi "lỏng" hơn 1 chút khi có nhiều worker (xem giải thích trong `config.py`).
    - `TRUST_PROXY=true` — hầu hết PaaS đều có proxy ở lớp ngoài, nên bật để rate-limit nhận đúng IP khách
 4. Xong — nền tảng tự deploy theo `Procfile`.

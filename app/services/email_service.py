@@ -1,9 +1,12 @@
 """Services / email service."""
 
+import json
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import parseaddr
+from urllib.error import HTTPError, URLError
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from flask import current_app as app
 from itsdangerous import URLSafeTimedSerializer
@@ -13,8 +16,65 @@ def get_reset_serializer():
     return URLSafeTimedSerializer(app.config["SECRET_KEY"])
 
 
+class _NoRedirect(HTTPRedirectHandler):
+    """Never forward the API key or reset token to a redirected endpoint."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _send_brevo(to_email, html_content):
+    """Submit once over HTTPS; acceptance does not guarantee inbox delivery."""
+    api_key = app.config.get("BREVO_API_KEY", "").strip()
+    sender_email = app.config.get("BREVO_SENDER_EMAIL", "").strip()
+    if not api_key or not sender_email:
+        return False, "Brevo: cần BREVO_API_KEY và BREVO_SENDER_EMAIL đã xác minh."
+
+    payload = {
+        "sender": {
+            "email": sender_email,
+            "name": app.config.get("BREVO_SENDER_NAME") or "Lego Flower",
+        },
+        "to": [{"email": to_email}],
+        "subject": "[Lego Flower] Đặt lại mật khẩu tài khoản",
+        "htmlContent": html_content,
+    }
+    request = Request(
+        "https://api.brevo.com/v3/smtp/email",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={
+            "api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    try:
+        with build_opener(_NoRedirect()).open(request, timeout=10) as response:
+            result = json.loads(response.read(65536))
+            if response.status == 201 and isinstance(result, dict) and result.get("messageId"):
+                return True, "accepted"
+        return False, "Brevo: phản hồi không xác nhận nhận thư."
+    except HTTPError as error:
+        # Never log response bodies: they may echo credentials or reset links.
+        error.close()
+        hints = {
+            400: "kiểm tra sender đã xác minh và cấu hình nội dung",
+            401: "API key không hợp lệ",
+            402: "kiểm tra hạn mức gửi thư",
+            403: "kiểm tra quyền API key và trạng thái tài khoản transactional",
+            429: "vượt giới hạn gửi thư, thử lại sau",
+        }
+        return False, f"Brevo HTTP {error.code}: {hints.get(error.code, 'dịch vụ tạm thời lỗi')}"
+    except (URLError, OSError):
+        # No automatic retry/fallback: a timed-out request may already be accepted.
+        return False, "Brevo: lỗi kết nối hoặc hết thời gian chờ HTTPS."
+    except (ValueError, UnicodeError):
+        return False, "Brevo: phản hồi JSON không hợp lệ."
+
+
 def send_password_reset_email(to_email, reset_url, verification_code):
-    """Gửi mã xác thực và liên kết đặt lại mật khẩu qua SMTP."""
+    """Gửi mã xác thực bằng provider được cấu hình, không tự chuyển provider."""
     mail_username = app.config.get("MAIL_USERNAME")
     mail_password = app.config.get("MAIL_PASSWORD")
     configured_sender = app.config.get("MAIL_DEFAULT_SENDER", "").strip()
@@ -46,6 +106,12 @@ def send_password_reset_email(to_email, reset_url, verification_code):
         <p style="color: #aaaaaa; font-size: 12px; text-align: center; margin: 0;">Lego Flower Shop &bull; Shop hoa Lego nghệ thuật cao cấp</p>
     </div>
     """
+
+    provider = app.config.get("MAIL_PROVIDER", "smtp").strip().lower()
+    if provider == "brevo":
+        return _send_brevo(to_email, html_content)
+    if provider != "smtp":
+        return False, "MAIL_PROVIDER phải là brevo hoặc smtp."
 
     if not mail_username or not mail_password:
         return False, "Chưa cấu hình MAIL_USERNAME và MAIL_PASSWORD."

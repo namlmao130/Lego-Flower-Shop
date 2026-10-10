@@ -216,6 +216,26 @@ class AppTests(unittest.TestCase):
             )
         self.assertEqual(self.client.get(f"/reset-password/{token}").location, "/forgot-password")
 
+    def test_password_reset_brevo_route(self):
+        self.app.config.update(
+            MAIL_PROVIDER="brevo",
+            BREVO_API_KEY="test-only",
+            BREVO_SENDER_EMAIL="shop@example.test",
+        )
+        with patch("app.services.email_service.build_opener") as build:
+            reply = build.return_value.open.return_value.__enter__.return_value
+            reply.status = 201
+            reply.read.return_value = b'{"messageId":"test-id"}'
+            response = self.client.post("/forgot-password", data={"email": "customer@example.test"})
+            self.assertEqual(response.status_code, 302)
+            reply.read.return_value = b"{}"
+            response = self.client.post("/forgot-password", data={"email": "customer@example.test"})
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Hệ thống chưa thể gửi", response.get_data(as_text=True))
+            build.return_value.open.reset_mock()
+            self.client.post("/forgot-password", data={"email": "unknown@example.test"})
+            build.return_value.open.assert_not_called()
+
     def test_csrf_origin_and_rate_limits(self):
         response = self.client.post(
             "/cart/add", data={"product_id": self.pid}, headers={"Origin": "https://other.example"}

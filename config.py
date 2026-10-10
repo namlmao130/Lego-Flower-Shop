@@ -146,7 +146,14 @@ class Config:
     ALLOWED_VIDEO_EXTENSIONS = {"mp4", "webm", "mov", "ogg"}
     ALLOWED_EXTENSIONS = ALLOWED_IMAGE_EXTENSIONS | ALLOWED_VIDEO_EXTENSIONS
 
-    # Cấu hình gửi Email (ví dụ dùng Gmail SMTP hoặc dịch vụ khác)
+    # Render Free cần HTTPS API; SMTP vẫn dùng được ở môi trường hỗ trợ.
+    MAIL_PROVIDER = os.environ.get("MAIL_PROVIDER", "smtp").strip().lower()
+    BREVO_API_KEY = os.environ.get("BREVO_API_KEY", "").strip()
+    # Địa chỉ đã xác minh trong Brevo, không phải email của khách nhận thư.
+    BREVO_SENDER_EMAIL = os.environ.get("BREVO_SENDER_EMAIL", "").strip()
+    BREVO_SENDER_NAME = os.environ.get("BREVO_SENDER_NAME", "Lego Flower").strip()
+
+    # Cấu hình SMTP (không dùng khi MAIL_PROVIDER=brevo).
     MAIL_SERVER = os.environ.get("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT = int(os.environ.get("MAIL_PORT", 587))
     MAIL_USE_TLS = os.environ.get("MAIL_USE_TLS", "true").lower() in ["true", "1"]
