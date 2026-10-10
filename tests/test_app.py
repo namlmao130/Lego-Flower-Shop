@@ -17,7 +17,7 @@ os.environ["REQUIRE_POSTGRES"] = "false"
 
 from app import create_app
 from app.extensions import db
-from app.models import Admin, Category, Customer, Order, Product
+from app.models import Admin, Category, ChatMessage, Customer, Order, Product
 from app.services.email_service import get_reset_serializer
 from app.services.image_service import process_and_save_avatar
 from app.services.order_service import StockUnavailable, place_order
@@ -249,6 +249,86 @@ class AppTests(unittest.TestCase):
         self.assertEqual(success.status_code, 302)
         with self.app.app_context():
             self.assertTrue(db.session.get(Customer, self.cid).check_password("changed-password"))
+
+    def test_guest_chat_session_is_server_owned_and_isolated(self):
+        guest = self.app.test_client()
+        response = guest.post(
+            "/api/chat/send",
+            json={"message": "Tôi cần tư vấn", "session_id": "session-do-trinh-duyet-chon"},
+        )
+        self.assertEqual(response.status_code, 200)
+        session_id = response.json["message"]["session_id"]
+        self.assertTrue(session_id.startswith("guest_"))
+        self.assertNotEqual(session_id, "session-do-trinh-duyet-chon")
+
+        other_guest = self.app.test_client()
+        stolen = other_guest.get("/api/chat/messages", query_string={"session_id": session_id})
+        self.assertEqual(stolen.status_code, 200)
+        self.assertEqual(stolen.json["messages"], [])
+        self.assertNotEqual(stolen.json["session_id"], session_id)
+
+        own = guest.get("/api/chat/messages")
+        self.assertEqual([item["message"] for item in own.json["messages"]], ["Tôi cần tư vấn"])
+
+    def test_chat_delivery_and_read_receipts(self):
+        guest = self.app.test_client()
+        sent = guest.post("/api/chat/send", json={"message": "Shop còn hàng không?"}).json
+        session_id = sent["message"]["session_id"]
+
+        admin = self.app.test_client()
+        with admin.session_transaction() as session:
+            session["_user_id"] = f"admin-{self.aid}"
+            session["_fresh"] = True
+
+        opened = admin.get(f"/api/admin/chat/messages/{session_id}")
+        self.assertEqual(opened.status_code, 200)
+        self.assertTrue(opened.json["messages"][0]["is_read"])
+
+        reply = admin.post(
+            "/api/admin/chat/reply",
+            json={"session_id": session_id, "message": "Dạ sản phẩm vẫn còn ạ."},
+        )
+        self.assertEqual(reply.status_code, 200)
+        self.assertFalse(reply.json["message"]["is_read"])
+
+        received = guest.get("/api/chat/messages")
+        self.assertEqual(received.status_code, 200)
+        self.assertEqual(received.json["customer_read_through_id"], sent["message"]["id"])
+        self.assertEqual(received.json["messages"][-1]["message"], "Dạ sản phẩm vẫn còn ạ.")
+        with self.app.app_context():
+            self.assertTrue(db.session.get(ChatMessage, reply.json["message"]["id"]).is_read)
+
+        self.assertEqual(
+            admin.post(
+                "/api/admin/chat/reply",
+                json={"session_id": "missing", "message": "Không tồn tại"},
+            ).status_code,
+            404,
+        )
+        self.assertEqual(
+            admin.post(
+                "/api/admin/chat/reply",
+                json={"session_id": session_id, "message": "x" * 2001},
+            ).status_code,
+            400,
+        )
+
+    def test_guest_chat_merges_after_customer_login(self):
+        guest = self.app.test_client()
+        original = guest.post("/api/chat/send", json={"message": "Tin nhắn trước đăng nhập"})
+        guest_session_id = original.json["message"]["session_id"]
+        with guest.session_transaction() as session:
+            session["_user_id"] = f"customer-{self.cid}"
+            session["_fresh"] = True
+
+        messages = guest.get("/api/chat/messages")
+        self.assertEqual(messages.status_code, 200)
+        self.assertEqual(messages.json["session_id"], f"cust_{self.cid}")
+        with self.app.app_context():
+            merged = ChatMessage.query.one()
+            self.assertEqual(merged.session_id, f"cust_{self.cid}")
+            self.assertEqual(merged.customer_id, self.cid)
+            self.assertNotEqual(merged.session_id, guest_session_id)
 
     def test_invalid_and_expired_reset_links(self):
         for token in ["invalid", "bad.signature.value"]:

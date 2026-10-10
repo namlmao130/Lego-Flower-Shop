@@ -1,6 +1,6 @@
 """Chat database models. Existing table names are preserved."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.extensions import db
 
@@ -27,6 +27,7 @@ class ChatMessage(db.Model):
     )
 
     def to_dict(self):
+        created_at = self.created_at.replace(tzinfo=timezone.utc)
         return {
             "id": self.id,
             "session_id": self.session_id,
@@ -35,6 +36,7 @@ class ChatMessage(db.Model):
             "sender_name": self.sender_name,
             "message": self.message,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "created_at_iso": created_at.isoformat(),
             "time_str": self.created_at.strftime("%H:%M"),
             "is_read": self.is_read,
         }

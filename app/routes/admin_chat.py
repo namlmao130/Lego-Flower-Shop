@@ -138,7 +138,13 @@ def api_admin_chat_reply():
     message = (data.get("message") or "").strip()
 
     if not session_id or not message:
-        return jsonify({"error": "Thiếu session_id hoặc nội dung tin nhắn"}), 400
+        return jsonify({"error": "Vui lòng nhập nội dung tin nhắn."}), 400
+    if len(message) > 2000:
+        return jsonify({"error": "Tin nhắn tối đa 2.000 ký tự."}), 400
+
+    first_message = ChatMessage.query.filter_by(session_id=session_id).first()
+    if not first_message:
+        return jsonify({"error": "Cuộc trò chuyện không còn tồn tại."}), 404
 
     cust_id = None
     if session_id.startswith("cust_"):
@@ -148,8 +154,7 @@ def api_admin_chat_reply():
             pass
 
     if not cust_id:
-        last_msg = ChatMessage.query.filter_by(session_id=session_id).first()
-        cust_id = last_msg.customer_id if last_msg else None
+        cust_id = first_message.customer_id
 
     reply_msg = ChatMessage(
         session_id=session_id,

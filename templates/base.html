@@ -491,7 +491,8 @@
     <!-- ============================================ -->
     <div id="chatWidget" class="chat-widget">
         <!-- Cửa sổ Chat -->
-        <div id="chatWindow" class="chat-window" aria-hidden="true">
+        <div id="chatWindow" class="chat-window" role="dialog" aria-modal="false"
+            aria-labelledby="chatWindowTitle" aria-hidden="true">
             <!-- Header khung chat -->
             <div class="chat-header">
                 <div class="d-flex align-items-center gap-2">
@@ -499,9 +500,9 @@
                         <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" width="38" height="38" style="width: 38px; height: 38px; min-width: 38px; min-height: 38px; max-width: 38px; max-height: 38px; object-fit: cover; border-radius: 50%; display: block;">
                     </div>
                     <div>
-                        <div class="chat-header-title">Tiệm Hoa Lego</div>
+                        <div class="chat-header-title" id="chatWindowTitle">Tiệm Hoa Lego</div>
                         <div class="chat-header-status">
-                            <span class="chat-status-dot"></span> Đang hoạt động • Sẵn sàng hỗ trợ
+                            <span class="chat-status-dot"></span> Tư vấn trực tiếp qua website
                         </div>
                     </div>
                 </div>
@@ -542,8 +543,7 @@
                 <!-- Tin nhắn chào của shop -->
                 <div class="chat-msg chat-msg-bot">
                     <div class="chat-bubble">
-                        Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? Bạn có thể chọn câu hỏi gợi ý
-                        bên dưới hoặc nhắn trực tiếp cho shop nhé!
+                        Xin chào bạn! Hãy để lại câu hỏi, shop sẽ phản hồi ngay trong cuộc trò chuyện này.
                     </div>
                     <span class="chat-time">Vừa xong</span>
                 </div>
@@ -575,9 +575,11 @@
             </button>
 
             <!-- Khung nhập tin nhắn -->
+            <div id="chatNetworkStatus" class="chat-network-status d-none" role="status" aria-live="polite"></div>
             <form id="chatForm" class="chat-footer">
-                <input type="text" id="chatInput" class="chat-input" placeholder="Nhập tin nhắn cho shop..."
-                    autocomplete="off" maxlength="300" required>
+                <label for="chatInput" class="visually-hidden">Tin nhắn gửi shop</label>
+                <textarea id="chatInput" class="chat-input" rows="1" placeholder="Nhập tin nhắn cho shop..."
+                    autocomplete="off" maxlength="2000" required></textarea>
                 <button type="submit" id="chatSendBtn" class="chat-send-btn" aria-label="Gửi tin nhắn" title="Gửi" disabled>
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -1167,6 +1169,7 @@
             const chatSuggestions = document.getElementById('chatSuggestions');
             const chatScrollBottomBtn = document.getElementById('chatScrollBottomBtn');
             const chatFloatingToast = document.getElementById('chatFloatingToast');
+            const chatNetworkStatus = document.getElementById('chatNetworkStatus');
             const chatIconOpen = chatToggleBtn ? chatToggleBtn.querySelector('.chat-icon-open') : null;
             const chatIconClose = chatToggleBtn ? chatToggleBtn.querySelector('.chat-icon-close') : null;
 
@@ -1174,7 +1177,6 @@
 
             const STORAGE_PREFIX = 'lego_flower_chat_history_';
             const STATE_KEY = 'lego_flower_chat_open';
-            const SESSION_KEY = 'lego_flower_chat_session_id';
             const customerUnreadBadge = document.getElementById('chatCustomerUnreadBadge');
 
             let isOpen = false;
@@ -1246,31 +1248,15 @@
             if (chatInput && chatSendBtn) {
                 chatInput.addEventListener('input', () => {
                     chatSendBtn.disabled = !chatInput.value.trim();
+                    chatInput.style.height = 'auto';
+                    chatInput.style.height = Math.min(chatInput.scrollHeight, 96) + 'px';
                 });
             }
 
-            // Xác định sessionId định danh phiên chat của khách:
-            // 1. Khách thành viên: cố định là cust_<id> (không đổi khi F5, làm mới chat hay đổi thiết bị)
-            // 2. Khách vãng lai: lưu guestId trong localStorage (cố định trên trình duyệt, không đổi khi F5 hay bấm làm mới)
-            const loggedInCustId = {{ current_user.id if (current_user.is_authenticated and current_user.__class__.__name__ == 'Customer') else 'null' }};
-            let chatSessionId;
-            if (loggedInCustId) {
-                chatSessionId = 'cust_' + loggedInCustId;
-                const prevGuestSession = localStorage.getItem(SESSION_KEY);
-                if (prevGuestSession && prevGuestSession !== chatSessionId && !prevGuestSession.startsWith('cust_')) {
-                    sessionStorage.setItem('lego_prev_guest_session', prevGuestSession);
-                }
-                localStorage.setItem(SESSION_KEY, chatSessionId);
-            } else {
-                chatSessionId = localStorage.getItem(SESSION_KEY);
-                if (!chatSessionId || chatSessionId.startsWith('cust_')) {
-                    chatSessionId = 'guest_' + Math.random().toString(36).substring(2, 9) + Date.now().toString(36);
-                    localStorage.setItem(SESSION_KEY, chatSessionId);
-                }
-            }
+            // ID hội thoại được ràng buộc với session đã ký ở server.
+            const chatSessionId = {{ chat_session_id|tojson }};
 
             const STORAGE_KEY = STORAGE_PREFIX + chatSessionId;
-            const AUTOREPLY_KEY = 'lego_flower_chat_replied_' + chatSessionId;
 
             function toggleChat(state) {
                 isOpen = (state !== undefined) ? state : !isOpen;
@@ -1292,11 +1278,15 @@
                     if (chatIconOpen) chatIconOpen.classList.remove('d-none');
                     if (chatIconClose) chatIconClose.classList.add('d-none');
                     sessionStorage.setItem(STATE_KEY, '0');
+                    chatToggleBtn.focus();
                 }
             }
 
             chatToggleBtn.addEventListener('click', () => toggleChat());
             if (closeChatBtn) closeChatBtn.addEventListener('click', () => toggleChat(false));
+            document.addEventListener('keydown', event => {
+                if (event.key === 'Escape' && isOpen) toggleChat(false);
+            });
 
             function scrollChatToBottom() {
                 chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -1307,9 +1297,32 @@
                 return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
             }
 
-            function renderMessageElement(text, isUser = false, timeStr = null, showTime = true, isGrouped = false) {
+            function updateDeliveryState(msgDiv, state) {
+                if (!msgDiv) return;
+                const check = msgDiv.querySelector('.chat-check');
+                if (!check) return;
+                const labels = {
+                    pending: 'Đang gửi…',
+                    sent: 'Đã gửi ✓',
+                    read: 'Đã xem ✓✓',
+                    failed: 'Không gửi được'
+                };
+                check.className = `chat-check chat-delivery-${state}`;
+                check.textContent = labels[state] || labels.sent;
+            }
+
+            function markCustomerMessagesRead(readThroughId) {
+                if (!readThroughId) return;
+                chatMessages.querySelectorAll('.chat-msg-user[data-message-id]').forEach(el => {
+                    if (Number(el.dataset.messageId) <= readThroughId) updateDeliveryState(el, 'read');
+                });
+            }
+
+            function renderMessageElement(text, isUser = false, timeStr = null, showTime = true,
+                isGrouped = false, messageId = null, isRead = false, deliveryState = 'sent') {
                 const msgDiv = document.createElement('div');
                 msgDiv.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-bot'}${isGrouped ? ' chat-msg-grouped' : ''}`;
+                if (messageId) msgDiv.dataset.messageId = messageId;
 
                 const bubble = document.createElement('div');
                 bubble.className = 'chat-bubble';
@@ -1320,15 +1333,23 @@
                     const time = document.createElement('span');
                     time.className = 'chat-time';
                     const timeText = timeStr || getCurrentTimeStr();
-                    time.innerHTML = `${timeText}${isUser ? ' <span class="chat-check" title="Đã gửi">✓</span>' : ''}`;
+                    time.appendChild(document.createTextNode(timeText));
+                    if (isUser) {
+                        time.appendChild(document.createTextNode(' · '));
+                        const delivery = document.createElement('span');
+                        delivery.className = 'chat-check';
+                        time.appendChild(delivery);
+                    }
                     msgDiv.appendChild(time);
                 }
 
                 chatMessages.appendChild(msgDiv);
+                if (isUser) updateDeliveryState(msgDiv, isRead ? 'read' : deliveryState);
                 return msgDiv;
             }
 
-            function appendLiveMessage(text, isUser = false, customTime = null) {
+            function appendLiveMessage(text, isUser = false, customTime = null, messageId = null,
+                isRead = false, deliveryState = 'sent') {
                 const currentTime = customTime || getCurrentTimeStr();
                 const targetSenderClass = isUser ? 'chat-msg-user' : 'chat-msg-bot';
 
@@ -1347,9 +1368,12 @@
                     }
                 }
 
-                renderMessageElement(text, isUser, currentTime, true, false);
+                const element = renderMessageElement(
+                    text, isUser, currentTime, true, false, messageId, isRead, deliveryState
+                );
                 saveMessageToHistory(text, isUser, currentTime);
                 scrollChatToBottom();
+                return element;
             }
 
             function saveMessageToHistory(text, isUser, timeStr) {
@@ -1370,30 +1394,40 @@
             }
 
             // Gửi tin nhắn lên máy chủ (để Admin nhận được)
-            async function sendToServer(text) {
+            async function sendToServer(text, messageElement) {
+                updateDeliveryState(messageElement, 'pending');
+                if (chatNetworkStatus) chatNetworkStatus.classList.add('d-none');
                 try {
-                    const prevGuest = sessionStorage.getItem('lego_prev_guest_session');
-                    const payload = {
-                        session_id: chatSessionId,
-                        message: text
-                    };
-                    if (prevGuest) {
-                        payload.prev_guest_session = prevGuest;
-                    }
                     const res = await fetch('/api/chat/send', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
+                        body: JSON.stringify({ message: text })
                     });
-                    if (res.ok) {
-                        if (prevGuest) sessionStorage.removeItem('lego_prev_guest_session');
-                        const data = await res.json();
-                        if (data.message && data.message.id) {
-                            lastLoadedMsgId = Math.max(lastLoadedMsgId, data.message.id);
-                        }
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || 'Không thể gửi tin nhắn.');
+                    if (data.message && data.message.id) {
+                        lastLoadedMsgId = Math.max(lastLoadedMsgId, data.message.id);
+                        messageElement.dataset.messageId = data.message.id;
                     }
+                    updateDeliveryState(messageElement, 'sent');
+                    return true;
                 } catch (err) {
-                    console.error('Lỗi khi gửi tin nhắn lên server:', err);
+                    updateDeliveryState(messageElement, 'failed');
+                    if (chatNetworkStatus) {
+                        chatNetworkStatus.textContent = 'Tin nhắn chưa được gửi. Kiểm tra kết nối rồi thử lại.';
+                        chatNetworkStatus.classList.remove('d-none');
+                    }
+                    const check = messageElement.querySelector('.chat-check');
+                    if (check) {
+                        check.textContent = '';
+                        const retry = document.createElement('button');
+                        retry.type = 'button';
+                        retry.className = 'chat-retry-btn';
+                        retry.textContent = 'Gửi lại';
+                        retry.addEventListener('click', () => sendToServer(text, messageElement), { once: true });
+                        check.appendChild(retry);
+                    }
+                    return false;
                 }
             }
 
@@ -1413,10 +1447,11 @@
 
             async function adaptivePoll() {
                 try {
-                    const res = await fetch(`/api/chat/messages?session_id=${encodeURIComponent(chatSessionId)}&after_id=${lastLoadedMsgId}`);
+                    const res = await fetch(`/api/chat/messages?after_id=${lastLoadedMsgId}`);
                     if (!res.ok) { schedulePoll(); return; }
                     const data = await res.json();
                     const msgs = data.messages || [];
+                    markCustomerMessagesRead(data.customer_read_through_id || 0);
                     if (msgs.length > 0) {
                         _pollIdleCount = 0;
                         _pollDelay = POLL_MIN;
@@ -1425,7 +1460,7 @@
                         msgs.forEach(msg => {
                             lastLoadedMsgId = Math.max(lastLoadedMsgId, msg.id);
                             if (msg.sender_type === 'admin') {
-                                appendLiveMessage(msg.message, false, msg.time_str);
+                                appendLiveMessage(msg.message, false, msg.time_str, msg.id, msg.is_read);
                                 hasNewAdminMsg = true;
                                 lastAdminText = msg.message;
                                 if (!isOpen) {
@@ -1459,7 +1494,7 @@
             async function loadChatHistory() {
                 // Ưu tiên tải tin nhắn từ server trước
                 try {
-                    const res = await fetch(`/api/chat/messages?session_id=${encodeURIComponent(chatSessionId)}`);
+                    const res = await fetch('/api/chat/messages');
                     if (res.ok) {
                         const data = await res.json();
                         const msgs = data.messages || [];
@@ -1469,8 +1504,12 @@
                                 lastLoadedMsgId = Math.max(lastLoadedMsgId, item.id);
                                 const next = msgs[index + 1];
                                 const isConsecutive = next && (next.sender_type === item.sender_type) && (next.time_str === item.time_str);
-                                renderMessageElement(item.message, item.sender_type === 'customer', item.time_str, !isConsecutive, isConsecutive);
+                                renderMessageElement(
+                                    item.message, item.sender_type === 'customer', item.time_str,
+                                    !isConsecutive, isConsecutive, item.id, item.is_read
+                                );
                             });
+                            markCustomerMessagesRead(data.customer_read_through_id || 0);
                             if (chatSuggestions) chatSuggestions.style.display = 'none';
                             scrollChatToBottom();
                             return;
@@ -1508,7 +1547,7 @@
             }
 
             function resetToWelcome() {
-                const welcomeText = 'Xin chào bạn! Tiệm Hoa Lego có thể giúp gì cho bạn hôm nay ạ? Bạn có thể chọn câu hỏi gợi ý bên dưới hoặc nhắn trực tiếp cho shop nhé!';
+                const welcomeText = 'Xin chào bạn! Hãy để lại câu hỏi, shop sẽ phản hồi ngay trong cuộc trò chuyện này.';
                 const timeStr = getCurrentTimeStr();
                 chatMessages.innerHTML = '';
                 renderMessageElement(welcomeText, false, timeStr, true, false);
@@ -1517,7 +1556,6 @@
                     text: welcomeText,
                     time: timeStr
                 }]));
-                localStorage.removeItem(AUTOREPLY_KEY);
                 if (chatSuggestions) {
                     chatSuggestions.style.display = 'flex';
                     chatMessages.appendChild(chatSuggestions);
@@ -1548,132 +1586,37 @@
                 });
             }
 
-            function hasAlreadyAutoReplied() {
-                if (localStorage.getItem(AUTOREPLY_KEY) === '1') return true;
-                try {
-                    const raw = localStorage.getItem(STORAGE_KEY);
-                    if (raw) {
-                        const history = JSON.parse(raw);
-                        if (Array.isArray(history)) {
-                            const botMsgs = history.filter(m => m.sender === 'bot');
-                            if (botMsgs.length > 1) return true;
-                        }
-                    }
-                } catch (e) { }
-                return false;
-            }
-
-            const botKnowledge = [
-                {
-                    keywords: ['chào', 'hello', 'hi', 'alo', 'bắt đầu', 'ơi'],
-                    reply: 'Chào bạn! Tiệm Hoa Lego rất vui được đồng hành cùng bạn. Bạn cần tư vấn chọn mẫu hoa, hỏi phí giao hàng hay cần hỗ trợ gì ạ?'
-                },
-                {
-                    keywords: ['quà', 'ý nghĩa', 'chọn hoa', 'tư vấn', 'mẫu nào', 'tặng bạn', 'tặng người yêu', 'sinh nhật', '20/10', '8/3', 'mẫu'],
-                    reply: 'Tiệm có rất nhiều đóa hoa mang ý nghĩa tuyệt vời: Hoa hồng (tình yêu vĩnh cửu), Hoa hướng dương (năng lượng tích cực & thành công), Hoa cẩm tú cầu, hoa tulip... Bạn hãy vào mục "Sản phẩm" trên web hoặc nhắn tin qua Zalo 0967.701.565 để shop gửi ảnh & video mẫu thực tế nhé!'
-                },
-                {
-                    keywords: ['ship', 'vận chuyển', 'giao hàng', 'bao lâu', 'phí ship', 'đến nơi', 'giao nhanh'],
-                    reply: 'Shop giao hàng toàn quốc nha! Đơn tại nội thành thường nhận trong 1-2 ngày, các tỉnh thành khác từ 2-4 ngày. Từng sản phẩm đều được bọc chống sốc kỹ càng bảo vệ hoa Lego nguyên vẹn tới tận tay bạn.'
-                },
-                {
-                    keywords: ['thiệp', 'gói quà', 'hộp quà', 'lời chúc', 'gói', 'hộp'],
-                    reply: 'Dạ shop có hỗ trợ viết thiệp chúc mừng theo yêu cầu hoàn toàn MIỄN PHÍ và có hộp quà thắt nơ sang trọng. Bạn chỉ cần ghi chú lúc đặt hàng hoặc nhắn qua Zalo: 0967.701.565 là shop chuẩn bị chu đáo ạ!'
-                },
-                {
-                    keywords: ['giá', 'bao nhiêu', 'tiền', 'khuyến mãi', 'giảm giá', 'sale'],
-                    reply: 'Giá các mẫu hoa Lego của tiệm dao động từ 150k đến 500k tùy theo kích thước và độ cầu kỳ của từng đóa hoa. Mời bạn duyệt qua danh mục "Sản phẩm" để xem chi tiết từng mẫu nhé!'
-                },
-                {
-                    keywords: ['zalo', 'sđt', 'hotline', 'liên hệ', 'gọi', 'chủ shop', 'điện thoại'],
-                    reply: 'Bạn có thể liên hệ trực tiếp chủ tiệm qua Hotline/Zalo: 0967.701.565 để được tư vấn và hỗ trợ hỏa tốc bất cứ lúc nào ạ!'
-                },
-                {
-                    keywords: ['địa chỉ', 'ở đâu', 'cửa hàng', 'shop ở', 'showroom'],
-                    reply: 'Tiệm Hoa Lego phục vụ đặt hàng trực tuyến và giao hàng toàn quốc. Bạn có thể đặt hàng trực tiếp ngay trên website hoặc nhắn qua Zalo 0967.701.565 để được gửi hàng nhanh nhất nhé!'
-                }
-            ];
-
-            function getBotReply(userText) {
-                const lower = userText.toLowerCase();
-                for (const item of botKnowledge) {
-                    if (item.keywords.some(kw => lower.includes(kw))) {
-                        return item.reply;
-                    }
-                }
-                return 'Dạ Tiệm Hoa Lego đã nhận được tin nhắn của bạn! Đội ngũ tư vấn sẽ phản hồi trong giây lát. Để được hỗ trợ hỏa tốc hoặc xem ảnh mẫu thực tế ngay, bạn có thể bấm liên hệ Zalo: 0967.701.565 nhé!';
-            }
-
-            function showTypingIndicator() {
-                const typing = document.createElement('div');
-                typing.className = 'chat-typing chat-msg chat-msg-bot';
-                typing.id = 'chatTypingIndicator';
-                typing.innerHTML = '<span class="chat-dot"></span><span class="chat-dot"></span><span class="chat-dot"></span>';
-                chatMessages.appendChild(typing);
-                scrollChatToBottom();
-                return typing;
-            }
-
-            function removeTypingIndicator() {
-                const typing = document.getElementById('chatTypingIndicator');
-                if (typing) typing.remove();
-            }
-
-            let botReplyTimeout = null;
-
             function handleSend(userText, isQuickChip = false) {
                 if (!userText || !userText.trim()) return;
                 const text = userText.trim();
 
-                // Gửi tin nhắn của người dùng với tính năng gom cụm tin nhắn liền mạch
-                appendLiveMessage(text, true);
+                const pendingMessage = appendLiveMessage(
+                    text, true, null, null, false, 'pending'
+                );
                 if (chatInput) {
                     chatInput.value = '';
+                    chatInput.style.height = 'auto';
                     if (chatSendBtn) chatSendBtn.disabled = true;
                 }
 
-                // GỬI LÊN SERVER ĐỂ ADMIN NHẬN ĐƯỢC
-                sendToServer(text);
+                sendToServer(text, pendingMessage);
 
-                // Ẩn các nút gợi ý sau khi gửi tin
                 if (chatSuggestions) chatSuggestions.style.display = 'none';
-
-                // Nếu là câu hỏi từ nút gợi ý (Quick chip): Trả lời ngay câu hỏi đó
-                if (isQuickChip) {
-                    const indicator = showTypingIndicator();
-                    setTimeout(() => {
-                        removeTypingIndicator();
-                        const reply = getBotReply(text);
-                        appendLiveMessage(reply, false);
-                    }, 500);
-                    return;
-                }
-
-                // Nếu là khách tự gõ chữ:
-                // Tuyệt đối KHÔNG spam tin nhắn tự động sau mỗi câu chat của khách.
-                // Chỉ phản hồi xác nhận tối đa 1 lần duy nhất trong toàn bộ cuộc trò chuyện.
-                if (hasAlreadyAutoReplied()) {
-                    return;
-                }
-
-                localStorage.setItem(AUTOREPLY_KEY, '1');
-
-                if (botReplyTimeout) clearTimeout(botReplyTimeout);
-
-                botReplyTimeout = setTimeout(() => {
-                    const indicator = showTypingIndicator();
-                    setTimeout(() => {
-                        removeTypingIndicator();
-                        const reply = getBotReply(text);
-                        appendLiveMessage(reply, false);
-                    }, 600);
-                }, 1000);
             }
 
             if (chatForm) {
                 chatForm.addEventListener('submit', function (e) {
                     e.preventDefault();
                     if (chatInput) handleSend(chatInput.value, false);
+                });
+            }
+
+            if (chatInput) {
+                chatInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend(chatInput.value, false);
+                    }
                 });
             }
 

@@ -233,19 +233,23 @@
             color: #ffffff;
             border-color: #1B2140;
         }
-        .live-dot {
-            width: 8px;
-            height: 8px;
-            background: #22c55e;
-            border-radius: 50%;
-            display: inline-block;
-            box-shadow: 0 0 0 rgba(34, 197, 94, 0.4);
-            animation: pulseDot 1.8s infinite;
+        #adminReplyInput {
+            min-height: 44px;
+            max-height: 132px;
+            resize: none;
+            line-height: 1.4;
         }
-        @keyframes pulseDot {
-            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.6); }
-            70% { box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        .reply-status { min-height: 18px; margin-top: 6px; color: #64748b; font-size: 0.75rem; }
+        .reply-status.error { color: #b91c1c; }
+        .admin-msg-bubble.failed { outline: 2px solid #fecaca; }
+        .retry-admin-message {
+            padding: 0;
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font-size: inherit;
+            font-weight: 700;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -274,7 +278,7 @@
                         <h6 class="fw-bold mb-0 text-dark">Hộp thư khách hàng</h6>
                         <span id="unreadTotalBadge" class="badge bg-danger rounded-pill d-none">0 mới</span>
                     </div>
-                    <input type="text" id="searchConvInput" class="form-control form-control-sm" placeholder="Tìm theo tên, SĐT khách...">
+                    <input type="search" id="searchConvInput" class="form-control form-control-sm" placeholder="Tìm tên, email, SĐT hoặc nội dung...">
                 </div>
 
                 <!-- Tabs lọc danh sách hội thoại -->
@@ -311,9 +315,7 @@
                                 <div class="d-flex align-items-center gap-2">
                                     <h6 class="fw-bold mb-0 text-dark" id="activeName">Khách hàng</h6>
                                     <span id="activeBadge" class="badge bg-secondary rounded-pill" style="font-size: 0.65rem;">Khách vãng lai</span>
-                                    <span class="d-inline-flex align-items-center gap-1 text-muted" style="font-size: 0.72rem;">
-                                        <span class="live-dot"></span> Đang trực tuyến
-                                    </span>
+                                    <span class="text-muted" style="font-size: 0.72rem;">Chat qua website</span>
                                 </div>
                                 <div class="text-muted small mt-1" id="activeContact" style="font-size: 0.78rem;">
                                     Chưa có số điện thoại
@@ -342,8 +344,8 @@
                             <button type="button" class="quick-chip-btn" data-text="Bạn có thể để lại số điện thoại hoặc nhắn qua Zalo 0967.701.565 để shop gửi ảnh thật nhé!">Xin Zalo</button>
                         </div>
 
-                        <form id="adminReplyForm" class="d-flex gap-2">
-                            <input type="text" id="adminReplyInput" class="form-control" placeholder="Nhập tin nhắn phản hồi cho khách... (Nhấn Enter để gửi)" autocomplete="off" required>
+                        <form id="adminReplyForm" class="d-flex gap-2 align-items-end">
+                            <textarea id="adminReplyInput" class="form-control" rows="1" maxlength="2000" placeholder="Nhập phản hồi... Enter để gửi, Shift + Enter để xuống dòng" aria-label="Nội dung phản hồi" required></textarea>
                             <button type="submit" class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-1" id="btnSendReply">
                                 <span>Gửi</span>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -351,6 +353,7 @@
                                 </svg>
                             </button>
                         </form>
+                        <div id="adminReplyStatus" class="reply-status" role="status" aria-live="polite"></div>
                     </div>
                 </div>
             </div>
@@ -365,6 +368,7 @@
             let previousTotalUnread = -1;
             const baseTitle = document.title;
             let titleBlinkTimer = null;
+            let isSendingReply = false;
 
             const conversationList = document.getElementById('conversationList');
             const searchInput = document.getElementById('searchConvInput');
@@ -375,12 +379,32 @@
             const chatThread = document.getElementById('chatThread');
             const adminReplyForm = document.getElementById('adminReplyForm');
             const adminReplyInput = document.getElementById('adminReplyInput');
+            const btnSendReply = document.getElementById('btnSendReply');
+            const adminReplyStatus = document.getElementById('adminReplyStatus');
             const refreshActiveBtn = document.getElementById('refreshActiveBtn');
 
             const activeAvatar = document.getElementById('activeAvatar');
             const activeName = document.getElementById('activeName');
             const activeBadge = document.getElementById('activeBadge');
             const activeContact = document.getElementById('activeContact');
+
+            function setReplyStatus(message = '', isError = false) {
+                adminReplyStatus.textContent = message;
+                adminReplyStatus.classList.toggle('error', isError);
+            }
+
+            function resizeReplyInput() {
+                adminReplyInput.style.height = 'auto';
+                adminReplyInput.style.height = Math.min(adminReplyInput.scrollHeight, 132) + 'px';
+            }
+
+            adminReplyInput.addEventListener('input', resizeReplyInput);
+            adminReplyInput.addEventListener('keydown', event => {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    adminReplyForm.requestSubmit();
+                }
+            });
 
             // Âm thanh thông báo tin nhắn khách mới (Web Audio API)
             function playNotificationSound() {
@@ -433,6 +457,7 @@
             document.querySelectorAll('.quick-chip-btn').forEach(btn => {
                 btn.addEventListener('click', function () {
                     adminReplyInput.value = this.getAttribute('data-text');
+                    resizeReplyInput();
                     adminReplyInput.focus();
                 });
             });
@@ -441,13 +466,16 @@
             async function fetchConversations() {
                 try {
                     const res = await fetch('/api/admin/chat/conversations');
-                    if (!res.ok) return;
+                    if (!res.ok) throw new Error('Không thể tải hộp thư.');
                     const data = await res.json();
                     conversationsData = data.conversations || [];
                     renderConversations(conversationsData);
                     updateTotalUnread();
                 } catch (e) {
                     console.error('Lỗi tải cuộc trò chuyện:', e);
+                    if (!conversationsData.length) {
+                        conversationList.innerHTML = '<div class="text-center py-4 text-danger small">Không thể tải hộp thư. Vui lòng thử lại.</div>';
+                    }
                 }
             }
 
@@ -491,8 +519,9 @@
                     if (!query) return true;
                     const name = (item.customer.name || '').toLowerCase();
                     const phone = (item.customer.phone || '').toLowerCase();
+                    const email = (item.customer.email || '').toLowerCase();
                     const lastMsg = (item.last_message || '').toLowerCase();
-                    return name.includes(query) || phone.includes(query) || lastMsg.includes(query);
+                    return name.includes(query) || phone.includes(query) || email.includes(query) || lastMsg.includes(query);
                 });
 
                 if (filtered.length === 0) {
@@ -506,9 +535,11 @@
                     el.className = `conv-item ${item.session_id === activeSessionId ? 'active' : ''}`;
                     el.setAttribute('data-session', item.session_id);
 
+                    const safeName = escapeHtml(item.customer.name || 'Khách vãng lai');
+                    const safeAvatar = encodeURIComponent(item.customer.avatar || '');
                     const avatarHtml = item.customer.avatar 
-                        ? `<img src="/static/uploads/avatars/${item.customer.avatar}" alt="${item.customer.name}">`
-                        : (item.customer.name ? item.customer.name.charAt(0).toUpperCase() : 'K');
+                        ? `<img src="/static/uploads/avatars/${safeAvatar}" alt="${safeName}">`
+                        : escapeHtml(item.customer.name ? item.customer.name.charAt(0).toUpperCase() : 'K');
 
                     const unreadBadgeHtml = item.unread_count > 0 
                         ? `<span class="badge bg-danger rounded-pill">${item.unread_count}</span>` 
@@ -522,7 +553,7 @@
                         <div class="conv-avatar">${avatarHtml}</div>
                         <div class="conv-info">
                             <div class="d-flex align-items-center justify-content-between">
-                                <div class="conv-name">${item.customer.name} ${memberBadge}</div>
+                                <div class="conv-name">${safeName} ${memberBadge}</div>
                                 <div class="conv-meta">${item.last_time}</div>
                             </div>
                             <div class="d-flex align-items-center justify-content-between">
@@ -554,7 +585,7 @@
                 if (!activeSessionId) return;
                 try {
                     const res = await fetch(`/api/admin/chat/messages/${encodeURIComponent(activeSessionId)}`);
-                    if (!res.ok) return;
+                    if (!res.ok) throw new Error('Không thể tải cuộc trò chuyện.');
                     const data = await res.json();
                     
                     // Cập nhật thông tin khách ở Header
@@ -562,7 +593,7 @@
                     activeName.textContent = cust.name || 'Khách vãng lai';
                     
                     if (cust.avatar) {
-                        activeAvatar.innerHTML = `<img src="/static/uploads/avatars/${cust.avatar}" alt="${cust.name}">`;
+                        activeAvatar.innerHTML = `<img src="/static/uploads/avatars/${encodeURIComponent(cust.avatar)}" alt="${escapeHtml(cust.name || 'Khách hàng')}">`;
                     } else {
                         activeAvatar.textContent = cust.name ? cust.name.charAt(0).toUpperCase() : 'K';
                     }
@@ -570,7 +601,7 @@
                     if (cust.is_member) {
                         activeBadge.className = 'badge bg-success rounded-pill';
                         activeBadge.textContent = 'Khách thành viên';
-                        activeContact.innerHTML = `SĐT: ${cust.phone || 'Chưa có'} • Email: ${cust.email || 'Chưa có'} • Ngày tham gia: ${cust.created_at || 'Mới'}`;
+                        activeContact.textContent = `SĐT: ${cust.phone || 'Chưa có'} • Email: ${cust.email || 'Chưa có'} • Ngày tham gia: ${cust.created_at || 'Mới'}`;
                     } else {
                         activeBadge.className = 'badge bg-secondary rounded-pill';
                         activeBadge.textContent = 'Khách vãng lai';
@@ -582,6 +613,7 @@
                     fetchConversations(); // Cập nhật lại unread count
                 } catch (e) {
                     console.error('Lỗi tải tin nhắn cuộc trò chuyện:', e);
+                    setReplyStatus('Không thể tải cuộc trò chuyện. Vui lòng thử lại.', true);
                 }
             }
 
@@ -599,7 +631,7 @@
 
                     bubble.innerHTML = `
                         <div>${escapeHtml(msg.message)}</div>
-                        <div class="admin-msg-time">${isMe ? 'Bạn • ' : ''}${msg.time_str || ''}</div>
+                        <div class="admin-msg-time">${isMe ? `Bạn • ${msg.is_read ? 'Đã xem' : 'Đã gửi'} • ` : ''}${msg.time_str || ''}</div>
                     `;
                     chatThread.appendChild(bubble);
                 });
@@ -607,47 +639,64 @@
                 chatThread.scrollTop = chatThread.scrollHeight;
             }
 
-            // 3. Admin gửi tin nhắn trả lời (Optimistic UI Update)
-            adminReplyForm.addEventListener('submit', async function (e) {
-                e.preventDefault();
-                const text = adminReplyInput.value.trim();
-                if (!text || !activeSessionId) return;
+            async function sendAdminReply(text, optimisticBubble = null) {
+                if (isSendingReply || !activeSessionId) return;
+                isSendingReply = true;
+                btnSendReply.disabled = true;
+                setReplyStatus('Đang gửi tin nhắn...');
 
-                // Thêm tin nhắn ngay lập tức lên màn hình (trải nghiệm siêu mượt)
                 const now = new Date();
                 const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-                const optimisticBubble = document.createElement('div');
-                optimisticBubble.className = 'admin-msg-bubble admin-msg-me';
+                if (!optimisticBubble) {
+                    optimisticBubble = document.createElement('div');
+                    optimisticBubble.className = 'admin-msg-bubble admin-msg-me';
+                    chatThread.appendChild(optimisticBubble);
+                }
+                optimisticBubble.classList.remove('failed');
                 optimisticBubble.innerHTML = `
                     <div>${escapeHtml(text)}</div>
-                    <div class="admin-msg-time">Bạn • ${timeStr} <span style="font-size:0.65rem; opacity:0.8;">✓</span></div>
+                    <div class="admin-msg-time">Bạn • Đang gửi • ${timeStr}</div>
                 `;
-                chatThread.appendChild(optimisticBubble);
                 chatThread.scrollTop = chatThread.scrollHeight;
-                adminReplyInput.value = '';
 
                 try {
                     const res = await fetch('/api/admin/chat/reply', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            session_id: activeSessionId,
-                            message: text
-                        })
+                        body: JSON.stringify({ session_id: activeSessionId, message: text })
                     });
-                    const data = await res.json();
-                    if (data.success) {
-                        fetchConversations();
-                    } else {
-                        optimisticBubble.remove();
-                        alert(data.error || 'Không thể gửi tin nhắn.');
-                    }
-                } catch (e) {
-                    optimisticBubble.remove();
-                    console.error('Lỗi khi gửi phản hồi:', e);
+                    const data = await res.json().catch(() => ({}));
+                    if (!res.ok || !data.success) throw new Error(data.error || 'Không thể gửi tin nhắn.');
+                    const sent = data.message || {};
+                    optimisticBubble.innerHTML = `
+                        <div>${escapeHtml(text)}</div>
+                        <div class="admin-msg-time">Bạn • Đã gửi • ${sent.time_str || timeStr}</div>
+                    `;
+                    setReplyStatus('Tin nhắn đã được gửi.');
+                    fetchConversations();
+                } catch (error) {
+                    optimisticBubble.classList.add('failed');
+                    optimisticBubble.innerHTML = `
+                        <div>${escapeHtml(text)}</div>
+                        <div class="admin-msg-time">Không gửi được • <button type="button" class="retry-admin-message">Gửi lại</button></div>
+                    `;
+                    optimisticBubble.querySelector('.retry-admin-message').addEventListener('click', () => sendAdminReply(text, optimisticBubble));
+                    setReplyStatus(error.message || 'Không thể gửi tin nhắn. Vui lòng thử lại.', true);
                 } finally {
+                    isSendingReply = false;
+                    btnSendReply.disabled = false;
                     adminReplyInput.focus();
                 }
+            }
+
+            // 3. Admin gửi tin nhắn trả lời
+            adminReplyForm.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const text = adminReplyInput.value.trim();
+                if (!text || !activeSessionId || isSendingReply) return;
+                adminReplyInput.value = '';
+                resizeReplyInput();
+                await sendAdminReply(text);
             });
 
             if (refreshActiveBtn) {
@@ -668,7 +717,9 @@
             fetchConversations();
             setInterval(fetchConversations, 3500);
             setInterval(() => {
-                if (activeSessionId) loadActiveMessages();
+                if (activeSessionId && !isSendingReply && !chatThread.querySelector('.failed')) {
+                    loadActiveMessages();
+                }
             }, 3500);
         });
     </script>

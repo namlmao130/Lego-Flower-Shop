@@ -2160,7 +2160,7 @@ input::-webkit-search-results-decoration {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #22c55e;
+    background: #f6d365;
     display: inline-block;
 }
 
@@ -2373,6 +2373,12 @@ input::-webkit-search-results-decoration {
     font-size: 0.88rem;
     outline: none;
     transition: border-color 0.2s ease;
+    resize: none;
+    min-height: 38px;
+    max-height: 96px;
+    line-height: 1.35;
+    overflow-y: auto;
+    font-family: inherit;
 }
 
 .chat-input:focus {
@@ -2592,6 +2598,26 @@ input::-webkit-search-results-decoration {
     font-size: 0.68rem;
     margin-left: 3px;
     color: rgba(255, 255, 255, 0.75);
+}
+.chat-check.chat-delivery-pending { opacity: 0.72; }
+.chat-check.chat-delivery-read { color: #93c5fd; }
+.chat-check.chat-delivery-failed { color: #fecaca; font-weight: 700; }
+.chat-retry-btn {
+    border: 0;
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    font: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.chat-network-status {
+    padding: 7px 14px;
+    border-top: 1px solid #fecaca;
+    background: #fff1f2;
+    color: #9f1239;
+    font-size: 0.76rem;
 }
 
 @media (max-width: 576px) {
