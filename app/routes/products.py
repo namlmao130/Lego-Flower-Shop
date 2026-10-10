@@ -7,13 +7,14 @@ from sqlalchemy.orm import joinedload, selectinload
 from app.extensions import db, limiter
 from app.models import Customer, Product, Review
 from app.services.catalog_service import get_cached_categories, product_cards_query
+from app.services.search_service import clean_search_query, search_products
 
 PRODUCTS_PER_PAGE = 24
 
 
 def index():
     # Trang chủ: hỗ trợ tìm kiếm sản phẩm và lọc theo danh mục
-    q = request.args.get("q", "").strip()
+    q = clean_search_query(request.args.get("q", ""))
     category_id = request.args.get("category", type=int)
     is_partial = (
         request.headers.get("X-Requested-With") == "XMLHttpRequest"
@@ -23,8 +24,7 @@ def index():
     query = product_cards_query()
     if category_id:
         query = query.filter_by(category_id=category_id)
-    if q:
-        query = query.filter(Product.name.ilike(f"%{q}%"))
+    query = search_products(query, q)
 
     if not (q or category_id):
         # TỐI ƯU HÓA TRUY VẤN TRANG CHỦ: Gom 1 lần truy vấn duy nhất lấy 8 sản phẩm mới nhất.
@@ -38,7 +38,7 @@ def index():
             if is_partial
             else product_cards_query(with_ratings=False).order_by(Product.id.desc()).limit(6).all()
         )
-        products = query.order_by(Product.id.desc()).limit(60).all()
+        products = query.limit(60).all()
 
     # Nếu là yêu cầu AJAX (chỉ load lại phần sản phẩm bên dưới)
     if is_partial:
@@ -62,16 +62,14 @@ def index():
 
 def products():
     # Danh sách toàn bộ sản phẩm, có thể lọc theo category và từ khóa tìm kiếm
-    q = request.args.get("q", "").strip()
+    q = clean_search_query(request.args.get("q", ""))
     category_id = request.args.get("category", type=int)
     page = request.args.get("page", 1, type=int)
 
     query = product_cards_query()
     if category_id:
         query = query.filter_by(category_id=category_id)
-    if q:
-        query = query.filter(Product.name.ilike(f"%{q}%"))
-    query = query.order_by(Product.id.desc())
+    query = search_products(query, q)
 
     # QUAN TRỌNG: trước đây dùng .all() tải HẾT 300+ sản phẩm (kèm reviews của từng
     # sản phẩm) trong 1 lần -> rất nặng khi nhiều khách cùng mở trang này.

@@ -96,6 +96,51 @@ class AppTests(unittest.TestCase):
         for path in ["/admin/dashboard", "/admin/categories", "/admin/orders", "/admin/chat"]:
             self.assertEqual(self.client.get(path).status_code, 200, path)
 
+    def test_vietnamese_search_ranking_and_fields(self):
+        from app.services.search_service import search_products
+
+        with self.app.app_context():
+            category = Category(name="Quà tặng")
+            exact = Product(name="Hoa Hồng Đỏ", price=100, stock=1)
+            phrase = Product(name="Bó Hoa Hồng Đỏ Lego", price=100, stock=1)
+            description = Product(name="Mẫu đặc biệt", description="hoa hồng đỏ", price=100)
+            categorized = Product(name="Tulip", category=category, price=100)
+            literal = Product(name="Sale 50%_", price=100)
+            db.session.add_all([exact, phrase, description, categorized, literal])
+            db.session.commit()
+
+            def matches(q):
+                return [p.id for p in search_products(Product.query, q).all()]
+
+            self.assertEqual(matches("HOA hong do"), [exact.id, phrase.id, description.id])
+            self.assertEqual(set(matches("đỏ hồng")), {exact.id, phrase.id, description.id})
+            self.assertEqual(matches("qua tang tulip"), [categorized.id])
+            self.assertEqual(matches("50%_"), [literal.id])
+            self.assertEqual(matches("hong nonexistent"), [])
+            self.assertEqual(
+                matches("ho\u0061 ho\u0302\u0300ng đo\u0309"), [exact.id, phrase.id, description.id]
+            )
+            category_id = category.id
+        for path in ("/", "/products"):
+            response = self.client.get(
+                path, query_string={"q": "  qua   tang ", "ajax": 1, "category": category_id}
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertIn("Tulip", response.get_data(as_text=True))
+            self.assertNotIn("Mẫu đặc biệt", response.get_data(as_text=True))
+
+    def test_search_keeps_pagination(self):
+        with self.app.app_context():
+            db.session.add_all([Product(name=f"Hoa Đào {n}", price=100) for n in range(30)])
+            db.session.commit()
+        first = self.client.get("/products?q=hoa+dao&ajax=1")
+        second = self.client.get("/products?q=hoa+dao&page=2&ajax=1")
+        self.assertEqual(first.status_code, 200)
+        self.assertEqual(second.status_code, 200)
+        self.assertIn("Hoa Đào 29", first.get_data(as_text=True))
+        self.assertNotIn("Hoa Đào 0</", first.get_data(as_text=True))
+        self.assertIn("Hoa Đào 0", second.get_data(as_text=True))
+
     def test_customer_login_and_settings(self):
         response = self.client.post(
             "/login",

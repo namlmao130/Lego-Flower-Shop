@@ -629,9 +629,16 @@
 
         let currentCategory = '{{ selected_category or "" }}';
         let debounceTimer = null;
+        let activeSearch = null;
 
         function fetchFilteredProducts(q, categoryId) {
             if (!productsContainer) return;
+            if (activeSearch) activeSearch.abort();
+            const controller = new AbortController();
+            activeSearch = controller;
+            productsContainer.setAttribute('aria-busy', 'true');
+            const previousError = document.getElementById('searchError');
+            if (previousError) previousError.remove();
             productsContainer.style.transition = 'opacity 0.2s ease';
             productsContainer.style.opacity = '0.4';
 
@@ -641,13 +648,16 @@
             params.set('ajax', '1');
 
             fetch(`/?${params.toString()}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                signal: controller.signal
             })
                 .then(res => {
                     if (!res.ok) throw new Error('Network error');
                     return res.text();
                 })
                 .then(html => {
+                    if (controller !== activeSearch) return;
+                    productsContainer.setAttribute('aria-busy', 'false');
                     productsContainer.innerHTML = html;
                     productsContainer.style.opacity = '1';
 
@@ -662,6 +672,14 @@
                     }
                 })
                 .catch(err => {
+                    if (controller !== activeSearch || err.name === 'AbortError') return;
+                    productsContainer.setAttribute('aria-busy', 'false');
+                    const error = document.createElement('p');
+                    error.id = 'searchError';
+                    error.className = 'alert alert-warning';
+                    error.setAttribute('role', 'alert');
+                    error.textContent = 'Chưa tải được kết quả. Vui lòng bấm Tìm kiếm để thử lại.';
+                    productsContainer.before(error);
                     console.error('Lỗi khi tải danh sách sản phẩm:', err);
                     productsContainer.style.opacity = '1';
                 });

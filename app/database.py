@@ -49,6 +49,11 @@ def configure_sqlite(app):
 
             @event.listens_for(db.engine, "connect")
             def _set_sqlite_pragma(dbapi_connection, connection_record):
+                from app.services.search_service import normalize_search
+
+                dbapi_connection.create_function(
+                    "shop_search_normalize", 1, normalize_search, deterministic=True
+                )
                 cursor = dbapi_connection.cursor()
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.execute("PRAGMA synchronous=NORMAL")

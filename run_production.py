@@ -9,11 +9,11 @@ logging.getLogger("waitress").setLevel(logging.ERROR)
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🚀 ĐANG CHẠY PRODUCTION WSGI SERVER (WAITRESS - HIỆU NĂNG CAO)")
-    print("⚡ Số luồng xử lý đồng thời (Threads): 32")
-    print("⚡ Giới hạn kết nối (Connection Limit): 2,000")
-    print("⚡ Hàng đợi Socket Backlog: 2,048")
-    print("🌐 Website đang lắng nghe tại: http://127.0.0.1:5000")
+    print("ĐANG CHẠY PRODUCTION WSGI SERVER (WAITRESS - HIỆU NĂNG CAO)")
+    print("Số luồng xử lý đồng thời (Threads): 32")
+    print("Giới hạn kết nối (Connection Limit): 2,000")
+    print("Hàng đợi Socket Backlog: 2,048")
+    print("Website: http://127.0.0.1:5000")
     print("=" * 60)
     serve(
         app,
