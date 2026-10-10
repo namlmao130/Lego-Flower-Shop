@@ -157,6 +157,13 @@ class AppTests(unittest.TestCase):
         self.assertIn("data-chat-session-id=", html)
         self.assertNotIn("const chatSessionId =", html)
 
+        shell_js = (Path(self.app.static_folder) / "js" / "app-shell.js").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn("const POLL_CLOSED = 60000", shell_js)
+        self.assertIn("visibilitychange", shell_js)
+        self.assertIn("_pollInFlight", shell_js)
+
     def test_customer_login_and_settings(self):
         response = self.client.post(
             "/login",

@@ -599,6 +599,7 @@ if (userMenuBtn && userMenu) {
             if (customerUnreadBadge) customerUnreadBadge.classList.add('d-none');
             setTimeout(() => chatInput && chatInput.focus(), 250);
             scrollChatToBottom();
+            requestPollNow();
         } else {
             chatWindow.classList.remove('open');
             chatWindow.setAttribute('aria-hidden', 'true');
@@ -758,30 +759,47 @@ if (userMenuBtn && userMenu) {
         }
     }
 
-    // Kiểm tra tin nhắn mới từ Admin - Adaptive backoff polling:
-    // Khi chat đang hoạt động (vừa gửi/nhận tin): poll nhanh mỗi 3.5s
-    // Khi không có tin mới: poll ngày càng chậm lại (tối đa 18s) để tiết kiệm requests
+    // Kiểm tra tin nhắn mới từ Admin bằng một timer duy nhất:
+    // - Chat mở: phản hồi nhanh, sau đó backoff tối đa 30 giây khi không có tin.
+    // - Chat đóng: chỉ kiểm tra mỗi 60 giây.
+    // - Tab bị ẩn: dừng hoàn toàn và kiểm tra ngay khi người dùng quay lại.
     let _pollTimer = null;
-    let _pollDelay = 3500;
-    let _pollIdleCount = 0;
-    const POLL_MIN = 3500;
-    const POLL_MAX = 18000;
+    let _pollInFlight = false;
+    let _chatHistoryPromise = null;
+    let _pollDelay = 5000;
+    const POLL_ACTIVE_MIN = 5000;
+    const POLL_ACTIVE_MAX = 30000;
+    const POLL_CLOSED = 60000;
 
-    function schedulePoll() {
+    function schedulePoll(delay = null) {
         if (_pollTimer) clearTimeout(_pollTimer);
-        _pollTimer = setTimeout(adaptivePoll, _pollDelay);
+        _pollTimer = null;
+        if (document.hidden) return;
+        const nextDelay = delay ?? (isOpen ? _pollDelay : POLL_CLOSED);
+        _pollTimer = setTimeout(adaptivePoll, nextDelay);
+    }
+
+    function requestPollNow() {
+        if (document.hidden || _pollInFlight) return;
+        if (_chatHistoryPromise) {
+            _chatHistoryPromise.finally(() => schedulePoll(0));
+            return;
+        }
+        schedulePoll(0);
     }
 
     async function adaptivePoll() {
+        if (_pollInFlight || document.hidden) return;
+        _pollTimer = null;
+        _pollInFlight = true;
         try {
             const res = await fetch(`/api/chat/messages?after_id=${lastLoadedMsgId}`);
-            if (!res.ok) { schedulePoll(); return; }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
             const msgs = data.messages || [];
             markCustomerMessagesRead(data.customer_read_through_id || 0);
             if (msgs.length > 0) {
-                _pollIdleCount = 0;
-                _pollDelay = POLL_MIN;
+                _pollDelay = POLL_ACTIVE_MIN;
                 let hasNewAdminMsg = false;
                 let lastAdminText = '';
                 msgs.forEach(msg => {
@@ -806,17 +824,24 @@ if (userMenuBtn && userMenu) {
                     }
                 }
             } else {
-                _pollIdleCount++;
-                // Tăng dần thời gian chờ sau mỗi lần idle, tối đa POLL_MAX
-                _pollDelay = Math.min(_pollDelay * 1.25, POLL_MAX);
+                _pollDelay = Math.min(_pollDelay * 1.5, POLL_ACTIVE_MAX);
             }
         } catch (e) {
-            _pollDelay = Math.min(_pollDelay * 1.5, POLL_MAX);
+            _pollDelay = POLL_ACTIVE_MAX;
+        } finally {
+            _pollInFlight = false;
+            schedulePoll();
         }
-        schedulePoll();
     }
 
-    function pollAdminMessages() { adaptivePoll(); }
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (_pollTimer) clearTimeout(_pollTimer);
+            _pollTimer = null;
+        } else {
+            requestPollNow();
+        }
+    });
 
     async function loadChatHistory() {
         // Ưu tiên tải tin nhắn từ server trước
@@ -957,9 +982,12 @@ if (userMenuBtn && userMenu) {
         });
     }
 
-    // Khởi tạo lịch sử chat & kích hoạt kiểm tra tin nhắn mới từ Admin
-    loadChatHistory();
-    schedulePoll();
+    // Tải lịch sử xong mới bật polling để không tạo hai request song song lúc mở trang.
+    _chatHistoryPromise = loadChatHistory();
+    _chatHistoryPromise.finally(() => {
+        _chatHistoryPromise = null;
+        schedulePoll();
+    });
 
     // Khôi phục trạng thái mở chat từ sessionStorage nếu trước đó đang mở
     if (sessionStorage.getItem(STATE_KEY) === '1') {
