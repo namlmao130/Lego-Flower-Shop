@@ -1,0 +1,51 @@
+:root {
+    --color-brand-900: #1b2140;
+    --color-brand-800: #21243d;
+    --color-accent-500: #c9a227;
+    --color-accent-300: #e9c766;
+    --color-surface: #fff;
+    --color-surface-soft: #fbf8f2;
+    --color-text: #21243d;
+    --color-text-muted: #64748b;
+    --color-danger: #b91c1c;
+    --focus-ring: 0 0 0 3px rgba(201, 162, 39, 0.28);
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 20px;
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.08);
+    --shadow-md: 0 12px 30px rgba(15, 23, 42, 0.12);
+    --motion-fast: 160ms;
+    --motion-normal: 240ms;
+}
+
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-accent-500);
+    outline-offset: 2px;
+    box-shadow: var(--focus-ring);
+}
+
+button:disabled, input:disabled, select:disabled, textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.page-heading { color: var(--color-text); font-family: 'Playfair Display', serif; }
+.clear-search-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+}
+[data-products-container] { transition: opacity var(--motion-normal) ease; }
+[data-products-container].products-loading { opacity: 0.45; pointer-events: none; }
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

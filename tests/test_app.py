@@ -141,6 +141,15 @@ class AppTests(unittest.TestCase):
         self.assertNotIn("Hoa Đào 0</", first.get_data(as_text=True))
         self.assertIn("Hoa Đào 0", second.get_data(as_text=True))
 
+    def test_product_search_uses_shared_frontend_component(self):
+        for path in ("/", "/products"):
+            with self.subTest(path=path):
+                html = self.client.get(path).get_data(as_text=True)
+                self.assertIn("data-product-search", html)
+                self.assertIn("data-products-container", html)
+                self.assertIn("js/components/product-search.js", html)
+                self.assertEqual(html.count("data-product-search"), 1)
+
     def test_customer_login_and_settings(self):
         response = self.client.post(
             "/login",

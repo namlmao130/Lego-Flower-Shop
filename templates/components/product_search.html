@@ -1,0 +1,38 @@
+{# Reusable product search/filter component.
+   Required: search_endpoint, history_path. Optional: search_spacing, enable_pagination. #}
+<section class="search-filter-box {{ search_spacing|default('mb-4') }}"
+    data-product-search data-endpoint="{{ search_endpoint }}" data-history-path="{{ history_path }}"
+    data-pagination="{{ 'true' if enable_pagination|default(false) else 'false' }}"
+    aria-label="Tìm kiếm và lọc sản phẩm">
+    <form action="{{ search_endpoint }}" method="get" class="search-form" id="searchFilterForm" data-search-form>
+        <div class="search-bar-wrapper">
+            <span class="search-icon" aria-hidden="true">⌕</span>
+            <label class="visually-hidden" for="productSearchInput">Tìm kiếm sản phẩm</label>
+            <input type="search" enterkeyhint="search" name="q" id="productSearchInput" class="search-input"
+                placeholder="Tìm kiếm sản phẩm hoa Lego..." value="{{ search_query or '' }}"
+                autocomplete="off" data-search-input>
+            <button type="button" class="clear-search-btn {{ 'd-none' if not search_query else '' }}"
+                title="Xóa từ khóa" aria-label="Xóa từ khóa tìm kiếm" data-clear-search>&times;</button>
+            <button type="submit" class="search-btn" data-search-submit>Tìm kiếm</button>
+        </div>
+        <div class="category-filter-area">
+            <span class="category-filter-label" id="categoryFilterLabel">Danh mục:</span>
+            <div class="category-pills-list" role="group" aria-labelledby="categoryFilterLabel">
+                <a href="{{ search_endpoint }}{% if search_query %}?q={{ search_query|urlencode }}{% endif %}"
+                    class="category-pill-btn {% if not selected_category %}active{% endif %}" data-category=""
+                    aria-pressed="{{ 'true' if not selected_category else 'false' }}">Tất cả</a>
+                {% for cat in categories %}
+                <a href="{{ search_endpoint }}?category={{ cat.id }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}"
+                    class="category-pill-btn {% if selected_category == cat.id %}active{% endif %}"
+                    data-category="{{ cat.id }}"
+                    aria-pressed="{{ 'true' if selected_category == cat.id else 'false' }}">{{ cat.name }}</a>
+                {% endfor %}
+            </div>
+            <input type="hidden" name="category" id="categoryHiddenInput"
+                value="{{ selected_category or '' }}" data-category-input>
+        </div>
+    </form>
+</section>
+<div id="productsSectionContainer" data-products-container>
+    {% include "_product_list_partial.html" %}
+</div>
