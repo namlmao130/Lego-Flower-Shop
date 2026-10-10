@@ -26,16 +26,16 @@ def column_exists(cursor, table, column):
 
 
 def main():
-    if not Config.SQLALCHEMY_DATABASE_URI.startswith('sqlite:///'):
-        raise SystemExit('Legacy SQLite migration only. PostgreSQL schema is created by web.py; transfer data with transfer_to_postgres.py before first startup.')
+    if not Config.SQLALCHEMY_DATABASE_URI.startswith("sqlite:///"):
+        raise SystemExit(
+            "Legacy SQLite migration only. PostgreSQL schema is created by web.py; transfer data with transfer_to_postgres.py before first startup."
+        )
     conn = sqlite3.connect(DB_PATH)
     cur = conn.cursor()
 
     if not column_exists(cur, "reviews", "customer_id"):
         print("Đang thêm cột 'customer_id' vào bảng 'reviews'...")
-        cur.execute(
-            "ALTER TABLE reviews ADD COLUMN customer_id INTEGER REFERENCES customers(id)"
-        )
+        cur.execute("ALTER TABLE reviews ADD COLUMN customer_id INTEGER REFERENCES customers(id)")
         conn.commit()
         print("✅ Đã thêm cột customer_id.")
     else:
@@ -60,8 +60,8 @@ def main():
     conn.close()
 
     # Tạo bảng customers nếu chưa có (bảng hoàn toàn mới nên db.create_all() xử lý được)
-    from web import app
     from models import db
+    from web import app
 
     with app.app_context():
         db.create_all()

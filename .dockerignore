@@ -12,6 +12,10 @@ __pycache__
 *.db-shm
 *.patch
 test_*.py
+tests
+docs
+.ruff_cache
+requirements-dev.txt
 .agents
 deploy
 .DS_Store

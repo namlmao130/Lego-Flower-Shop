@@ -8,3 +8,4 @@ venv/
 *.db-shm
 .DS_Store
 Thumbs.db
+.ruff_cache/
