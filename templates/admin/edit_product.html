@@ -1,104 +1,68 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <title>Sửa sản phẩm</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body>
-    <nav class="navbar navbar-dark bg-dark">
-        <div class="container">
-            <span class="navbar-brand">Admin</span>
-            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-light btn-sm">&larr; Quay lại danh sách</a>
-        </div>
-    </nav>
-
-    <div class="container my-4" style="max-width:600px;">
-        <h2>Sửa sản phẩm</h2>
-
-        {% if product.media %}
-        <label class="form-label d-block">Ảnh/video hiện có <span class="text-muted small">(bấm vào để xem full)</span></label>
-        <div class="d-flex flex-wrap gap-2 mb-3">
-            {% for m in product.media %}
-            <div class="position-relative">
-                {% if m.media_type == 'video' %}
-                <video style="width:100px; height:100px; object-fit:cover; cursor:pointer;" class="rounded border"
-                       onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + m.filename) }}', 'video')">
-                    <source src="{{ url_for('static', filename='uploads/' + m.filename) }}">
-                </video>
-                <span class="position-absolute" style="bottom:4px; left:4px; background:rgba(0,0,0,0.6); color:#fff; font-size:0.7rem; padding:1px 5px; border-radius:4px; pointer-events:none;">▶ video</span>
-                {% else %}
-                <img src="{{ url_for('static', filename='uploads/' + m.filename) }}" style="width:100px; height:100px; object-fit:cover; cursor:pointer;" class="rounded border"
-                     onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + m.filename) }}', 'image')">
-                {% endif %}
-                <form method="POST" action="{{ url_for('admin_delete_media', media_id=m.id) }}" onsubmit="return confirm('Xóa ảnh/video này?');" class="position-absolute top-0 end-0">
-                    <button type="submit" class="btn btn-sm btn-danger py-0 px-1">✕</button>
-                </form>
-            </div>
-            {% endfor %}
-        </div>
-        {% elif product.image %}
-        <img src="{{ url_for('static', filename='uploads/' + product.image) }}" style="width:120px; height:120px; object-fit:cover; cursor:pointer;" class="mb-3 rounded"
-             onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + product.image) }}', 'image')">
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data">
-            <div class="mb-3">
-                <label class="form-label">Tên sản phẩm</label>
-                <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Giá (VNĐ)</label>
-                <input type="number" step="0.01" name="price" class="form-control" value="{{ product.price }}" required>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Tồn kho</label>
-                <input type="number" name="stock" class="form-control" value="{{ product.stock }}">
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Danh mục</label>
-                <select name="category_id" class="form-select">
-                    <option value="">-- Không chọn --</option>
-                    {% for cat in categories %}
-                    <option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Mô tả</label>
-                <textarea name="description" class="form-control" rows="4">{{ product.description or '' }}</textarea>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Thêm ảnh/video mới <span class="text-muted small">(có thể chọn nhiều file cùng lúc — giữ nguyên ảnh cũ, xóa riêng ở nút ✕ phía trên)</span></label>
-                <input type="file" name="media" class="form-control" accept="image/*,video/*" multiple>
-            </div>
-            <button type="submit" class="btn btn-warning">Cập nhật</button>
-        </form>
-    </div>
-
-    <!-- Modal xem full ảnh/video -->
-    <div class="modal fade" id="mediaPreviewModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content bg-dark">
-                <div class="modal-header border-0">
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+{% extends "admin/base.html" %}
+{% block title %}Sửa sản phẩm{% endblock %}
+{% block page_title %}Sửa sản phẩm{% endblock %}
+{% block page_description %}<p>Cập nhật nội dung, giá bán, tồn kho và thư viện sản phẩm.</p>{% endblock %}
+{% block page_actions %}<a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">← Quay lại</a>{% endblock %}
+{% block content %}
+<div class="row g-4">
+    {% if product.media or product.image %}
+    <div class="col-xl-4">
+        <section class="admin-panel">
+            <div class="admin-panel-header"><h2>Thư viện hiện tại</h2></div>
+            <div class="admin-panel-body">
+                <div class="admin-media-grid">
+                    {% if product.media %}
+                        {% for m in product.media %}
+                        <div class="admin-media-item">
+                            {% if m.media_type == 'video' %}
+                            <video onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + m.filename) }}', 'video')" aria-label="Xem video"><source src="{{ url_for('static', filename='uploads/' + m.filename) }}"></video>
+                            {% else %}
+                            <img src="{{ url_for('static', filename='uploads/' + m.filename) }}" alt="Ảnh sản phẩm" onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + m.filename) }}', 'image')">
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('admin_delete_media', media_id=m.id) }}" onsubmit="return confirm('Xóa ảnh/video này?');" class="position-absolute top-0 end-0 m-1">
+                                <button type="submit" class="btn btn-sm btn-danger py-0 px-2" aria-label="Xóa tệp">×</button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    {% elif product.image %}
+                    <div class="admin-media-item"><img src="{{ url_for('static', filename='uploads/' + product.image) }}" alt="Ảnh sản phẩm" onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + product.image) }}', 'image')"></div>
+                    {% endif %}
                 </div>
-                <div class="modal-body text-center" id="mediaPreviewBody"></div>
+                <p class="small text-muted mt-3 mb-0">Bấm vào ảnh hoặc video để xem kích thước lớn.</p>
             </div>
-        </div>
+        </section>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        function openMediaPreview(url, type) {
-            const body = document.getElementById('mediaPreviewBody');
-            if (type === 'video') {
-                body.innerHTML = '<video src="' + url + '" controls autoplay style="max-width:100%; max-height:75vh;"></video>';
-            } else {
-                body.innerHTML = '<img src="' + url + '" style="max-width:100%; max-height:75vh;">';
-            }
-            new bootstrap.Modal(document.getElementById('mediaPreviewModal')).show();
-        }
-    </script>
-</body>
-</html>
+    {% endif %}
+    <div class="{{ 'col-xl-8' if product.media or product.image else 'col-12' }}">
+        <section class="admin-panel admin-form-card mw-100">
+            <div class="admin-panel-header"><h2>Thông tin sản phẩm</h2><span class="admin-stat">ID #{{ product.id }}</span></div>
+            <form method="POST" enctype="multipart/form-data" class="admin-panel-body">
+                <div class="mb-3"><label for="productName" class="form-label">Tên sản phẩm</label><input id="productName" type="text" name="name" class="form-control" value="{{ product.name }}" required></div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6"><label for="productPrice" class="form-label">Giá bán (VNĐ)</label><input id="productPrice" type="number" min="0" step="0.01" name="price" class="form-control" value="{{ product.price }}" required></div>
+                    <div class="col-md-6"><label for="productStock" class="form-label">Tồn kho</label><input id="productStock" type="number" min="0" name="stock" class="form-control" value="{{ product.stock }}"></div>
+                </div>
+                <div class="mb-3"><label for="productCategory" class="form-label">Danh mục</label><select id="productCategory" name="category_id" class="form-select"><option value="">Không chọn danh mục</option>{% for cat in categories %}<option value="{{ cat.id }}" {% if product.category_id == cat.id %}selected{% endif %}>{{ cat.name }}</option>{% endfor %}</select></div>
+                <div class="mb-3"><label for="productDescription" class="form-label">Mô tả</label><textarea id="productDescription" name="description" class="form-control" rows="6">{{ product.description or '' }}</textarea></div>
+                <div class="mb-4"><label for="productMedia" class="form-label">Thêm ảnh hoặc video mới</label><input id="productMedia" type="file" name="media" class="form-control" accept="image/*,video/*" multiple><div class="form-text">Tệp mới sẽ được thêm vào, không thay thế thư viện hiện tại.</div></div>
+                <div class="admin-form-actions"><button type="submit" class="btn btn-admin-primary px-4">Lưu thay đổi</button><a href="{{ url_for('admin_dashboard') }}" class="btn btn-light">Hủy</a></div>
+            </form>
+        </section>
+    </div>
+</div>
+<div class="modal fade" id="mediaPreviewModal" tabindex="-1" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content bg-dark"><div class="modal-header border-0"><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Đóng"></button></div><div class="modal-body text-center" id="mediaPreviewBody"></div></div></div></div>
+{% endblock %}
+{% block scripts %}
+<script>
+function openMediaPreview(url, type) {
+    const body = document.getElementById('mediaPreviewBody');
+    body.replaceChildren();
+    const media = document.createElement(type === 'video' ? 'video' : 'img');
+    media.src = url;
+    media.style.cssText = 'max-width:100%;max-height:75vh;';
+    if (type === 'video') { media.controls = true; media.autoplay = true; }
+    body.appendChild(media);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('mediaPreviewModal')).show();
+}
+</script>
+{% endblock %}

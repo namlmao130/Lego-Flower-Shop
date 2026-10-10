@@ -93,8 +93,22 @@ class AppTests(unittest.TestCase):
         self.sign_in("customer")
         self.assertEqual(self.client.get("/admin/dashboard").status_code, 403)
         self.sign_in("admin")
-        for path in ["/admin/dashboard", "/admin/categories", "/admin/orders", "/admin/chat"]:
-            self.assertEqual(self.client.get(path).status_code, 200, path)
+        with self.app.app_context():
+            category_id = Category.query.one().id
+        for path in [
+            "/admin/dashboard",
+            "/admin/categories",
+            "/admin/orders",
+            "/admin/chat",
+            "/admin/add",
+            f"/admin/edit/{self.pid}",
+            "/admin/categories/add",
+            f"/admin/categories/edit/{category_id}",
+        ]:
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200, path)
+            self.assertIn(b"admin-layout", response.data, path)
+            self.assertIn(b"/static/css/admin.css", response.data, path)
 
     def test_vietnamese_search_ranking_and_fields(self):
         from app.services.search_service import search_products
