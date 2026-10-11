@@ -24,6 +24,7 @@
             <div class="hero-carousel-stage">
 
                 <!-- Viewfinder frame -->
+                <!--
                 <div class="hero-viewfinder">
                     <div style="position:absolute;top:-6px;left:-6px;width:6px;height:6px;background:#fff128;"></div>
                     <div style="position:absolute;top:-6px;right:-6px;width:6px;height:6px;background:#fff128;"></div>
@@ -31,6 +32,7 @@
                     <div style="position:absolute;bottom:-6px;right:-6px;width:6px;height:6px;background:#fff128;">
                     </div>
                 </div>
+                -->
 
                 <!-- Cards track -->
                 <div id="heroCardsTrack"
@@ -40,10 +42,8 @@
                         href="{{ url_for('product_detail', product_id=product.id) }}">
                         {% if product.thumbnail %}
                         <img src="{{ url_for('static', filename='uploads/' + product.thumbnail) }}"
-                            alt="{{ product.name }}"
-                            loading="{{ 'eager' if loop.index0 <= 1 else 'lazy' }}"
-                            decoding="async"
-                            width="240" height="340">
+                            alt="{{ product.name }}" loading="{{ 'eager' if loop.index0 <= 1 else 'lazy' }}"
+                            decoding="async" width="240" height="340">
                         {% else %}
                         <span class="hero-card-placeholder">Chưa có ảnh</span>
                         {% endif %}
@@ -57,16 +57,19 @@
             <!-- Controls & Pagination Dots -->
             <div class="hero-carousel-controls d-flex flex-column align-items-center justify-content-center mt-2 w-100">
                 <div class="d-flex align-items-center justify-content-center gap-2 gap-md-3">
-                    <button id="heroPrevBtn" class="hero-carousel-btn" type="button" aria-label="Sản phẩm trước" title="Sản phẩm trước">&larr;</button>
+                    <button id="heroPrevBtn" class="hero-carousel-btn" type="button" aria-label="Sản phẩm trước"
+                        title="Sản phẩm trước">&larr;</button>
 
                     <!-- Chỉ báo vị trí slide (Dots) -->
                     <div id="heroDots" class="hero-dots-wrap d-flex align-items-center gap-1">
                         {% for product in carousel_products %}
-                        <button type="button" class="hero-dot-btn {% if loop.index0 == 1 %}active{% endif %}" data-dot-idx="{{ loop.index0 }}" aria-label="Xem sản phẩm {{ loop.index }}"></button>
+                        <button type="button" class="hero-dot-btn {% if loop.index0 == 1 %}active{% endif %}"
+                            data-dot-idx="{{ loop.index0 }}" aria-label="Xem sản phẩm {{ loop.index }}"></button>
                         {% endfor %}
                     </div>
 
-                    <button id="heroNextBtn" class="hero-carousel-btn" type="button" aria-label="Sản phẩm sau" title="Sản phẩm sau">&rarr;</button>
+                    <button id="heroNextBtn" class="hero-carousel-btn" type="button" aria-label="Sản phẩm sau"
+                        title="Sản phẩm sau">&rarr;</button>
                 </div>
 
                 <div class="mt-2">
@@ -576,8 +579,9 @@
     })();
 </script>
 
-{% with search_endpoint=url_for('index'), history_path=url_for('index'), search_spacing='mb-5', enable_pagination=false %}
-    {% include "components/product_search.html" %}
+{% with search_endpoint=url_for('index'), history_path=url_for('index'), search_spacing='mb-5', enable_pagination=false
+%}
+{% include "components/product_search.html" %}
 {% endwith %}
 {% endblock %}
 
