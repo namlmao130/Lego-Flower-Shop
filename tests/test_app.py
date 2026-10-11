@@ -17,7 +17,7 @@ os.environ["REQUIRE_POSTGRES"] = "false"
 
 from app import create_app
 from app.extensions import db
-from app.models import Admin, Category, ChatMessage, Customer, Order, Product
+from app.models import Admin, Category, ChatMessage, Customer, Order, OrderItem, Product
 from app.services.email_service import get_reset_serializer
 from app.services.image_service import process_and_save_avatar
 from app.services.order_service import StockUnavailable, place_order
@@ -173,6 +173,13 @@ class AppTests(unittest.TestCase):
         self.assertIn("js/app-shell.js", html)
         self.assertIn("data-chat-session-id=", html)
         self.assertNotIn("const chatSessionId =", html)
+        self.assertIn('class="rainbow-brand-text"', html)
+
+        style_css = (Path(self.app.static_folder) / "css" / "style.css").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(".rainbow-brand-text", style_css)
+        self.assertIn("rainbowBrandFlow 4s linear infinite", style_css)
 
         shell_js = (Path(self.app.static_folder) / "js" / "app-shell.js").read_text(
             encoding="utf-8"
@@ -180,6 +187,81 @@ class AppTests(unittest.TestCase):
         self.assertIn("const POLL_CLOSED = 60000", shell_js)
         self.assertIn("visibilitychange", shell_js)
         self.assertIn("_pollInFlight", shell_js)
+
+    def test_admin_can_manage_homepage_carousel(self):
+        with self.app.app_context():
+            newer_product = Product(name="Newest not featured", price=150000, stock=2)
+            db.session.add(newer_product)
+            db.session.commit()
+
+        self.sign_in("admin")
+        response = self.client.post(f"/admin/carousel/{self.pid}/toggle")
+        self.assertEqual(response.status_code, 302)
+
+        with self.app.app_context():
+            featured = db.session.get(Product, self.pid)
+            self.assertTrue(featured.is_carousel)
+            self.assertEqual(featured.carousel_order, 1)
+
+        homepage = self.client.get("/").get_data(as_text=True)
+        carousel_markup = homepage.split('id="heroCardsTrack"', 1)[1].split("</div>", 1)[0]
+        self.assertIn("Test bouquet", carousel_markup)
+        self.assertNotIn("Newest not featured", carousel_markup)
+
+        response = self.client.post(f"/admin/carousel/{self.pid}/toggle")
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            featured = db.session.get(Product, self.pid)
+            self.assertFalse(featured.is_carousel)
+            self.assertIsNone(featured.carousel_order)
+
+    def test_admin_can_bulk_update_and_delete_orders(self):
+        with self.app.app_context():
+            orders = []
+            for suffix in ("A", "B"):
+                order = Order(
+                    order_code=f"BULK-{suffix}",
+                    customer_name="Bulk customer",
+                    customer_phone="0900000000",
+                    shipping_address="Test address",
+                    total_price=120000,
+                    status="pending",
+                )
+                order.items.append(
+                    OrderItem(
+                        product_id=self.pid,
+                        product_name="Test bouquet",
+                        product_price=120000,
+                        quantity=1,
+                        subtotal=120000,
+                    )
+                )
+                orders.append(order)
+            db.session.add_all(orders)
+            db.session.commit()
+            order_ids = [order.id for order in orders]
+
+        self.sign_in("admin")
+        response = self.client.post(
+            "/admin/orders/bulk",
+            data={"order_ids": order_ids, "bulk_action": "status:cancelled"},
+        )
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            self.assertEqual(
+                {db.session.get(Order, order_id).status for order_id in order_ids},
+                {"cancelled"},
+            )
+            self.assertEqual(db.session.get(Product, self.pid).stock, 7)
+
+        response = self.client.post(
+            "/admin/orders/bulk",
+            data={"order_ids": order_ids, "bulk_action": "delete"},
+        )
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            self.assertEqual(Order.query.filter(Order.id.in_(order_ids)).count(), 0)
+            self.assertEqual(db.session.get(Product, self.pid).stock, 7)
 
     def test_customer_login_and_settings(self):
         response = self.client.post(

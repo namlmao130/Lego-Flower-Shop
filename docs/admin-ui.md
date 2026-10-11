@@ -39,3 +39,5 @@ Use the CSS custom properties at the top of `admin.css` for color, radius, spaci
 - The global unread badge polls every 30 seconds and pauses in hidden tabs.
 - The admin inbox polls its active thread every 5 seconds and the conversation list every 15 seconds; both requests use in-flight guards and pause in hidden tabs.
 - Destructive actions require confirmation and retain the existing server-side POST routes.
+- Products can be pinned to or removed from the homepage carousel directly in the admin table. The carousel accepts at most six products and falls back to the newest products until the first item is pinned.
+- The orders table supports selecting multiple rows, then changing their status or deleting them in one transaction. Stock restoration follows the same rules as single-order actions.

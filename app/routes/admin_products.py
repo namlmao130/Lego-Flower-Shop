@@ -11,6 +11,8 @@ from app.security import admin_required
 from app.services.catalog_service import get_cached_categories
 from app.services.image_service import save_media_files
 
+MAX_CAROUSEL_PRODUCTS = 6
+
 
 @admin_required
 def admin_add_product():
@@ -160,6 +162,36 @@ def admin_delete_multiple():
     return redirect(url_for("admin_dashboard"))
 
 
+@admin_required
+def admin_toggle_carousel(product_id):
+    """Add or remove a product from the homepage carousel."""
+    product = Product.query.get_or_404(product_id)
+
+    if product.is_carousel:
+        product.is_carousel = False
+        product.carousel_order = None
+        flash(f'Đã gỡ "{product.name}" khỏi carousel.', "success")
+    else:
+        carousel_count = Product.query.filter_by(is_carousel=True).count()
+        if carousel_count >= MAX_CAROUSEL_PRODUCTS:
+            flash(
+                f"Carousel chỉ hiển thị tối đa {MAX_CAROUSEL_PRODUCTS} sản phẩm. "
+                "Hãy gỡ một sản phẩm trước.",
+                "warning",
+            )
+            return redirect(url_for("admin_dashboard"))
+
+        highest_order = (
+            db.session.query(db.func.max(Product.carousel_order)).scalar() or 0
+        )
+        product.is_carousel = True
+        product.carousel_order = highest_order + 1
+        flash(f'Đã thêm "{product.name}" vào carousel.', "success")
+
+    db.session.commit()
+    return redirect(url_for("admin_dashboard"))
+
+
 def register_routes(app):
     """Register handlers, retaining the public endpoint names."""
     app.route("/admin/add", methods=["GET", "POST"])(admin_add_product)
@@ -168,3 +200,6 @@ def register_routes(app):
     app.route("/admin/review/delete/<int:review_id>", methods=["POST"])(admin_delete_review)
     app.route("/admin/delete/<int:product_id>", methods=["POST"])(admin_delete_product)
     app.route("/admin/delete_multiple", methods=["POST"])(admin_delete_multiple)
+    app.route("/admin/carousel/<int:product_id>/toggle", methods=["POST"])(
+        admin_toggle_carousel
+    )

@@ -51,6 +51,7 @@ def admin_dashboard():
         query = query.filter(Product.name.ilike(f"%{q}%"))
 
     products = query.order_by(Product.id.desc()).all()
+    carousel_count = Product.query.filter_by(is_carousel=True).count()
     categories = get_cached_categories()
     return render_template(
         "admin/dashboard.html",
@@ -58,6 +59,7 @@ def admin_dashboard():
         categories=categories,
         search_query=q,
         selected_category=category_id,
+        carousel_count=carousel_count,
     )
 
 

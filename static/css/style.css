@@ -82,28 +82,42 @@ h1, h2, h3, .hero-title {
 }
 
 .rainbow-brand {
+    color: inherit;
+}
+
+.rainbow-brand-text {
+    display: inline-block;
     background: linear-gradient(
         90deg,
         #d41414 0%,
-        #e87500 16%,
-        #c9a600 32%,
-        #168a2f 48%,
-        #1264b3 64%,
-        #3f27a8 80%,
-        #8c168f 100%
+        #ff7a00 7.14%,
+        #ffd000 14.28%,
+        #20a443 21.42%,
+        #1688d4 28.56%,
+        #4d42d7 35.7%,
+        #a72bb3 42.84%,
+        #d41414 50%,
+        #ff7a00 57.14%,
+        #ffd000 64.28%,
+        #20a443 71.42%,
+        #1688d4 78.56%,
+        #4d42d7 85.7%,
+        #a72bb3 92.84%,
+        #d41414 100%
     );
-    background-size: 300% 100%;
+    background-size: 200% 100%;
     background-position: 0% 50%;
     -webkit-background-clip: text;
     background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    animation: rainbowBrandFlow 5s linear infinite;
+    -webkit-text-fill-color: transparent !important;
+    color: transparent !important;
+    animation: rainbowBrandFlow 4s linear infinite;
+    will-change: background-position;
 }
 
 @keyframes rainbowBrandFlow {
     from { background-position: 0% 50%; }
-    to { background-position: 300% 50%; }
+    to { background-position: -200% 50%; }
 }
 
 .card-title {

@@ -8,6 +8,31 @@ from app.extensions import db
 from app.models import Order, OrderItem, Product
 from app.security import admin_required
 
+VALID_ORDER_STATUSES = {"pending", "confirmed", "shipping", "completed", "cancelled"}
+
+
+def _set_order_status(order, new_status):
+    """Change status while keeping product stock consistent."""
+    old_status = order.status
+    if new_status == old_status:
+        return
+    order.status = new_status
+    if new_status == "cancelled" and old_status != "cancelled":
+        for item in order.items:
+            if item.product:
+                item.product.stock += item.quantity
+    elif old_status == "cancelled" and new_status != "cancelled":
+        for item in order.items:
+            if item.product:
+                item.product.stock = max(0, item.product.stock - item.quantity)
+
+
+def _restore_stock_before_delete(order):
+    if order.status not in ("completed", "cancelled"):
+        for item in order.items:
+            if item.product:
+                item.product.stock += item.quantity
+
 
 @admin_required
 def admin_orders():
@@ -55,22 +80,8 @@ def admin_order_update_status(order_id):
     """Admin cập nhật trạng thái đơn hàng."""
     order = Order.query.get_or_404(order_id)
     new_status = request.form.get("status")
-    valid_statuses = ["pending", "confirmed", "shipping", "completed", "cancelled"]
-    if new_status in valid_statuses:
-        old_status = order.status
-        order.status = new_status
-
-        # Nếu hủy đơn -> hoàn lại tồn kho
-        if new_status == "cancelled" and old_status != "cancelled":
-            for item in order.items:
-                if item.product:
-                    item.product.stock += item.quantity
-        # Nếu mở lại đơn từ hủy -> trừ lại tồn kho
-        elif old_status == "cancelled" and new_status != "cancelled":
-            for item in order.items:
-                if item.product:
-                    item.product.stock = max(0, item.product.stock - item.quantity)
-
+    if new_status in VALID_ORDER_STATUSES:
+        _set_order_status(order, new_status)
         db.session.commit()
         flash(
             f'Đã cập nhật trạng thái đơn #{order.order_code} thành "{order.status_label}"!',
@@ -83,14 +94,55 @@ def admin_order_update_status(order_id):
 def admin_order_delete(order_id):
     """Admin xóa đơn hàng."""
     order = Order.query.get_or_404(order_id)
-    # Nếu đơn chưa hoàn thành và chưa hủy, hoàn lại tồn kho
-    if order.status not in ("completed", "cancelled"):
-        for item in order.items:
-            if item.product:
-                item.product.stock += item.quantity
+    _restore_stock_before_delete(order)
     db.session.delete(order)
     db.session.commit()
     flash(f"Đã xóa đơn hàng #{order.order_code} thành công!", "success")
+    return redirect(url_for("admin_orders"))
+
+
+@admin_required
+def admin_orders_bulk_action():
+    """Update status or delete multiple orders in one transaction."""
+    order_ids = []
+    for raw_id in request.form.getlist("order_ids"):
+        try:
+            order_ids.append(int(raw_id))
+        except (TypeError, ValueError):
+            continue
+
+    if not order_ids:
+        flash("Hãy chọn ít nhất một đơn hàng.", "warning")
+        return redirect(url_for("admin_orders"))
+
+    orders = (
+        Order.query.options(selectinload(Order.items).selectinload(OrderItem.product))
+        .filter(Order.id.in_(set(order_ids)))
+        .all()
+    )
+    if not orders:
+        flash("Không tìm thấy đơn hàng đã chọn.", "warning")
+        return redirect(url_for("admin_orders"))
+
+    action = request.form.get("bulk_action", "")
+    if action == "delete":
+        for order in orders:
+            _restore_stock_before_delete(order)
+            db.session.delete(order)
+        db.session.commit()
+        flash(f"Đã xóa {len(orders)} đơn hàng.", "success")
+    elif action.startswith("status:"):
+        new_status = action.partition(":")[2]
+        if new_status not in VALID_ORDER_STATUSES:
+            flash("Trạng thái đơn hàng không hợp lệ.", "error")
+            return redirect(url_for("admin_orders"))
+        for order in orders:
+            _set_order_status(order, new_status)
+        db.session.commit()
+        flash(f"Đã cập nhật trạng thái cho {len(orders)} đơn hàng.", "success")
+    else:
+        flash("Hãy chọn thao tác hàng loạt.", "warning")
+
     return redirect(url_for("admin_orders"))
 
 
@@ -99,3 +151,4 @@ def register_routes(app):
     app.route("/admin/orders")(admin_orders)
     app.route("/admin/orders/<int:order_id>/status", methods=["POST"])(admin_order_update_status)
     app.route("/admin/orders/<int:order_id>/delete", methods=["POST"])(admin_order_delete)
+    app.route("/admin/orders/bulk", methods=["POST"])(admin_orders_bulk_action)

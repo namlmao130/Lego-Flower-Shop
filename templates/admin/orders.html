@@ -46,10 +46,31 @@
 
         <!-- BẢNG DANH SÁCH ĐƠN HÀNG -->
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="admin-panel-header">
+                <div class="d-flex align-items-center gap-2">
+                    <h2>Danh sách đơn hàng</h2>
+                    <span class="admin-stat">{{ orders|length }} đơn</span>
+                </div>
+                <form id="bulkOrdersForm" method="POST" action="{{ url_for('admin_orders_bulk_action') }}" class="d-flex align-items-center gap-2 flex-wrap">
+                    <select name="bulk_action" id="bulkOrderAction" class="form-select form-select-sm" style="min-width: 190px;" required>
+                        <option value="">Chỉnh sửa đã chọn...</option>
+                        <optgroup label="Đổi trạng thái">
+                            <option value="status:pending">Chờ xác nhận</option>
+                            <option value="status:confirmed">Đã xác nhận</option>
+                            <option value="status:shipping">Đang giao hàng</option>
+                            <option value="status:completed">Hoàn thành</option>
+                            <option value="status:cancelled">Đã hủy</option>
+                        </optgroup>
+                        <option value="delete">Xóa vĩnh viễn</option>
+                    </select>
+                    <button type="submit" id="applyBulkOrders" class="btn btn-sm btn-dark" disabled>Áp dụng (<span id="selectedOrderCount">0</span>)</button>
+                </form>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0 bg-white">
                     <thead class="table-light border-bottom">
                         <tr>
+                            <th class="ps-4 text-center"><input type="checkbox" id="selectAllOrders" class="form-check-input" aria-label="Chọn tất cả đơn hàng"></th>
                             <th class="ps-4">Mã đơn</th>
                             <th>Ngày đặt</th>
                             <th>Khách hàng</th>
@@ -62,13 +83,14 @@
                     <tbody>
                         {% if not orders %}
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="8" class="text-center py-5 text-muted">
                                 Không tìm thấy đơn hàng nào phù hợp.
                             </td>
                         </tr>
                         {% else %}
                         {% for o in orders %}
                         <tr>
+                            <td class="ps-4 text-center"><input type="checkbox" name="order_ids" value="{{ o.id }}" form="bulkOrdersForm" class="form-check-input order-checkbox" aria-label="Chọn đơn {{ o.order_code }}"></td>
                             <td class="ps-4">
                                 <strong class="text-danger">#{{ o.order_code }}</strong>
                                 {% if o.customer %}
@@ -199,4 +221,42 @@
                 </table>
             </div>
         </div>
+{% endblock %}
+{% block scripts %}
+<script>
+(() => {
+    const selectAll = document.getElementById('selectAllOrders');
+    const boxes = [...document.querySelectorAll('.order-checkbox')];
+    const applyButton = document.getElementById('applyBulkOrders');
+    const selectedCount = document.getElementById('selectedOrderCount');
+    const actionSelect = document.getElementById('bulkOrderAction');
+    const form = document.getElementById('bulkOrdersForm');
+
+    function updateOrderSelection() {
+        const count = boxes.filter(box => box.checked).length;
+        selectedCount.textContent = count;
+        applyButton.disabled = count === 0;
+        selectAll.checked = boxes.length > 0 && count === boxes.length;
+        selectAll.indeterminate = count > 0 && count < boxes.length;
+    }
+
+    selectAll?.addEventListener('change', () => {
+        boxes.forEach(box => { box.checked = selectAll.checked; });
+        updateOrderSelection();
+    });
+    boxes.forEach(box => box.addEventListener('change', updateOrderSelection));
+    form?.addEventListener('submit', event => {
+        const count = boxes.filter(box => box.checked).length;
+        if (!count || !actionSelect.value) {
+            event.preventDefault();
+            return;
+        }
+        const message = actionSelect.value === 'delete'
+            ? `Xóa vĩnh viễn ${count} đơn hàng đã chọn? Thao tác này không thể hoàn tác.`
+            : `Cập nhật trạng thái cho ${count} đơn hàng đã chọn?`;
+        if (!confirm(message)) event.preventDefault();
+    });
+    updateOrderSelection();
+})();
+</script>
 {% endblock %}

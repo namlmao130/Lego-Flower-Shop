@@ -3,10 +3,29 @@
 import os
 
 from flask import current_app as app
-from sqlalchemy import event
+from sqlalchemy import event, inspect
 
 from app.extensions import db
 from app.models import Admin
+
+
+def ensure_product_carousel_columns():
+    """Add carousel fields to existing databases without replacing product data."""
+    columns = {column["name"] for column in inspect(db.engine).get_columns("products")}
+    statements = []
+    if "is_carousel" not in columns:
+        boolean_default = "FALSE" if db.engine.dialect.name == "postgresql" else "0"
+        statements.append(
+            "ALTER TABLE products ADD COLUMN is_carousel BOOLEAN "
+            f"NOT NULL DEFAULT {boolean_default}"
+        )
+    if "carousel_order" not in columns:
+        statements.append("ALTER TABLE products ADD COLUMN carousel_order INTEGER")
+
+    if statements:
+        with db.engine.begin() as connection:
+            for statement in statements:
+                connection.execute(db.text(statement))
 
 
 def ensure_database_indexes():
@@ -15,6 +34,7 @@ def ensure_database_indexes():
         with db.engine.connect() as conn:
             indexes = [
                 "CREATE INDEX IF NOT EXISTS idx_products_category_id_desc ON products(category_id, id DESC)",
+                "CREATE INDEX IF NOT EXISTS idx_products_carousel_order ON products(is_carousel, carousel_order, id DESC)",
                 "CREATE INDEX IF NOT EXISTS idx_chat_messages_session_id_id ON chat_messages(session_id, id ASC)",
                 "CREATE INDEX IF NOT EXISTS idx_chat_messages_unread_badge ON chat_messages(sender_type, is_read)",
                 "CREATE INDEX IF NOT EXISTS idx_orders_customer_created ON orders(customer_id, created_at DESC)",
@@ -72,11 +92,13 @@ def initialize_database():
             bootstrap_connection.execute(db.text("SELECT pg_advisory_lock(72024001)"))
             try:
                 db.create_all()
+                ensure_product_carousel_columns()
                 ensure_database_indexes()
                 create_default_admin()
             finally:
                 bootstrap_connection.execute(db.text("SELECT pg_advisory_unlock(72024001)"))
     else:
         db.create_all()
+        ensure_product_carousel_columns()
         ensure_database_indexes()
         create_default_admin()

@@ -33,6 +33,7 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h2>Danh sách sản phẩm</h2>
                 <span class="admin-stat"><span id="visibleCount">{{ products|length }}</span> sản phẩm</span>
+                <span class="admin-stat">Carousel: {{ carousel_count }}/6</span>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <button type="button" id="btnToggleAll" class="btn btn-sm btn-outline-secondary">Chọn tất cả</button>
@@ -41,7 +42,7 @@
         </div>
         <div class="table-responsive">
             <table class="table admin-table" id="adminProductsTable">
-                <thead><tr><th class="text-center"><input type="checkbox" id="selectAllCheckbox" class="form-check-input" aria-label="Chọn tất cả sản phẩm"></th><th>Ảnh</th><th>Sản phẩm</th><th>Giá bán</th><th>Tồn kho</th><th>Danh mục</th><th class="text-end">Thao tác</th></tr></thead>
+                <thead><tr><th class="text-center"><input type="checkbox" id="selectAllCheckbox" class="form-check-input" aria-label="Chọn tất cả sản phẩm"></th><th>Ảnh</th><th>Sản phẩm</th><th>Giá bán</th><th>Tồn kho</th><th>Danh mục</th><th>Carousel</th><th class="text-end">Thao tác</th></tr></thead>
                 <tbody>
                     {% for product in products %}
                     <tr class="product-row" data-name="{{ (product.name or '')|lower }}" data-category="{{ product.category_id or '' }}">
@@ -51,13 +52,22 @@
                         <td class="fw-bold text-danger">{{ "{:,.0f}".format(product.price) }} đ</td>
                         <td><span class="badge {{ 'text-bg-danger' if product.stock <= 0 else ('text-bg-warning' if product.stock < 5 else 'text-bg-success') }}">{{ product.stock }}</span></td>
                         <td>{% if product.category %}<span class="admin-stat">{{ product.category.name }}</span>{% else %}<span class="text-muted">Chưa phân loại</span>{% endif %}</td>
+                        <td>
+                            <button type="submit"
+                                class="btn btn-sm js-carousel-toggle {{ 'btn-success' if product.is_carousel else 'btn-outline-secondary' }}"
+                                formaction="{{ url_for('admin_toggle_carousel', product_id=product.id) }}"
+                                formmethod="post"
+                                title="{{ 'Gỡ khỏi carousel' if product.is_carousel else 'Thêm vào carousel' }}">
+                                {{ '✓ Đang hiển thị' if product.is_carousel else '+ Thêm' }}
+                            </button>
+                        </td>
                         <td class="text-end text-nowrap">
                             <a href="{{ url_for('admin_edit_product', product_id=product.id) }}" class="btn btn-sm btn-outline-secondary">Sửa</a>
                             <button type="button" class="btn btn-sm btn-outline-danger js-delete-product" data-id="{{ product.id }}" data-name="{{ product.name|e }}">Xóa</button>
                         </td>
                     </tr>
                     {% else %}
-                    <tr><td colspan="7" class="admin-empty">Không tìm thấy sản phẩm phù hợp.</td></tr>
+                    <tr><td colspan="8" class="admin-empty">Không tìm thấy sản phẩm phù hợp.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -108,6 +118,7 @@
     searchInput?.addEventListener('input', filterRows);
     categorySelect?.addEventListener('change', filterRows);
     document.getElementById('bulkDeleteForm')?.addEventListener('submit', event => {
+        if (event.submitter?.classList.contains('js-carousel-toggle')) return;
         const count = visibleBoxes().filter(box => box.checked).length;
         if (!count || !confirm(`Xóa vĩnh viễn ${count} sản phẩm đã chọn?`)) event.preventDefault();
     });

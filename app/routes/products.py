@@ -31,13 +31,32 @@ def index():
         # 6 sản phẩm đầu tiên hiển thị trên carousel, toàn bộ 8 sản phẩm hiển thị ở danh sách bên dưới.
         # Tái sử dụng cùng danh sách để không truy vấn riêng cho carousel.
         products = query.order_by(Product.id.desc()).limit(8).all()
-        carousel_products = products[:6]
+        carousel_products = (
+            product_cards_query(with_ratings=False)
+            .filter(Product.is_carousel.is_(True))
+            .order_by(Product.carousel_order.asc(), Product.id.desc())
+            .limit(6)
+            .all()
+        )
+        if not carousel_products:
+            carousel_products = products[:6]
     else:
         carousel_products = (
             []
             if is_partial
-            else product_cards_query(with_ratings=False).order_by(Product.id.desc()).limit(6).all()
+            else product_cards_query(with_ratings=False)
+            .filter(Product.is_carousel.is_(True))
+            .order_by(Product.carousel_order.asc(), Product.id.desc())
+            .limit(6)
+            .all()
         )
+        if not is_partial and not carousel_products:
+            carousel_products = (
+                product_cards_query(with_ratings=False)
+                .order_by(Product.id.desc())
+                .limit(6)
+                .all()
+            )
         products = query.limit(60).all()
 
     # Nếu là yêu cầu AJAX (chỉ load lại phần sản phẩm bên dưới)

@@ -24,8 +24,18 @@ class Product(db.Model):
     image = db.Column(db.String(200), nullable=True)  # ảnh cũ (giữ để tương thích ngược)
     stock = db.Column(db.Integer, default=0)
     category_id = db.Column(db.Integer, db.ForeignKey("categories.id"), nullable=True, index=True)
+    is_carousel = db.Column(
+        db.Boolean,
+        nullable=False,
+        default=False,
+        server_default=db.false(),
+    )
+    carousel_order = db.Column(db.Integer, nullable=True)
 
-    __table_args__ = (db.Index("idx_products_category_id_desc", "category_id", "id"),)
+    __table_args__ = (
+        db.Index("idx_products_category_id_desc", "category_id", "id"),
+        db.Index("idx_products_carousel_order", "is_carousel", "carousel_order", "id"),
+    )
 
     @property
     def thumbnail(self):
