@@ -195,8 +195,14 @@ class AppTests(unittest.TestCase):
             db.session.commit()
 
         self.sign_in("admin")
-        response = self.client.post(f"/admin/carousel/{self.pid}/toggle")
-        self.assertEqual(response.status_code, 302)
+        response = self.client.post(
+            f"/admin/carousel/{self.pid}/toggle",
+            headers={"X-Requested-With": "XMLHttpRequest", "Accept": "application/json"},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json["success"])
+        self.assertTrue(response.json["is_carousel"])
+        self.assertEqual(response.json["carousel_count"], 1)
 
         with self.app.app_context():
             featured = db.session.get(Product, self.pid)

@@ -33,7 +33,7 @@
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 <h2>Danh sách sản phẩm</h2>
                 <span class="admin-stat"><span id="visibleCount">{{ products|length }}</span> sản phẩm</span>
-                <span class="admin-stat">Carousel: {{ carousel_count }}/6</span>
+                <span class="admin-stat">Carousel: <span id="carouselCount">{{ carousel_count }}</span>/6</span>
             </div>
             <div class="d-flex gap-2 flex-wrap">
                 <button type="button" id="btnToggleAll" class="btn btn-sm btn-outline-secondary">Chọn tất cả</button>
@@ -53,10 +53,10 @@
                         <td><span class="badge {{ 'text-bg-danger' if product.stock <= 0 else ('text-bg-warning' if product.stock < 5 else 'text-bg-success') }}">{{ product.stock }}</span></td>
                         <td>{% if product.category %}<span class="admin-stat">{{ product.category.name }}</span>{% else %}<span class="text-muted">Chưa phân loại</span>{% endif %}</td>
                         <td>
-                            <button type="submit"
+                            <button type="button"
                                 class="btn btn-sm js-carousel-toggle {{ 'btn-success' if product.is_carousel else 'btn-outline-secondary' }}"
-                                formaction="{{ url_for('admin_toggle_carousel', product_id=product.id) }}"
-                                formmethod="post"
+                                data-url="{{ url_for('admin_toggle_carousel', product_id=product.id) }}"
+                                data-active="{{ 'true' if product.is_carousel else 'false' }}"
                                 title="{{ 'Gỡ khỏi carousel' if product.is_carousel else 'Thêm vào carousel' }}">
                                 {{ '✓ Đang hiển thị' if product.is_carousel else '+ Thêm' }}
                             </button>
@@ -75,6 +75,7 @@
     </section>
 </form>
 <form id="singleDeleteForm" method="POST" class="d-none"></form>
+<div id="carouselAdminStatus" class="alert admin-alert d-none mt-3 mb-0" role="status" aria-live="polite"></div>
 {% endblock %}
 {% block scripts %}
 <script>
@@ -87,6 +88,8 @@
     const toggleAll = document.getElementById('btnToggleAll');
     const searchInput = document.getElementById('adminSearchInput');
     const categorySelect = document.getElementById('adminCategorySelect');
+    const carouselCount = document.getElementById('carouselCount');
+    const carouselStatus = document.getElementById('carouselAdminStatus');
 
     const visibleBoxes = () => rows.filter(row => !row.hidden).map(row => row.querySelector('.product-checkbox'));
     function updateSelection() {
@@ -118,7 +121,6 @@
     searchInput?.addEventListener('input', filterRows);
     categorySelect?.addEventListener('change', filterRows);
     document.getElementById('bulkDeleteForm')?.addEventListener('submit', event => {
-        if (event.submitter?.classList.contains('js-carousel-toggle')) return;
         const count = visibleBoxes().filter(box => box.checked).length;
         if (!count || !confirm(`Xóa vĩnh viễn ${count} sản phẩm đã chọn?`)) event.preventDefault();
     });
@@ -128,6 +130,44 @@
         form.action = `/admin/delete/${button.dataset.id}`;
         form.submit();
     }));
+    document.querySelectorAll('.js-carousel-toggle').forEach(button => {
+        button.addEventListener('click', async () => {
+            if (button.dataset.loading === 'true') return;
+            button.dataset.loading = 'true';
+            button.disabled = true;
+            const previousText = button.textContent.trim();
+            button.textContent = 'Đang lưu...';
+            try {
+                const response = await fetch(button.dataset.url, {
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || !data.success) {
+                    throw new Error(data.error || 'Không thể cập nhật carousel.');
+                }
+                const active = Boolean(data.is_carousel);
+                button.dataset.active = String(active);
+                button.textContent = active ? '✓ Đang hiển thị' : '+ Thêm';
+                button.title = active ? 'Gỡ khỏi carousel' : 'Thêm vào carousel';
+                button.classList.toggle('btn-success', active);
+                button.classList.toggle('btn-outline-secondary', !active);
+                carouselCount.textContent = data.carousel_count;
+                carouselStatus.textContent = data.message;
+                carouselStatus.className = 'alert alert-success admin-alert mt-3 mb-0';
+            } catch (error) {
+                button.textContent = previousText;
+                carouselStatus.textContent = error.message;
+                carouselStatus.className = 'alert alert-danger admin-alert mt-3 mb-0';
+            } finally {
+                button.disabled = false;
+                button.dataset.loading = 'false';
+            }
+        });
+    });
     updateSelection();
 })();
 </script>

@@ -3,7 +3,7 @@
 import os
 
 from flask import current_app as app
-from flask import flash, redirect, render_template, request, url_for
+from flask import flash, jsonify, redirect, render_template, request, url_for
 
 from app.extensions import db
 from app.models import Product, ProductMedia, Review
@@ -166,19 +166,22 @@ def admin_delete_multiple():
 def admin_toggle_carousel(product_id):
     """Add or remove a product from the homepage carousel."""
     product = Product.query.get_or_404(product_id)
+    is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
     if product.is_carousel:
         product.is_carousel = False
         product.carousel_order = None
-        flash(f'Đã gỡ "{product.name}" khỏi carousel.', "success")
+        message = f'Đã gỡ "{product.name}" khỏi carousel.'
     else:
         carousel_count = Product.query.filter_by(is_carousel=True).count()
         if carousel_count >= MAX_CAROUSEL_PRODUCTS:
-            flash(
+            message = (
                 f"Carousel chỉ hiển thị tối đa {MAX_CAROUSEL_PRODUCTS} sản phẩm. "
-                "Hãy gỡ một sản phẩm trước.",
-                "warning",
+                "Hãy gỡ một sản phẩm trước."
             )
+            if is_ajax:
+                return jsonify(success=False, error=message, carousel_count=carousel_count), 409
+            flash(message, "warning")
             return redirect(url_for("admin_dashboard"))
 
         highest_order = (
@@ -186,9 +189,19 @@ def admin_toggle_carousel(product_id):
         )
         product.is_carousel = True
         product.carousel_order = highest_order + 1
-        flash(f'Đã thêm "{product.name}" vào carousel.', "success")
+        message = f'Đã thêm "{product.name}" vào carousel.'
 
     db.session.commit()
+    carousel_count = Product.query.filter_by(is_carousel=True).count()
+    if is_ajax:
+        return jsonify(
+            success=True,
+            message=message,
+            is_carousel=product.is_carousel,
+            carousel_count=carousel_count,
+            max_carousel_products=MAX_CAROUSEL_PRODUCTS,
+        )
+    flash(message, "success")
     return redirect(url_for("admin_dashboard"))
 
 
