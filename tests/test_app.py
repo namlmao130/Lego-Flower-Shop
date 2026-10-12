@@ -34,6 +34,7 @@ class AppTests(unittest.TestCase):
                 "SQLALCHEMY_ENGINE_OPTIONS": {},
                 "SECRET_KEY": "test-only-secret",
                 "RATELIMIT_ENABLED": False,
+                "CSRF_ENABLED": False,
                 "CACHE_TYPE": "NullCache",
                 "UPLOAD_FOLDER": self.directory.name,
                 "AVATAR_UPLOAD_FOLDER": str(Path(self.directory.name) / "avatars"),
@@ -175,9 +176,7 @@ class AppTests(unittest.TestCase):
         self.assertNotIn("const chatSessionId =", html)
         self.assertIn('class="rainbow-brand-text"', html)
 
-        style_css = (Path(self.app.static_folder) / "css" / "style.css").read_text(
-            encoding="utf-8"
-        )
+        style_css = (Path(self.app.static_folder) / "css" / "style.css").read_text(encoding="utf-8")
         self.assertIn(".rainbow-brand-text", style_css)
         self.assertIn("rainbowBrandFlow 4s linear infinite", style_css)
 
@@ -505,6 +504,65 @@ class AppTests(unittest.TestCase):
             db.session.remove()
             db.engine.dispose()
         self.assertEqual(statuses, [200] * 5 + [429])
+
+    def test_csrf_tokens_required_for_forms_and_ajax(self):
+        self.app.config["CSRF_ENABLED"] = True
+        self.client.get("/login")
+        with self.client.session_transaction() as session:
+            token = session["csrf_token"]
+        self.assertEqual(self.client.post("/login", data={}).status_code, 403)
+        self.assertEqual(self.client.post("/login", data={"csrf_token": "wrong"}).status_code, 403)
+        self.assertEqual(self.client.post("/login", data={"csrf_token": token}).status_code, 200)
+        self.assertEqual(
+            self.client.post(
+                "/api/chat/send", json={"message": "hello"}, headers={"X-CSRFToken": token}
+            ).status_code,
+            200,
+        )
+        stranger = self.app.test_client()
+        self.assertEqual(stranger.post("/login", data={"csrf_token": token}).status_code, 403)
+
+    def test_order_access_is_private(self):
+        self.client.post("/cart/add", data={"product_id": self.pid, "quantity": 1})
+        self.client.post(
+            "/checkout",
+            data={
+                "customer_name": "Guest",
+                "customer_phone": "0912345678",
+                "shipping_address": "Private address",
+            },
+        )
+        with self.app.app_context():
+            code = Order.query.one().order_code
+        stranger = self.app.test_client()
+        for path in (f"/order/{code}", f"/order-success/{code}"):
+            self.assertEqual(stranger.get(path).status_code, 404)
+            self.assertEqual(self.client.get(path).status_code, 200)
+        self.assertEqual(stranger.post(f"/order/{code}/cancel").status_code, 404)
+        self.assertEqual(stranger.post(f"/order/{code}/reorder").status_code, 404)
+        self.assertNotIn(
+            "Private address", stranger.get("/orders?identifier=LF").get_data(as_text=True)
+        )
+        with self.app.app_context():
+            self.assertEqual(Order.query.one().status, "pending")
+
+    def test_reset_link_cannot_be_reused(self):
+        with patch(
+            "app.routes.auth.send_password_reset_email", return_value=(True, "sent")
+        ) as send:
+            self.client.post("/forgot-password", data={"email": "customer@example.test"})
+        _, link, code = send.call_args.args
+        path = "/reset-password/" + link.rsplit("/", 1)[1]
+        payload = {
+            "verification_code": code,
+            "password": "first-password",
+            "password2": "first-password",
+        }
+        self.assertEqual(self.client.post(path, data=payload).status_code, 302)
+        payload.update(password="stolen-password", password2="stolen-password")
+        self.assertEqual(self.client.post(path, data=payload).location, "/forgot-password")
+        with self.app.app_context():
+            self.assertTrue(db.session.get(Customer, self.cid).check_password("first-password"))
 
     def test_image_service_and_multiple_app_instances(self):
         buffer = io.BytesIO()

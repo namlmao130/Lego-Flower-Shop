@@ -1,9 +1,11 @@
 """Security."""
 
+import hmac
+import secrets
 import urllib.parse
 from functools import wraps
 
-from flask import abort, redirect, request, url_for
+from flask import abort, current_app, redirect, request, session, url_for
 from flask_login import current_user
 
 from app.extensions import db, login_manager
@@ -58,6 +60,11 @@ def csrf_protect_origin():
     """Bảo vệ chống tấn công CSRF (Cross-Site Request Forgery) trên các yêu cầu thay đổi trạng thái (POST, PUT, DELETE, PATCH).
     Kiểm tra Origin hoặc Referer phải xuất phát từ chính tên miền của máy chủ."""
     if request.method in ("POST", "PUT", "DELETE", "PATCH"):
+        if current_app.config.get("CSRF_ENABLED", True):
+            expected = session.get("csrf_token", "")
+            supplied = request.headers.get("X-CSRFToken") or request.form.get("csrf_token", "")
+            if not expected or not hmac.compare_digest(expected.encode(), supplied.encode()):
+                abort(403)
         origin = request.headers.get("Origin")
         referer = request.headers.get("Referer")
         target_host = request.host.lower()
@@ -110,3 +117,10 @@ def register(app):
     login_manager.user_loader(load_user)
     app.before_request(csrf_protect_origin)
     app.after_request(add_header)
+    app.jinja_env.globals["csrf_token"] = csrf_token
+
+
+def csrf_token():
+    if "csrf_token" not in session:
+        session["csrf_token"] = secrets.token_urlsafe(32)
+    return session["csrf_token"]

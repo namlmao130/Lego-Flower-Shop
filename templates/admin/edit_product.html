@@ -20,6 +20,7 @@
                             <img src="{{ url_for('static', filename='uploads/' + m.filename) }}" alt="Ảnh sản phẩm" onclick="openMediaPreview('{{ url_for('static', filename='uploads/' + m.filename) }}', 'image')">
                             {% endif %}
                             <form method="POST" action="{{ url_for('admin_delete_media', media_id=m.id) }}" onsubmit="return confirm('Xóa ảnh/video này?');" class="position-absolute top-0 end-0 m-1">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit" class="btn btn-sm btn-danger py-0 px-2" aria-label="Xóa tệp">×</button>
                             </form>
                         </div>
@@ -37,6 +38,7 @@
         <section class="admin-panel admin-form-card mw-100">
             <div class="admin-panel-header"><h2>Thông tin sản phẩm</h2><span class="admin-stat">ID #{{ product.id }}</span></div>
             <form method="POST" enctype="multipart/form-data" class="admin-panel-body">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3"><label for="productName" class="form-label">Tên sản phẩm</label><input id="productName" type="text" name="name" class="form-control" value="{{ product.name }}" required></div>
                 <div class="row g-3 mb-3">
                     <div class="col-md-6"><label for="productPrice" class="form-label">Giá bán (VNĐ)</label><input id="productPrice" type="number" min="0" step="0.01" name="price" class="form-control" value="{{ product.price }}" required></div>

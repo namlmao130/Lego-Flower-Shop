@@ -163,6 +163,7 @@
                                 <form method="POST" action="{{ url_for('user_settings') }}"
                                     enctype="multipart/form-data" id="avatarUploadForm"
                                     class="d-inline-flex gap-2 align-items-center m-0">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" name="action" value="update_avatar">
                                     <input type="file" id="avatarInput" name="avatar"
                                         accept="image/png, image/jpeg, image/jpg, image/webp, image/gif" class="d-none">
@@ -187,6 +188,7 @@
                                 </form>
                                 {% if current_user.avatar %}
                                 <form method="POST" action="{{ url_for('user_settings') }}" class="d-inline m-0">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input type="hidden" name="action" value="delete_avatar">
                                     <button type="submit" class="settings-avatar-btn-delete"
                                         title="Xóa ảnh và dùng chữ cái mặc định"
@@ -210,6 +212,7 @@
                     </div>
 
                     <form method="POST" action="{{ url_for('user_settings') }}" id="profileForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="update_profile">
 
                         <div class="mb-3">
@@ -282,6 +285,7 @@
                     </div>
 
                     <form method="POST" action="{{ url_for('user_settings') }}" id="pwdChangeForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="hidden" name="action" value="change_password">
 
                         <div class="mb-3">
@@ -444,6 +448,7 @@
                                         data-confirm="Bạn có chắc muốn xóa đánh giá này?"
                                         data-confirm-title="Xóa đánh giá" data-confirm-ok="Xóa ngay"
                                         data-confirm-type="danger">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="hidden" name="next" value="{{ url_for('user_settings') }}#reviews">
                                         <button type="submit"
                                             class="btn btn-sm btn-link text-danger p-0 text-decoration-none small d-inline-flex align-items-center gap-1">

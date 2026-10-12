@@ -1,6 +1,6 @@
 """Routes / orders."""
 
-from flask import flash, redirect, render_template, request, session, url_for
+from flask import abort, flash, redirect, render_template, request, session, url_for
 from flask_login import current_user
 from sqlalchemy import func
 from sqlalchemy.orm import selectinload
@@ -10,9 +10,19 @@ from app.models import Customer, Order
 from app.validators import PHONE_REGEX, normalize_phone
 
 
+def require_order_access(order):
+    if current_user.is_authenticated and isinstance(current_user, Customer):
+        if order.customer_id == current_user.id:
+            return
+    if order.customer_id is None and order.order_code in session.get("guest_orders", []):
+        return
+    abort(404)
+
+
 def order_success(order_code):
     """Trang thông báo đặt hàng thành công."""
     order = Order.query.filter_by(order_code=order_code).first_or_404()
+    require_order_access(order)
     return render_template("order_success.html", order=order)
 
 
@@ -53,10 +63,17 @@ def my_orders_view():
                 exact_order = Order.query.filter(
                     func.upper(Order.order_code) == identifier.upper()
                 ).first()
-                if exact_order:
+                if (
+                    exact_order
+                    and exact_order.customer_id is None
+                    and exact_order.order_code in session.get("guest_orders", [])
+                ):
                     return redirect(url_for("order_detail", order_code=exact_order.order_code))
 
-            query = Order.query.options(selectinload(Order.items))
+            query = Order.query.options(selectinload(Order.items)).filter(
+                Order.customer_id.is_(None),
+                Order.order_code.in_(session.get("guest_orders", [])),
+            )
             if norm_phone and PHONE_REGEX.match(norm_phone):
                 query = query.filter(Order.customer_phone == norm_phone)
             else:
@@ -90,6 +107,7 @@ def order_detail(order_code):
         .filter_by(order_code=order_code)
         .first_or_404()
     )
+    require_order_access(order)
     return render_template("order_detail.html", order=order)
 
 
@@ -97,6 +115,7 @@ def order_detail(order_code):
 def order_cancel_customer(order_code):
     """Khách hàng tự hủy đơn hàng khi đơn còn ở trạng thái Chờ xác nhận."""
     order = Order.query.filter_by(order_code=order_code).first_or_404()
+    require_order_access(order)
     if not order.can_cancel:
         flash(
             "Đơn hàng đã được xác nhận hoặc đang giao nên không thể tự hủy trực tiếp. Vui lòng liên hệ shop qua Zalo/Hotline để được hỗ trợ!",
@@ -131,6 +150,7 @@ def order_reorder(order_code):
         .filter_by(order_code=order_code)
         .first_or_404()
     )
+    require_order_access(order)
     cart = session.get("cart", {})
     if not isinstance(cart, dict):
         cart = {}

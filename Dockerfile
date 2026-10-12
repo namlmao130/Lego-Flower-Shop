@@ -19,4 +19,4 @@ USER app
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "exec gunicorn web:app --bind 0.0.0.0:${PORT:-10000} --workers ${WEB_CONCURRENCY:-2} --threads ${GUNICORN_THREADS:-2} --worker-class gthread --timeout 30 --max-requests 1000 --max-requests-jitter 50 --access-logfile - --error-logfile -"]
+CMD ["sh", "-c", "exec gunicorn -c gunicorn.conf.py web:app --bind 0.0.0.0:${PORT:-10000} --access-logfile - --error-logfile -"]

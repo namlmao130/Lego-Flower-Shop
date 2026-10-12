@@ -24,7 +24,12 @@ def delete_own_review(review_id):
     flash("Đã xóa đánh giá của bạn.", "success")
 
     next_url = request.form.get("next")
-    if next_url and next_url.startswith("/"):
+    if (
+        next_url
+        and next_url.startswith("/")
+        and not next_url.startswith("//")
+        and "\\" not in next_url
+    ):
         return redirect(next_url)
     return redirect(url_for("product_detail", product_id=product_id) + "#reviews")
 

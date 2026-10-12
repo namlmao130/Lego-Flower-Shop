@@ -64,6 +64,7 @@
                         </h5>
                         <form method="POST" action="{{ url_for('cart_clear') }}"
                             onsubmit="return confirm('Bạn có chắc muốn xóa toàn bộ sản phẩm khỏi giỏ hàng?');">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-sm btn-link text-danger text-decoration-none p-0"
                                 style="font-size: 0.85rem;">
                                 🗑️ Xóa tất cả
@@ -134,6 +135,7 @@
                                     </div>
                                     <form method="POST" action="{{ url_for('cart_remove', product_id=p.id) }}"
                                         class="m-0">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm text-muted p-0 text-decoration-none"
                                             style="font-size: 0.78rem;" title="Xóa khỏi giỏ">
                                             ✕ Xóa

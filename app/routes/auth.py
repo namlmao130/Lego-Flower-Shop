@@ -8,11 +8,16 @@ from flask import flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 from itsdangerous import BadData, SignatureExpired
 from sqlalchemy import func
+from werkzeug.security import generate_password_hash
 
 from app.extensions import db, limiter
 from app.models import Customer
 from app.services.email_service import get_reset_serializer, send_password_reset_email
 from app.validators import EMAIL_REGEX, PHONE_REGEX, normalize_phone
+
+
+def reset_digest(value):
+    return hmac.new(app.config["SECRET_KEY"].encode(), value.encode(), "sha256").hexdigest()
 
 
 @limiter.limit("5 per minute, 15 per hour")
@@ -88,7 +93,12 @@ def login():
         if customer and customer.check_password(password):
             login_user(customer, remember=remember)
             next_page = request.args.get("next")
-            if next_page and next_page.startswith("/"):
+            if (
+                next_page
+                and next_page.startswith("/")
+                and not next_page.startswith("//")
+                and "\\" not in next_page
+            ):
                 return redirect(next_page)
             return redirect(url_for("index"))
         else:
@@ -114,7 +124,12 @@ def forgot_password():
             serializer = get_reset_serializer()
             verification_code = f"{secrets.randbelow(1_000_000):06d}"
             token = serializer.dumps(
-                {"email": customer.email, "code": verification_code}, salt="password-reset-salt"
+                {
+                    "email": customer.email,
+                    "version": reset_digest(customer.password_hash),
+                    "code_hash": reset_digest(verification_code),
+                },
+                salt="password-reset-salt",
             )
             reset_url = url_for("reset_password", token=token, _external=True)
             sent, error = send_password_reset_email(customer.email, reset_url, verification_code)
@@ -145,13 +160,14 @@ def reset_password(token):
     serializer = get_reset_serializer()
     try:
         reset_payload = serializer.loads(token, salt="password-reset-salt", max_age=1800)
-        # Hỗ trợ các liên kết cũ đã phát hành trước khi bổ sung mã xác thực.
-        if isinstance(reset_payload, dict):
-            email = reset_payload.get("email", "")
-            expected_code = str(reset_payload.get("code", ""))
-        else:
-            email = str(reset_payload)
-            expected_code = ""
+        if (
+            not isinstance(reset_payload, dict)
+            or not reset_payload.get("version")
+            or not reset_payload.get("code_hash")
+        ):
+            raise BadData("Legacy reset link")
+        email = reset_payload.get("email", "")
+        expected_code = str(reset_payload["code_hash"])
     except SignatureExpired:
         flash(
             "Liên kết đặt lại mật khẩu đã hết hạn (chỉ có hiệu lực trong 30 phút). Vui lòng yêu cầu lại.",
@@ -167,12 +183,17 @@ def reset_password(token):
         flash("Tài khoản không tồn tại.", "error")
         return redirect(url_for("forgot_password"))
 
+    original_hash = customer.password_hash
+    if not hmac.compare_digest(reset_payload["version"], reset_digest(original_hash)):
+        flash("Liên kết đã được sử dụng hoặc vô hiệu hóa. Vui lòng yêu cầu liên kết mới.", "error")
+        return redirect(url_for("forgot_password"))
+
     if request.method == "POST":
         verification_code = request.form.get("verification_code", "").strip()
         password = request.form.get("password", "")
         password2 = request.form.get("password2", "")
 
-        if expected_code and not hmac.compare_digest(verification_code, expected_code):
+        if not hmac.compare_digest(reset_digest(verification_code), expected_code):
             flash("Mã xác thực không chính xác. Vui lòng kiểm tra lại email.", "error")
             return render_template("reset_password.html", token=token, requires_code=True)
         if len(password) < 6:
@@ -186,7 +207,13 @@ def reset_password(token):
                 "reset_password.html", token=token, requires_code=bool(expected_code)
             )
 
-        customer.set_password(password)
+        changed = Customer.query.filter_by(id=customer.id, password_hash=original_hash).update(
+            {"password_hash": generate_password_hash(password)}, synchronize_session=False
+        )
+        if changed != 1:
+            db.session.rollback()
+            flash("Liên kết đã được sử dụng. Vui lòng yêu cầu liên kết mới.", "error")
+            return redirect(url_for("forgot_password"))
         db.session.commit()
         flash(
             "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập bằng mật khẩu mới ngay bây giờ.",

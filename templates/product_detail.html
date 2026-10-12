@@ -173,6 +173,7 @@
         style="background: rgba(255,255,255,0.7); border: 1.5px solid var(--lego-gold);">
         <h5 class="mb-3" style="color:#21243D;">Viết đánh giá của bạn</h5>
         <form method="post" action="{{ url_for('submit_review', product_id=product.id) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-3">
                 {% if current_user.is_authenticated and current_user.__class__.__name__ == 'Customer' %}
                 <div class="col-md-6">
@@ -247,12 +248,14 @@
                     <form method="post" action="{{ url_for('admin_delete_review', review_id=r.id) }}"
                         data-confirm="Bạn có chắc muốn xóa đánh giá này?" data-confirm-title="Xóa đánh giá"
                         data-confirm-ok="Xóa ngay" data-confirm-type="danger">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa (admin)</button>
                     </form>
                     {% elif current_user.__class__.__name__ == 'Customer' and r.customer_id == current_user.id %}
                     <form method="post" action="{{ url_for('delete_own_review', review_id=r.id) }}"
                         data-confirm="Bạn có chắc muốn xóa đánh giá của bạn?" data-confirm-title="Xóa đánh giá"
                         data-confirm-ok="Xóa ngay" data-confirm-type="danger">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-sm btn-outline-danger mt-1">Xóa đánh giá của tôi</button>
                     </form>
                     {% endif %}

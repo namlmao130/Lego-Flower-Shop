@@ -89,6 +89,7 @@
             <!-- Khung nhập tin nhắn -->
             <div id="chatNetworkStatus" class="chat-network-status d-none" role="status" aria-live="polite"></div>
             <form id="chatForm" class="chat-footer">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <label for="chatInput" class="visually-hidden">Tin nhắn gửi shop</label>
                 <textarea id="chatInput" class="chat-input" rows="1" placeholder="Nhập tin nhắn cho shop..."
                     autocomplete="off" maxlength="2000" required></textarea>

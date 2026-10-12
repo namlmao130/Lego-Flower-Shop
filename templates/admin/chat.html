@@ -391,6 +391,7 @@
                     </div>
 
                     <form id="adminReplyForm" class="d-flex gap-2 align-items-end">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <textarea id="adminReplyInput" class="form-control" rows="1" maxlength="2000"
                             placeholder="Nhập phản hồi... Enter để gửi, Shift + Enter để xuống dòng"
                             aria-label="Nội dung phản hồi" required></textarea>

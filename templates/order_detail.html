@@ -212,6 +212,7 @@
                     <!-- Nút thao tác -->
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <form method="POST" action="{{ url_for('order_reorder', order_code=order.order_code) }}" class="m-0">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="btn btn-outline-success rounded-pill px-4 py-2 fw-semibold">
                                 🔄 Mua lại đơn này
                             </button>
@@ -243,6 +244,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('order_cancel_customer', order_code=order.order_code) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="modal-body py-3">
                     <p class="text-secondary small mb-3">
                         Bạn có chắc chắn muốn hủy đơn hàng này không? Sau khi xác nhận, toàn bộ hoa sẽ được hoàn lại kho.

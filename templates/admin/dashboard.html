@@ -28,6 +28,7 @@
 </section>
 
 <form method="POST" action="{{ url_for('admin_delete_multiple') }}" id="bulkDeleteForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <section class="admin-panel admin-table-wrap">
         <div class="admin-panel-header">
             <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -74,7 +75,8 @@
         </div>
     </section>
 </form>
-<form id="singleDeleteForm" method="POST" class="d-none"></form>
+<form id="singleDeleteForm" method="POST" class="d-none">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"></form>
 <div id="carouselAdminStatus" class="alert admin-alert d-none mt-3 mb-0" role="status" aria-live="polite"></div>
 {% endblock %}
 {% block scripts %}

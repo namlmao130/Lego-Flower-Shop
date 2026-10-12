@@ -36,6 +36,7 @@
         <div class="auth-card p-3 p-md-4 rounded-4 shadow-sm mb-4"
             style="background: linear-gradient(135deg, rgba(253, 250, 242, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%); border: 1.5px solid rgba(201, 162, 39, 0.25);">
             <form method="POST" action="{{ url_for('my_orders_view') }}" class="row g-2 align-items-center">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="col-12 col-md-8 col-lg-9">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-muted"
@@ -58,8 +59,7 @@
             {% if lookup_mode == 'guest' and not search_query %}
             <div class="small text-muted mt-2 d-flex align-items-center gap-1">
 
-                <span></span> Bạn có thể tra cứu đơn hàng mà không cần đăng nhập bằng cách nhập Số điện thoại hoặc Mã
-                đơn hàng.
+                <span></span> Khách vãng lai chỉ tra cứu được đơn đã đặt trên trình duyệt này. Đăng nhập để xem đơn thuộc tài khoản; nếu đổi thiết bị, vui lòng liên hệ shop.
             </div>
             {% endif %}
         </div>
@@ -262,6 +262,7 @@
                             <!-- Nút Mua lại / Đặt lại -->
                             <form method="POST" action="{{ url_for('order_reorder', order_code=ord.order_code) }}"
                                 class="m-0">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                 <button type="submit"
                                     class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 fw-semibold">
                                     Mua lại đơn này
@@ -295,6 +296,7 @@
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <form method="POST" action="{{ url_for('order_cancel_customer', order_code=ord.order_code) }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="modal-body py-3">
                                 <p class="text-secondary small mb-3">
                                     Bạn có chắc chắn muốn hủy đơn hàng này không?

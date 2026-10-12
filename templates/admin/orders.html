@@ -52,6 +52,7 @@
                     <span class="admin-stat">{{ orders|length }} đơn</span>
                 </div>
                 <form id="bulkOrdersForm" method="POST" action="{{ url_for('admin_orders_bulk_action') }}" class="d-flex align-items-center gap-2 flex-wrap">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <select name="bulk_action" id="bulkOrderAction" class="form-select form-select-sm" style="min-width: 190px;" required>
                         <option value="">Chỉnh sửa đã chọn...</option>
                         <optgroup label="Đổi trạng thái">
@@ -130,6 +131,7 @@
                             </td>
                             <td>
                                 <form method="POST" action="{{ url_for('admin_order_update_status', order_id=o.id) }}" class="m-0">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <select name="status" class="form-select form-select-sm order-status-select border-{{ 'warning' if o.status=='pending' else ('info' if o.status=='confirmed' else ('primary' if o.status=='shipping' else ('success' if o.status=='completed' else 'danger'))) }}" onchange="this.form.submit()">
                                         <option value="pending" {{ 'selected' if o.status=='pending' else '' }}>Chờ xác nhận</option>
                                         <option value="confirmed" {{ 'selected' if o.status=='confirmed' else '' }}>Đã xác nhận</option>
@@ -145,6 +147,7 @@
                                         Xem
                                     </button>
                                     <form method="POST" action="{{ url_for('admin_order_delete', order_id=o.id) }}" onsubmit="return confirm('Bạn có chắc chắn muốn xóa vĩnh viễn đơn hàng #{{ o.order_code }} không?');" class="d-inline">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa đơn">
                                             Xóa
                                         </button>

@@ -11,6 +11,7 @@
             </div>
 
             <form method="POST" id="loginForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
                     <label class="form-label small fw-semibold text-secondary mb-1">Số điện thoại hoặc Email</label>
                     <input type="text" name="login_identifier" id="loginIdentifier" class="form-control" placeholder="0912345678 hoặc email@example.com"

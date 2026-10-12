@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="{{ url_for('static', filename='js/csrf.js') }}"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#172033">
@@ -20,6 +22,7 @@
         </div>
         {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}{% for category, message in messages %}<div class="alert alert-danger admin-alert" role="alert">{{ message }}</div>{% endfor %}{% endif %}{% endwith %}
         <form method="POST">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-3"><label for="username" class="form-label fw-semibold">Tên đăng nhập</label><input id="username" type="text" name="username" class="form-control form-control-lg" autocomplete="username" required autofocus></div>
             <div class="mb-4"><label for="password" class="form-label fw-semibold">Mật khẩu</label><input id="password" type="password" name="password" class="form-control form-control-lg" autocomplete="current-password" required></div>
             <button type="submit" class="btn btn-admin-primary btn-lg w-100">Đăng nhập</button>

@@ -76,6 +76,8 @@ def checkout():
             return redirect(url_for("view_cart"))
 
         session.pop("cart", None)
+        if customer_id is None:
+            session["guest_orders"] = (session.get("guest_orders", []) + [order_code])[-50:]
         session.modified = True
 
         return redirect(url_for("order_success", order_code=order_code))

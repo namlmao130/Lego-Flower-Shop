@@ -25,6 +25,7 @@
         </div>
 
         <form method="POST" action="{{ url_for('checkout') }}" id="checkoutForm">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row g-4">
                 <!-- Cột trái: Form điền thông tin giao hàng -->
                 <div class="col-12 col-lg-7">

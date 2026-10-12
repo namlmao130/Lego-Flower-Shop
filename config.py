@@ -125,17 +125,16 @@ class Config:
     # Bảo mật Session và Cookie
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
-    SESSION_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() in (
+    SESSION_COOKIE_SECURE = os.environ.get(
+        "SESSION_COOKIE_SECURE", "true" if os.environ.get("RENDER") else "false"
+    ).lower() in (
         "true",
         "1",
     )
     REMEMBER_COOKIE_DURATION = timedelta(days=30)
     REMEMBER_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_SAMESITE = "Lax"
-    REMEMBER_COOKIE_SECURE = os.environ.get("SESSION_COOKIE_SECURE", "false").lower() in (
-        "true",
-        "1",
-    )
+    REMEMBER_COOKIE_SECURE = SESSION_COOKIE_SECURE
 
     # Giới hạn kích thước payload tối đa (16MB) chống tấn công làm tràn bộ đệm máy chủ
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 16 * 1024 * 1024))

@@ -4,6 +4,7 @@ __pycache__/
 venv/
 .env
 .secret_key
+*.db
 *.db-wal
 *.db-shm
 .DS_Store
