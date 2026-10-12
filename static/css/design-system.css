@@ -49,8 +49,6 @@ button:disabled, input:disabled, select:disabled, textarea:disabled {
     /* Chỉ giảm hiệu ứng trang trí lặp vô hạn. Giữ nguyên chuyển động có chức năng
        của sidebar, carousel, modal và các trạng thái tương tác. */
     body,
-    .rainbow-brand,
-    .rainbow-brand-text,
     .chat-online-badge,
     .chat-status-dot {
         animation-duration: 0.01ms !important;
