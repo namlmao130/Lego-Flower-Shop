@@ -502,6 +502,13 @@ if (userMenuBtn && userMenu) {
 
     if (!chatToggleBtn || !chatWindow || !chatMessages) return;
 
+    const imagePicker = ChatImages.picker(chatForm, () => {
+        chatSendBtn.disabled = !chatInput.value.trim() && !imagePicker.file;
+    }, message => {
+        chatNetworkStatus.textContent = message;
+        chatNetworkStatus.classList.toggle('d-none', !message);
+    });
+
     const STORAGE_PREFIX = 'lego_flower_chat_history_';
     const STATE_KEY = 'lego_flower_chat_open';
     const customerUnreadBadge = document.getElementById('chatCustomerUnreadBadge');
@@ -574,7 +581,7 @@ if (userMenuBtn && userMenu) {
     // Kích hoạt nút gửi khi có nội dung
     if (chatInput && chatSendBtn) {
         chatInput.addEventListener('input', () => {
-            chatSendBtn.disabled = !chatInput.value.trim();
+            chatSendBtn.disabled = !chatInput.value.trim() && !imagePicker.file;
             chatInput.style.height = 'auto';
             chatInput.style.height = Math.min(chatInput.scrollHeight, 96) + 'px';
         });
@@ -647,7 +654,7 @@ if (userMenuBtn && userMenu) {
     }
 
     function renderMessageElement(text, isUser = false, timeStr = null, showTime = true,
-        isGrouped = false, messageId = null, isRead = false, deliveryState = 'sent') {
+        isGrouped = false, messageId = null, isRead = false, deliveryState = 'sent', imageUrl = null) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `chat-msg ${isUser ? 'chat-msg-user' : 'chat-msg-bot'}${isGrouped ? ' chat-msg-grouped' : ''}`;
         if (messageId) msgDiv.dataset.messageId = messageId;
@@ -655,6 +662,7 @@ if (userMenuBtn && userMenu) {
         const bubble = document.createElement('div');
         bubble.className = 'chat-bubble';
         bubble.textContent = text;
+        ChatImages.render(bubble, imageUrl);
         msgDiv.appendChild(bubble);
 
         if (showTime) {
@@ -677,7 +685,7 @@ if (userMenuBtn && userMenu) {
     }
 
     function appendLiveMessage(text, isUser = false, customTime = null, messageId = null,
-        isRead = false, deliveryState = 'sent') {
+        isRead = false, deliveryState = 'sent', imageUrl = null) {
         const currentTime = customTime || getCurrentTimeStr();
         const targetSenderClass = isUser ? 'chat-msg-user' : 'chat-msg-bot';
 
@@ -697,9 +705,11 @@ if (userMenuBtn && userMenu) {
         }
 
         const element = renderMessageElement(
-            text, isUser, currentTime, true, false, messageId, isRead, deliveryState
+            text, isUser, currentTime, true, false, messageId, isRead, deliveryState, imageUrl
         );
-        saveMessageToHistory(text, isUser, currentTime);
+        if (deliveryState !== 'pending') {
+            saveMessageToHistory(text || (imageUrl ? '📷 Hình ảnh' : ''), isUser, currentTime);
+        }
         scrollChatToBottom();
         return element;
     }
@@ -722,27 +732,28 @@ if (userMenuBtn && userMenu) {
     }
 
     // Gửi tin nhắn lên máy chủ (để Admin nhận được)
-    async function sendToServer(text, messageElement) {
+    async function sendToServer(text, messageElement, file = null) {
         updateDeliveryState(messageElement, 'pending');
         if (chatNetworkStatus) chatNetworkStatus.classList.add('d-none');
         try {
             const res = await fetch('/api/chat/send', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: text })
+                body: ChatImages.body(text, file)
             });
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || 'Không thể gửi tin nhắn.');
             if (data.message && data.message.id) {
-                lastLoadedMsgId = Math.max(lastLoadedMsgId, data.message.id);
+                // Polling advances the cursor so replies arriving during an upload aren't skipped.
                 messageElement.dataset.messageId = data.message.id;
+                ChatImages.render(messageElement.querySelector('.chat-bubble'), data.message.image_url);
             }
             updateDeliveryState(messageElement, 'sent');
+            saveMessageToHistory(text || (file ? '📷 Hình ảnh' : ''), true, data.message?.time_str);
             return true;
         } catch (err) {
             updateDeliveryState(messageElement, 'failed');
             if (chatNetworkStatus) {
-                chatNetworkStatus.textContent = 'Tin nhắn chưa được gửi. Kiểm tra kết nối rồi thử lại.';
+                chatNetworkStatus.textContent = err.message || 'Tin nhắn chưa được gửi. Kiểm tra kết nối rồi thử lại.';
                 chatNetworkStatus.classList.remove('d-none');
             }
             const check = messageElement.querySelector('.chat-check');
@@ -752,7 +763,7 @@ if (userMenuBtn && userMenu) {
                 retry.type = 'button';
                 retry.className = 'chat-retry-btn';
                 retry.textContent = 'Gửi lại';
-                retry.addEventListener('click', () => sendToServer(text, messageElement), { once: true });
+                retry.addEventListener('click', () => sendToServer(text, messageElement, file), { once: true });
                 check.appendChild(retry);
             }
             return false;
@@ -805,9 +816,9 @@ if (userMenuBtn && userMenu) {
                 msgs.forEach(msg => {
                     lastLoadedMsgId = Math.max(lastLoadedMsgId, msg.id);
                     if (msg.sender_type === 'admin') {
-                        appendLiveMessage(msg.message, false, msg.time_str, msg.id, msg.is_read);
+                        appendLiveMessage(msg.message, false, msg.time_str, msg.id, msg.is_read, 'sent', msg.image_url);
                         hasNewAdminMsg = true;
-                        lastAdminText = msg.message;
+                        lastAdminText = msg.message || (msg.image_url ? '📷 Shop vừa gửi một hình ảnh' : '');
                         if (!isOpen) {
                             unreadAdminCount++;
                             if (customerUnreadBadge) {
@@ -858,7 +869,7 @@ if (userMenuBtn && userMenu) {
                         const isConsecutive = next && (next.sender_type === item.sender_type) && (next.time_str === item.time_str);
                         renderMessageElement(
                             item.message, item.sender_type === 'customer', item.time_str,
-                            !isConsecutive, isConsecutive, item.id, item.is_read
+                            !isConsecutive, isConsecutive, item.id, item.is_read, 'sent', item.image_url
                         );
                     });
                     markCustomerMessagesRead(data.customer_read_through_id || 0);
@@ -939,19 +950,21 @@ if (userMenuBtn && userMenu) {
     }
 
     function handleSend(userText, isQuickChip = false) {
-        if (!userText || !userText.trim()) return;
-        const text = userText.trim();
+        const text = (userText || '').trim();
+        const file = isQuickChip ? null : imagePicker.file;
+        if (!text && !file) return;
 
         const pendingMessage = appendLiveMessage(
-            text, true, null, null, false, 'pending'
+            text, true, null, null, false, 'pending', file ? URL.createObjectURL(file) : null
         );
+        if (!isQuickChip) imagePicker.clear();
         if (chatInput) {
             chatInput.value = '';
             chatInput.style.height = 'auto';
-            if (chatSendBtn) chatSendBtn.disabled = true;
+            if (chatSendBtn) chatSendBtn.disabled = !imagePicker.file;
         }
 
-        sendToServer(text, pendingMessage);
+        sendToServer(text, pendingMessage, file);
 
         if (chatSuggestions) chatSuggestions.style.display = 'none';
     }

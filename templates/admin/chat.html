@@ -3,6 +3,7 @@
 {% block page_title %}Hộp thư khách hàng{% endblock %}
 {% block page_description %}<p>Phản hồi tư vấn và theo dõi các cuộc trò chuyện đang chờ.</p>{% endblock %}
 {% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/chat-images.css') }}?v=1.1">
 <style>
     .admin-chat-content {
         padding-top: 18px;
@@ -394,7 +395,8 @@
 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <textarea id="adminReplyInput" class="form-control" rows="1" maxlength="2000"
                             placeholder="Nhập phản hồi... Enter để gửi, Shift + Enter để xuống dòng"
-                            aria-label="Nội dung phản hồi" required></textarea>
+                            aria-label="Nội dung phản hồi"></textarea>
+                        {% include "components/chat_image_button.html" %}
                         <button type="submit" class="btn btn-primary px-4 fw-semibold d-flex align-items-center gap-1"
                             id="btnSendReply">
                             <span>Gửi</span>
@@ -411,6 +413,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/chat-images.js') }}?v=1.1"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         let activeSessionId = null;
@@ -422,6 +425,7 @@
         let isSendingReply = false;
         let conversationRequestInFlight = false;
         let messageRequestInFlight = false;
+        let lastThreadSnapshot = '';
 
         const conversationList = document.getElementById('conversationList');
         const searchInput = document.getElementById('searchConvInput');
@@ -435,6 +439,9 @@
         const btnSendReply = document.getElementById('btnSendReply');
         const adminReplyStatus = document.getElementById('adminReplyStatus');
         const refreshActiveBtn = document.getElementById('refreshActiveBtn');
+        const imagePicker = ChatImages.picker(adminReplyForm, () => {}, message => {
+            setReplyStatus(message, !!message);
+        });
 
         const activeAvatar = document.getElementById('activeAvatar');
         const activeName = document.getElementById('activeName');
@@ -629,6 +636,17 @@
 
         // 2. Chọn một cuộc trò chuyện và tải tin nhắn
         async function selectConversation(sessionId) {
+            if (isSendingReply) {
+                setReplyStatus('Đang gửi, vui lòng chờ trước khi chuyển cuộc trò chuyện.');
+                return;
+            }
+            if (activeSessionId !== sessionId) {
+                lastThreadSnapshot = '';
+                chatThread.innerHTML = '';
+                imagePicker.clear();
+                adminReplyInput.value = '';
+                setReplyStatus('');
+            }
             activeSessionId = sessionId;
             renderConversations(conversationsData);
 
@@ -640,12 +658,15 @@
         }
 
         async function loadActiveMessages() {
-            if (!activeSessionId || document.hidden || messageRequestInFlight) return;
+            if (!activeSessionId || document.hidden || messageRequestInFlight || isSendingReply) return;
+            const requestedSessionId = activeSessionId;
             messageRequestInFlight = true;
             try {
                 const res = await fetch(`/api/admin/chat/messages/${encodeURIComponent(activeSessionId)}`);
                 if (!res.ok) throw new Error('Không thể tải cuộc trò chuyện.');
                 const data = await res.json();
+
+                if (requestedSessionId !== activeSessionId || isSendingReply) return;
 
                 // Cập nhật thông tin khách ở Header
                 const cust = data.customer || {};
@@ -678,6 +699,9 @@
         }
 
         function renderMessages(messages) {
+            const snapshot = JSON.stringify(messages);
+            if (snapshot === lastThreadSnapshot) return;
+            lastThreadSnapshot = snapshot;
             chatThread.innerHTML = '';
             if (messages.length === 0) {
                 chatThread.innerHTML = '<div class="text-center text-muted small my-auto">Chưa có tin nhắn nào trong cuộc trò chuyện này.</div>';
@@ -693,59 +717,49 @@
                         <div>${escapeHtml(msg.message)}</div>
                         <div class="admin-msg-time">${isMe ? `Bạn • ${msg.is_read ? 'Đã xem' : 'Đã gửi'} • ` : ''}${msg.time_str || ''}</div>
                     `;
+                ChatImages.render(bubble.firstElementChild, msg.image_url);
                 chatThread.appendChild(bubble);
             });
 
             chatThread.scrollTop = chatThread.scrollHeight;
         }
 
-        async function sendAdminReply(text, optimisticBubble = null) {
+        async function sendAdminReply(text, file = null) {
             if (isSendingReply || !activeSessionId) return;
+            const targetSessionId = activeSessionId;
             isSendingReply = true;
             btnSendReply.disabled = true;
+            adminReplyInput.disabled = true;
+            imagePicker.setDisabled(true);
             setReplyStatus('Đang gửi tin nhắn...');
-
-            const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-            if (!optimisticBubble) {
-                optimisticBubble = document.createElement('div');
-                optimisticBubble.className = 'admin-msg-bubble admin-msg-me';
-                chatThread.appendChild(optimisticBubble);
-            }
-            optimisticBubble.classList.remove('failed');
-            optimisticBubble.innerHTML = `
-                    <div>${escapeHtml(text)}</div>
-                    <div class="admin-msg-time">Bạn • Đang gửi • ${timeStr}</div>
-                `;
-            chatThread.scrollTop = chatThread.scrollHeight;
+            let sentSuccessfully = false;
 
             try {
                 const res = await fetch('/api/admin/chat/reply', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ session_id: activeSessionId, message: text })
+                    body: ChatImages.body(text, file, targetSessionId)
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.success) throw new Error(data.error || 'Không thể gửi tin nhắn.');
-                const sent = data.message || {};
-                optimisticBubble.innerHTML = `
-                        <div>${escapeHtml(text)}</div>
-                        <div class="admin-msg-time">Bạn • Đã gửi • ${sent.time_str || timeStr}</div>
-                    `;
+                sentSuccessfully = true;
+                adminReplyInput.value = '';
+                imagePicker.clear();
+                resizeReplyInput();
                 setReplyStatus('Tin nhắn đã được gửi.');
                 fetchConversations();
             } catch (error) {
-                optimisticBubble.classList.add('failed');
-                optimisticBubble.innerHTML = `
-                        <div>${escapeHtml(text)}</div>
-                        <div class="admin-msg-time">Không gửi được • <button type="button" class="retry-admin-message">Gửi lại</button></div>
-                    `;
-                optimisticBubble.querySelector('.retry-admin-message').addEventListener('click', () => sendAdminReply(text, optimisticBubble));
                 setReplyStatus(error.message || 'Không thể gửi tin nhắn. Vui lòng thử lại.', true);
+                btnSendReply.querySelector('span').textContent = 'Gửi lại';
             } finally {
                 isSendingReply = false;
                 btnSendReply.disabled = false;
+                adminReplyInput.disabled = false;
+                imagePicker.setDisabled(false);
                 adminReplyInput.focus();
+            }
+            if (sentSuccessfully) {
+                btnSendReply.querySelector('span').textContent = 'Gửi';
+                await loadActiveMessages();
             }
         }
 
@@ -753,10 +767,9 @@
         adminReplyForm.addEventListener('submit', async function (e) {
             e.preventDefault();
             const text = adminReplyInput.value.trim();
-            if (!text || !activeSessionId || isSendingReply) return;
-            adminReplyInput.value = '';
-            resizeReplyInput();
-            await sendAdminReply(text);
+            const file = imagePicker.file;
+            if ((!text && !file) || !activeSessionId || isSendingReply) return;
+            await sendAdminReply(text, file);
         });
 
         if (refreshActiveBtn) {

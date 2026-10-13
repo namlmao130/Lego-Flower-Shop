@@ -7,7 +7,9 @@ from sqlalchemy.orm import selectinload
 
 from app.extensions import db
 from app.models import ChatMessage, Customer
+from app.models.chat import ChatAttachment
 from app.security import admin_required
+from app.services.chat_image_service import prepare_chat_image
 
 
 @admin_required
@@ -65,7 +67,7 @@ def api_admin_chat_conversations():
             {
                 "session_id": msg.session_id,
                 "customer": cust_info,
-                "last_message": msg.message,
+                "last_message": msg.message or ("📷 Hình ảnh" if msg.attachment else ""),
                 "last_time": msg.created_at.strftime("%H:%M %d/%m"),
                 "sender_type": msg.sender_type,
                 "unread_count": unread,
@@ -137,7 +139,11 @@ def api_admin_chat_reply():
     session_id = (data.get("session_id") or "").strip()
     message = (data.get("message") or "").strip()
 
-    if not session_id or not message:
+    try:
+        image_data = prepare_chat_image(request.files.get("image"))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if not session_id or (not message and image_data is None):
         return jsonify({"error": "Vui lòng nhập nội dung tin nhắn."}), 400
     if len(message) > 2000:
         return jsonify({"error": "Tin nhắn tối đa 2.000 ký tự."}), 400
@@ -164,6 +170,8 @@ def api_admin_chat_reply():
         message=message,
         is_read=False,
     )
+    if image_data is not None:
+        reply_msg.attachment = ChatAttachment(image_data=image_data)
     db.session.add(reply_msg)
     db.session.commit()
 

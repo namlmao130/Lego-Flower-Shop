@@ -2,6 +2,8 @@
 
 from datetime import datetime, timezone
 
+from flask import url_for
+
 from app.extensions import db
 
 
@@ -20,6 +22,9 @@ class ChatMessage(db.Model):
     is_read = db.Column(db.Boolean, default=False, index=True)
 
     customer = db.relationship("Customer", backref=db.backref("chat_messages", lazy=True))
+    attachment = db.relationship(
+        "ChatAttachment", uselist=False, lazy="selectin", cascade="all, delete-orphan"
+    )
 
     __table_args__ = (
         db.Index("idx_chat_messages_session_id_id", "session_id", "id"),
@@ -39,7 +44,21 @@ class ChatMessage(db.Model):
             "created_at_iso": created_at.isoformat(),
             "time_str": self.created_at.strftime("%H:%M"),
             "is_read": self.is_read,
+            "image_url": url_for("api_chat_image", message_id=self.id) if self.attachment else None,
         }
 
     def __repr__(self):
         return f"<ChatMessage {self.id} from {self.sender_type} ({self.sender_name})>"
+
+
+class ChatAttachment(db.Model):
+    """Bounded, normalized images stored durably with their private conversation.
+
+    A separate table allows additive deployment without altering existing messages.
+    Image bytes are deferred so polling never loads the binary payload.
+    """
+
+    __tablename__ = "chat_attachments"
+
+    message_id = db.Column(db.Integer, db.ForeignKey("chat_messages.id"), primary_key=True)
+    image_data = db.deferred(db.Column(db.LargeBinary, nullable=False))

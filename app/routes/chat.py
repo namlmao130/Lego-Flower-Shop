@@ -1,11 +1,13 @@
 """Routes / chat."""
 
-from flask import jsonify, request
+from flask import abort, jsonify, make_response, request
 from flask_login import current_user
 from sqlalchemy import func
 
 from app.extensions import db, limiter
-from app.models import ChatMessage, Customer
+from app.models import Admin, ChatMessage, Customer
+from app.models.chat import ChatAttachment
+from app.services.chat_image_service import prepare_chat_image
 from app.services.chat_service import current_chat_session_id, merge_guest_chat_for_customer
 
 
@@ -14,7 +16,11 @@ def api_chat_send():
     """Khách hàng gửi tin nhắn lên server."""
     data = request.get_json(silent=True) or request.form
     message = (data.get("message") or "").strip()
-    if not message:
+    try:
+        image_data = prepare_chat_image(request.files.get("image"))
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    if not message and image_data is None:
         return jsonify({"error": "Tin nhắn không được để trống"}), 400
     if len(message) > 2000:
         return jsonify({"error": "Tin nhắn quá dài (tối đa 2000 ký tự)"}), 400
@@ -36,6 +42,8 @@ def api_chat_send():
         message=message,
         is_read=False,
     )
+    if image_data is not None:
+        msg.attachment = ChatAttachment(image_data=image_data)
     db.session.add(msg)
     db.session.commit()
 
@@ -76,7 +84,22 @@ def api_chat_messages():
     )
 
 
+def api_chat_image(message_id):
+    """Authorize each read; attachments never have public static URLs."""
+    session_id = merge_guest_chat_for_customer()
+    msg = db.session.get(ChatMessage, message_id)
+    is_admin = current_user.is_authenticated and isinstance(current_user, Admin)
+    if not msg or (not is_admin and msg.session_id != session_id) or not msg.attachment:
+        abort(404)
+    response = make_response(msg.attachment.image_data)
+    response.headers["Content-Type"] = "image/webp"
+    response.headers["Content-Disposition"] = f'inline; filename="chat-{message_id}.webp"'
+    response.headers["Cache-Control"] = "private, no-store"
+    return response
+
+
 def register_routes(app):
     """Register handlers, retaining the public endpoint names."""
     app.route("/api/chat/send", methods=["POST"])(api_chat_send)
     app.route("/api/chat/messages", methods=["GET"])(api_chat_messages)
+    app.route("/api/chat/images/<int:message_id>", methods=["GET"])(api_chat_image)

@@ -67,6 +67,122 @@ class AppTests(unittest.TestCase):
             session["_user_id"] = f"{role}-{self.cid if role == 'customer' else self.aid}"
             session["_fresh"] = True
 
+    @staticmethod
+    def chat_test_image():
+        content = io.BytesIO()
+        Image.new("RGB", (1800, 900), "gold").save(content, "PNG")
+        content.seek(0)
+        return content, "flower.png"
+
+    def test_chat_images_round_trip_and_private_access(self):
+        self.app.config["CSRF_ENABLED"] = True
+        self.client.get("/")
+        with self.client.session_transaction() as session:
+            token = session["csrf_token"]
+        response = self.client.post("/api/chat/send", data={"image": self.chat_test_image()})
+        self.assertEqual(response.status_code, 403)
+        response = self.client.post(
+            "/api/chat/send",
+            data={"image": self.chat_test_image()},
+            headers={"X-CSRFToken": token},
+        )
+        self.assertEqual(response.status_code, 200)
+        message = response.json["message"]
+        self.assertEqual(message["message"], "")
+        url = message["image_url"]
+        image_response = self.client.get(url)
+        self.assertEqual(image_response.status_code, 200)
+        self.assertEqual(image_response.mimetype, "image/webp")
+        self.assertIn("no-store", image_response.headers["Cache-Control"])
+        with Image.open(io.BytesIO(image_response.data)) as image:
+            self.assertEqual(image.size, (1600, 800))
+        stranger = self.app.test_client()
+        self.assertEqual(stranger.get(url).status_code, 404)
+        self.assertEqual(stranger.post("/api/admin/chat/reply").status_code, 403)
+
+        admin_client = self.app.test_client()
+        admin_client.get("/admin/login")
+        with admin_client.session_transaction() as session:
+            session["_user_id"] = f"admin-{self.aid}"
+            session["_fresh"] = True
+            admin_token = session["csrf_token"]
+        self.assertEqual(admin_client.get(url).status_code, 200)
+        preview = admin_client.get("/api/admin/chat/conversations").json["conversations"][0]
+        self.assertIn("Hình ảnh", preview["last_message"])
+        reply = admin_client.post(
+            "/api/admin/chat/reply",
+            data={
+                "session_id": message["session_id"],
+                "message": "Mẫu hoa bạn hỏi",
+                "image": self.chat_test_image(),
+            },
+            headers={"X-CSRFToken": admin_token},
+        )
+        self.assertEqual(reply.status_code, 200)
+        self.assertEqual(self.client.get(reply.json["message"]["image_url"]).status_code, 200)
+        self.assertEqual(stranger.get(reply.json["message"]["image_url"]).status_code, 404)
+        history = self.client.get("/api/chat/messages").json["messages"]
+        self.assertEqual(len(history), 2)
+        self.assertEqual(history[0]["image_url"], url)
+        self.assertNotIn("image_data", history[0])
+        # Logging in merges the guest history without losing image authorization.
+        self.sign_in("customer")
+        self.assertEqual(self.client.get(url).status_code, 200)
+        self.assertEqual(
+            self.client.get("/api/chat/messages").json["messages"][0]["image_url"], url
+        )
+
+    def test_chat_rejects_invalid_and_oversized_images_without_saving(self):
+        from app.models.chat import ChatAttachment
+        from app.services.chat_image_service import MAX_UPLOAD_BYTES, prepare_chat_image
+
+        for contents, filename in [
+            (b"<script>alert(1)</script>", "photo.jpg"),
+            (b"<svg></svg>", "photo.svg"),
+            (b"x" * (MAX_UPLOAD_BYTES + 1), "photo.png"),
+        ]:
+            with self.subTest(filename=filename, size=len(contents)):
+                response = self.client.post(
+                    "/api/chat/send", data={"image": (io.BytesIO(contents), filename)}
+                )
+                self.assertEqual(response.status_code, 400)
+        with patch("app.services.chat_image_service.MAX_PIXELS", 100):
+            buffer, name = self.chat_test_image()
+            with self.assertRaises(ValueError):
+                prepare_chat_image(FileStorage(buffer, filename=name))
+        with self.app.app_context():
+            self.assertEqual(ChatMessage.query.count(), 0)
+            self.assertEqual(ChatAttachment.query.count(), 0)
+        self.assertEqual(self.client.post("/api/chat/send", data={}).status_code, 400)
+        self.sign_in("admin")
+        response = self.client.post(
+            "/api/admin/chat/reply",
+            data={"session_id": "missing", "image": self.chat_test_image()},
+        )
+        self.assertEqual(response.status_code, 404)
+
+    def test_chat_image_table_bootstrap_preserves_existing_messages(self):
+        from app.models.chat import ChatAttachment
+
+        with self.app.app_context():
+            old = ChatMessage(
+                session_id="guest_old",
+                sender_type="customer",
+                sender_name="Old guest",
+                message="Original text",
+            )
+            db.session.add(old)
+            db.session.commit()
+            old_id = old.id
+            # Simulate the old schema, then the additive startup used by deployments.
+            ChatAttachment.__table__.drop(db.engine)
+            db.create_all()
+            db.create_all()
+            db.session.expire_all()
+            self.assertEqual(db.session.get(ChatMessage, old_id).message, "Original text")
+            self.assertEqual(ChatAttachment.query.count(), 0)
+            self.assertEqual(Product.query.count(), 1)
+
     def test_public_pages_and_error_handlers(self):
         for path in [
             "/",
