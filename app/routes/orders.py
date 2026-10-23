@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import selectinload
 
 from app.extensions import db, limiter
-from app.models import Customer, Order
+from app.models import Customer, Order, Product
 from app.validators import PHONE_REGEX, normalize_phone
 
 
@@ -49,26 +49,37 @@ def my_orders_view():
         lookup_mode = "guest"
         orders = []
         identifier = ""
+        phone_input = ""
         if request.method == "POST":
             identifier = request.form.get("identifier", "").strip()
+            phone_input = request.form.get("phone", "").strip()
         else:
             identifier = request.args.get("identifier", "").strip()
+            phone_input = request.args.get("phone", "").strip()
 
         if identifier:
             search_query = identifier
-            norm_phone = normalize_phone(identifier)
+            norm_phone = normalize_phone(phone_input or identifier)
 
-            # Nếu nhập đúng mã đơn hàng, chuyển thẳng tới trang chi tiết theo dõi
+            # Nếu nhập đúng mã đơn hàng, cho phép tra cứu nếu đã trong session hoặc khớp SĐT
             if identifier.upper().startswith("LF"):
                 exact_order = Order.query.filter(
                     func.upper(Order.order_code) == identifier.upper()
                 ).first()
-                if (
-                    exact_order
-                    and exact_order.customer_id is None
-                    and exact_order.order_code in session.get("guest_orders", [])
-                ):
-                    return redirect(url_for("order_detail", order_code=exact_order.order_code))
+                if exact_order and exact_order.customer_id is None:
+                    is_in_session = exact_order.order_code in session.get("guest_orders", [])
+                    phone_matched = norm_phone and exact_order.customer_phone == norm_phone
+                    if is_in_session or phone_matched:
+                        guest_orders = session.get("guest_orders", [])
+                        if exact_order.order_code not in guest_orders:
+                            session["guest_orders"] = (guest_orders + [exact_order.order_code])[-50:]
+                            session.modified = True
+                        return redirect(url_for("order_detail", order_code=exact_order.order_code))
+                    elif not phone_input:
+                        flash(
+                            "Để bảo mật thông tin đơn hàng trên thiết bị mới, vui lòng nhập thêm Số điện thoại đặt hàng.",
+                            "info",
+                        )
 
             query = Order.query.options(selectinload(Order.items)).filter(
                 Order.customer_id.is_(None),
@@ -121,25 +132,38 @@ def order_cancel_customer(order_code):
             "Đơn hàng đã được xác nhận hoặc đang giao nên không thể tự hủy trực tiếp. Vui lòng liên hệ shop qua Zalo/Hotline để được hỗ trợ!",
             "warning",
         )
-        return redirect(request.referrer or url_for("order_detail", order_code=order_code))
+        return redirect(url_for("order_detail", order_code=order_code))
 
     cancel_reason = (
         request.form.get("cancel_reason") or "Khách hàng yêu cầu hủy đơn qua website"
     ).strip()
-    order.status = "cancelled"
-    order.cancel_reason = cancel_reason
 
-    # Hoàn lại số lượng tồn kho
+    # Cập nhật trạng thái một cách Atomic: chỉ cập nhật nếu status vẫn đang là 'pending'
+    updated = Order.query.filter_by(id=order.id, status="pending").update(
+        {"status": "cancelled", "cancel_reason": cancel_reason},
+        synchronize_session=False,
+    )
+    if updated != 1:
+        flash(
+            "Đơn hàng này không ở trạng thái Chờ xác nhận hoặc vừa được cập nhật bởi yêu cầu khác.",
+            "warning",
+        )
+        return redirect(url_for("order_detail", order_code=order_code))
+
+    # Hoàn lại số lượng tồn kho một cách Atomic
     for item in order.items:
-        if item.product:
-            item.product.stock += item.quantity
+        if item.product_id:
+            Product.query.filter_by(id=item.product_id).update(
+                {Product.stock: Product.stock + item.quantity},
+                synchronize_session=False,
+            )
 
     db.session.commit()
     flash(
         f"Đã hủy thành công đơn hàng #{order.order_code}. Số lượng hoa đã được hoàn trả lại kho.",
         "success",
     )
-    return redirect(request.referrer or url_for("order_detail", order_code=order_code))
+    return redirect(url_for("order_detail", order_code=order_code))
 
 
 @limiter.limit("15 per minute")

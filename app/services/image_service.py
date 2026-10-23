@@ -2,6 +2,7 @@
 
 import os
 import time
+import uuid
 
 from flask import current_app as app
 from PIL import Image, ImageOps
@@ -43,7 +44,7 @@ def save_media_files(files, product_id):
             media_type = get_media_type(file.filename)
             if media_type == "image" and not is_valid_image_content(file.stream):
                 continue
-            filename = secure_filename(f"{product_id}_{file.filename}")
+            filename = secure_filename(f"{product_id}_{uuid.uuid4().hex[:8]}_{file.filename}")
             save_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
 
             if media_type == "image":

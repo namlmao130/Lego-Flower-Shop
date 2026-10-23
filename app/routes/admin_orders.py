@@ -87,7 +87,7 @@ def admin_order_update_status(order_id):
             f'Đã cập nhật trạng thái đơn #{order.order_code} thành "{order.status_label}"!',
             "success",
         )
-    return redirect(request.referrer or url_for("admin_orders"))
+    return redirect(url_for("admin_orders"))
 
 
 @admin_required

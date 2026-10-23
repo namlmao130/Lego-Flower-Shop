@@ -186,6 +186,12 @@ def submit_review(product_id):
     errors = []
     if not customer_name:
         errors.append("Vui lòng nhập tên của bạn.")
+    elif len(customer_name) > 100:
+        customer_name = customer_name[:100]
+
+    if comment and len(comment) > 1000:
+        errors.append("Nội dung đánh giá không được vượt quá 1.000 ký tự.")
+
     try:
         rating = int(rating_raw)
         if rating < 1 or rating > 5:

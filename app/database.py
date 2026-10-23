@@ -52,14 +52,25 @@ def ensure_database_indexes():
 def create_default_admin():
     """Tạo sẵn 1 tài khoản admin nếu chưa có, để bạn login lần đầu."""
     if not Admin.query.filter_by(username="admin").first():
+        import secrets
         admin = Admin(username="admin")
         password = os.environ.get("ADMIN_PASSWORD", "")
         if not password and db.engine.dialect.name == "postgresql":
             raise RuntimeError("Set ADMIN_PASSWORD before initializing a new PostgreSQL database.")
-        admin.set_password(password or "admin123")
+
+        generated = False
+        if not password:
+            password = secrets.token_urlsafe(16)
+            generated = True
+
+        admin.set_password(password)
         db.session.add(admin)
         db.session.commit()
-        print(">>> Đã tạo tài khoản admin: username=admin")
+        if generated:
+            print(f">>> [BẢO MẬT] Đã tạo tài khoản admin: username=admin | MẬT KHẨU: {password}")
+            print(">>> Vui lòng lưu lại mật khẩu trên hoặc cấu hình ADMIN_PASSWORD trong môi trường!")
+        else:
+            print(">>> Đã tạo tài khoản admin: username=admin")
 
 
 def configure_sqlite(app):
@@ -75,6 +86,7 @@ def configure_sqlite(app):
                     "shop_search_normalize", 1, normalize_search, deterministic=True
                 )
                 cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA foreign_keys = ON")
                 cursor.execute("PRAGMA journal_mode=WAL")
                 cursor.execute("PRAGMA synchronous=NORMAL")
                 cursor.execute("PRAGMA cache_size=-64000")
